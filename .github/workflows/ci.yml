@@ -1,0 +1,30 @@
+# Integración continua: ejecuta las pruebas en cada pull request y en cada
+# cambio que llega a main. No se integra un PR con este workflow en rojo.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pruebas:
+    name: Pruebas automatizadas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar dependencias
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Ejecutar pruebas
+        run: npm test
+        env:
+          LOG_LEVEL: silent
