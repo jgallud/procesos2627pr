@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log*
+.git
+.github
+.env
+.env.*
+test
+docs
+*.md
+*.json.key
+*-sa-key.json
+gcp-key*.json
