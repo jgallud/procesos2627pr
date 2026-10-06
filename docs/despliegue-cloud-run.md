@@ -61,6 +61,7 @@ En el repositorio: *Settings → Secrets and variables → Actions*.
 | Variable | `GCP_PROJECT_ID`    | `$PROJECT_ID`                           |
 | Variable | `GCP_REGION`        | `europe-west1`                          |
 | Variable | `CLOUD_RUN_SERVICE` | `procesos2627pr`                        |
+| Variable | `ADMIN_EMAIL`       | email del administrador inicial         |
 
 Después borra `gcp-key.json` de tu disco.
 

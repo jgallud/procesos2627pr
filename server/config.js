@@ -6,6 +6,8 @@ function leerConfig(env = process.env) {
     puerto: Number(env.PORT) || 3000,
     entorno: env.NODE_ENV || 'development',
     nivelLog: env.LOG_LEVEL || 'info',
+    // Email del administrador inicial: se crea (o se promueve) al arrancar.
+    adminEmail: env.ADMIN_EMAIL || '',
   };
 }
 

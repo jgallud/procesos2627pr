@@ -6,6 +6,7 @@
 #   Variables: GCP_PROJECT_ID     id del proyecto de Google Cloud
 #              GCP_REGION         p. ej. europe-southwest1 (Madrid)
 #              CLOUD_RUN_SERVICE  nombre del servicio, p. ej. procesos2627pr
+#              ADMIN_EMAIL        email del administrador inicial
 # Ver docs/despliegue-cloud-run.md
 name: Despliegue
 
@@ -47,6 +48,7 @@ jobs:
           env_vars: |
             NODE_ENV=production
             LOG_LEVEL=info
+            ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }}
 
       - name: Mostrar la URL pública
         run: echo "Desplegado en ${{ steps.deploy.outputs.url }}"
