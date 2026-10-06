@@ -5,7 +5,7 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 
 - **URL pública:** _(se añadirá tras el primer despliegue)_
 - **Integración continua:** pestaña *Actions* → workflow **CI**
-- **Despliegue continuo:** pestaña *Actions* → workflow **Despliegue**
+- **Despliegue continuo:** Cloud Run conectado al repositorio (activador de Cloud Build sobre `main`)
 
 ## Tecnologías
 
@@ -16,7 +16,7 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 | HTML + CSS + JavaScript sin framework | El frontend es pequeño; sin framework se ve claramente la separación entre interfaz y cliente de comunicación. |
 | `node:test` | Runner de pruebas incluido en Node: pruebas automatizadas sin dependencias adicionales. |
 | GitHub Actions | CI integrado en el propio repositorio, se ejecuta en cada PR y en cada cambio en `main`. |
-| Google Cloud Run | Contenedores con capa gratuita, escalado a cero y URL pública HTTPS; se despliega desde GitHub Actions. |
+| Google Cloud Run + Cloud Build | Contenedores con capa gratuita (créditos de educación), escalado a cero y URL pública HTTPS; la integración con GitHub despliega cada cambio en `main` sin claves que custodiar. |
 | MongoDB Atlas (Hito 3) | Cluster M0 gratuito y permanente; el modelo de documentos encaja con los objetos de usuario en JavaScript. |
 
 ## Arquitectura en capas
@@ -61,7 +61,7 @@ client/                         Frontend
 test/                           Pruebas automatizadas (node:test)
   logic/  data/  api/
 docs/                           Documentación de despliegue
-.github/workflows/              CI y despliegue continuo
+.github/workflows/              Integración continua (CI)
 ```
 
 ## Modelo de usuario y reglas
@@ -138,7 +138,7 @@ Ver `.env.example` (solo nombres, sin valores reales):
 2. Programar y ejecutar `npm test` en local.
 3. `git push -u origin feature/<descripcion>` y abrir un pull request contra `main`.
 4. Esperar el CI en verde e integrar el PR (*Create a merge commit*).
-5. El push a `main` dispara el despliegue automático en Cloud Run.
+5. El cambio en `main` dispara el activador de Cloud Build, que construye la imagen con el `Dockerfile` y la despliega en Cloud Run.
 
 Al cerrar cada hito se etiqueta el último commit de `main` (`hito-1`, `hito-2`…).
 

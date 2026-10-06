@@ -1,75 +1,71 @@
 # Despliegue continuo en Google Cloud Run
 
-Cada push a `main` ejecuta `.github/workflows/deploy.yml`, que:
+El despliegue continuo usa la **integración de Cloud Run con el repositorio
+de GitHub**: un activador (*trigger*) de Cloud Build vigila la rama `main` y,
+en cada cambio:
 
-1. Se autentica en Google Cloud con una cuenta de servicio.
-2. Sube el código y lo construye con Cloud Build usando el `Dockerfile`.
-3. Despliega la imagen en el servicio de Cloud Run y comprueba `/api/salud`.
+1. Descarga el código del commit.
+2. Construye la imagen con el `Dockerfile` de la raíz.
+3. La sube a Artifact Registry y despliega una nueva revisión en Cloud Run.
 
-Esta configuración se hace **una sola vez**. Los comandos usan `gcloud`
-(también se pueden hacer desde la consola web).
+No hay ningún paso manual por cambio ni claves de cuenta de servicio en
+GitHub: la conexión se autoriza mediante la app de GitHub de Cloud Build.
+La integración continua (pruebas) sigue en GitHub Actions (`.github/workflows/ci.yml`);
+ambos funcionan de forma independiente, como permite la especificación.
 
-## 1. Proyecto y APIs
+La configuración se hace **una sola vez** desde la consola de Google Cloud.
 
-```bash
-export PROJECT_ID=procesos2627pr-xxxx      # id único que elijas
-export REGION=europe-west1
-export SERVICE=procesos2627pr
+## 1. Proyecto y facturación
 
-gcloud projects create $PROJECT_ID
-gcloud config set project $PROJECT_ID
-# Vincular una cuenta de facturación (necesario aunque se use la capa gratuita):
-gcloud billing projects link $PROJECT_ID --billing-account=XXXXXX-XXXXXX-XXXXXX
+1. Crea un proyecto en la consola (o usa el que te asignen).
+2. *Facturación* → vincula el proyecto a la cuenta de facturación de los
+   **créditos de educación**.
+3. *Facturación → Presupuestos y alertas* → crea un presupuesto pequeño con
+   alertas al 50 %, 90 % y 100 %.
 
-gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
-  artifactregistry.googleapis.com iam.googleapis.com
-```
+## 2. Crear el servicio conectado al repositorio
 
-> Recomendación: crea un presupuesto con alertas en *Facturación → Presupuestos*
-> para que te avise si se supera la capa gratuita.
+*Cloud Run → Implementar contenedor → Servicio* (o *Conectar repositorio*):
 
-## 2. Cuenta de servicio para GitHub Actions
+1. Elige **Implementar continuamente desde un repositorio (GitHub)** →
+   **Configurar con Cloud Build**. Si lo pide, activa las APIs de Cloud Build
+   y Artifact Registry.
+2. **Proveedor:** GitHub → autentícate e instala la app *Google Cloud Build*
+   solo en el repositorio `procesos2627pr`.
+3. **Rama:** `^main$`.
+4. **Tipo de compilación:** *Dockerfile*, ubicación `/Dockerfile`.
+5. **Nombre del servicio:** `procesos2627pr`; **región:** `europe-west1`.
+6. **Autenticación:** *Permitir acceso público* (sin autenticación).
+7. **Facturación:** basada en solicitudes; **instancias mínimas:** 0.
+8. *Contenedores → Variables y secretos*, añade:
 
-```bash
-gcloud iam service-accounts create github-deployer \
-  --display-name="Despliegue desde GitHub Actions"
+   | Variable | Valor |
+   |----------|-------|
+   | `NODE_ENV` | `production` |
+   | `LOG_LEVEL` | `info` |
+   | `ADMIN_EMAIL` | email del administrador inicial |
 
-SA=github-deployer@$PROJECT_ID.iam.gserviceaccount.com
+   `PORT` no se define: Cloud Run lo inyecta (8080).
+9. **Crear**. El primer despliegue tarda unos minutos; la URL pública aparece
+   arriba en la página del servicio.
 
-for ROL in roles/run.admin roles/iam.serviceAccountUser \
-           roles/cloudbuild.builds.editor roles/artifactregistry.admin \
-           roles/storage.admin roles/serviceusage.serviceUsageConsumer; do
-  gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$SA" --role="$ROL"
-done
+Las variables se guardan en el servicio y se conservan en cada nuevo despliegue
+del activador.
 
-# Genera la clave JSON (NO la subas al repositorio; .gitignore la excluye).
-gcloud iam service-accounts keys create gcp-key.json --iam-account=$SA
-```
+## 3. Comprobar el despliegue continuo
 
-Si tu organización no permite crear claves de cuenta de servicio, la
-alternativa es *Workload Identity Federation*; cambia en el workflow
-`credentials_json` por `workload_identity_provider` y `service_account`.
+- *Cloud Build → Activadores*: aparece el activador sobre `^main$`.
+- *Cloud Build → Historial*: una compilación por cada cambio integrado en `main`.
+- En GitHub, cada commit de `main` muestra el resultado de Cloud Build junto al del CI.
+- `https://<url-del-servicio>/api/salud` debe responder `{"estado":"ok"}`.
 
-## 3. Secretos y variables en GitHub
+## Si la cuenta es institucional
 
-En el repositorio: *Settings → Secrets and variables → Actions*.
-
-| Tipo     | Nombre              | Valor                                   |
-|----------|---------------------|-----------------------------------------|
-| Secret   | `GCP_SA_KEY`        | contenido completo de `gcp-key.json`    |
-| Variable | `GCP_PROJECT_ID`    | `$PROJECT_ID`                           |
-| Variable | `GCP_REGION`        | `europe-west1`                          |
-| Variable | `CLOUD_RUN_SERVICE` | `procesos2627pr`                        |
-| Variable | `ADMIN_EMAIL`       | email del administrador inicial         |
-
-Después borra `gcp-key.json` de tu disco.
-
-## 4. Primer despliegue
-
-Integra cualquier PR en `main` (o lanza el workflow *Despliegue* a mano desde
-la pestaña *Actions*, que tiene `workflow_dispatch`). La URL pública aparece en
-el log del paso «Mostrar la URL pública» y en la consola de Cloud Run.
+Si *Permitir acceso público* falla con un error de dominio no permitido
+(política `iam.allowedPolicyMemberDomains` de la organización), en *Seguridad*
+del servicio desactiva **Usar IAM para autenticar las solicitudes entrantes**
+(equivale a `--no-invoker-iam-check`). Si también está bloqueado, hay que pedir
+una excepción al administrador de Google Cloud de la organización.
 
 ## Notas
 
@@ -78,5 +74,5 @@ el log del paso «Mostrar la URL pública» y en la consola de Cloud Run.
 - Los datos en memoria (Hitos 1-2) se pierden en cada despliegue o cuando la
   instancia se apaga; es lo esperado hasta el Hito 3 (MongoDB Atlas).
 - En los Hitos 3-4, los secretos (cadena de MongoDB, claves OAuth y de correo)
-  se pasarán al servicio con Secret Manager (`secrets:` en el paso de
-  despliegue), nunca en el código.
+  se guardarán en Secret Manager y se expondrán al servicio como variables
+  (*Variables y secretos → Hacer referencia a un secreto*), nunca en el código.
