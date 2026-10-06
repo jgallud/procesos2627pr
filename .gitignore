@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno con valores reales (nunca al repositorio)
+.env
+.env.*
+!.env.example
+
+# Claves de cuentas de servicio de Google Cloud
+*-sa-key.json
+gcp-key*.json
+
+# Logs y temporales
+*.log
+npm-debug.log*
+coverage/
+.DS_Store
