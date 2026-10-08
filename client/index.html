@@ -4,20 +4,89 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Procesos 26-27</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/estilo.css">
+  <!-- Capa de presentación; importa la capa de comunicación (js/api.js). -->
+  <script type="module" src="js/interfaz.js"></script>
 </head>
 <body>
+  <header class="cabecera">
+    <div class="contenedor cabecera-contenido">
+      <span class="marca">Procesos 26-27</span>
+      <span class="estado">Servidor: <span id="estado-servidor">comprobando…</span></span>
+    </div>
+  </header>
+
   <main class="contenedor">
-    <h1>Procesos 26-27</h1>
-    <p>Aplicación SaaS con gestión de usuarios.</p>
-    <p class="estado">Estado del servidor: <span id="estado-servidor">comprobando…</span></p>
+    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+
+    <!-- Mientras se comprueba si ya hay una sesión abierta -->
+    <section id="vista-cargando" class="tarjeta">
+      <p>Cargando…</p>
+    </section>
+
+    <!-- Acceso: inicio de sesión y registro -->
+    <section id="vista-acceso" class="tarjeta tarjeta-estrecha" hidden>
+      <div class="pestanas" role="tablist">
+        <button type="button" role="tab" data-pestana="entrar">Iniciar sesión</button>
+        <button type="button" role="tab" data-pestana="registro">Crear cuenta</button>
+      </div>
+
+      <form id="form-entrar" class="formulario" novalidate>
+        <label>Email
+          <input name="email" type="email" autocomplete="username" required>
+        </label>
+        <label>Contraseña
+          <input name="contrasena" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit" class="boton-principal">Entrar</button>
+      </form>
+
+      <form id="form-registro" class="formulario" novalidate hidden>
+        <label>Email
+          <input name="email" type="email" autocomplete="email" required>
+        </label>
+        <label>Nombre <span class="opcional">(opcional)</span>
+          <input name="nombre" type="text" autocomplete="name" maxlength="100">
+        </label>
+        <label>Contraseña <span class="opcional">(mínimo 8 caracteres)</span>
+          <input name="contrasena" type="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <label>Repite la contraseña
+          <input name="repetir" type="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <button type="submit" class="boton-principal">Crear cuenta</button>
+      </form>
+    </section>
+
+    <!-- Panel del usuario con sesión -->
+    <section id="vista-panel" hidden>
+      <div class="tarjeta perfil">
+        <div>
+          <h1 id="perfil-nombre"></h1>
+          <p class="secundario"><span id="perfil-email"></span> · <span id="perfil-rol" class="etiqueta"></span></p>
+        </div>
+        <div class="acciones">
+          <button id="boton-salir" type="button" class="boton-secundario">Cerrar sesión</button>
+          <button id="boton-eliminar-cuenta" type="button" class="boton-peligro">Eliminar mi cuenta</button>
+        </div>
+      </div>
+
+      <div id="seccion-admin" class="tarjeta" hidden>
+        <div class="titulo-seccion">
+          <h2>Usuarios <span id="total-usuarios" class="secundario"></span></h2>
+          <button id="boton-recargar-usuarios" type="button" class="boton-secundario">Actualizar</button>
+        </div>
+        <div class="tabla-desplazable">
+          <table id="tabla-usuarios">
+            <thead>
+              <tr><th>Email</th><th>Nombre</th><th>Rol</th><th>Estado</th><th>Alta</th><th>Acciones</th><th>Activo</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
-  <script>
-    // Comprobación mínima de que frontend y API comparten origen.
-    fetch('/api/salud')
-      .then((r) => r.json())
-      .then((d) => { document.getElementById('estado-servidor').textContent = d.estado; })
-      .catch(() => { document.getElementById('estado-servidor').textContent = 'sin conexión'; });
-  </script>
 </body>
 </html>

@@ -23,6 +23,12 @@ describe('Esqueleto del servidor', () => {
     assert.match(r.cabeceras.get('content-type'), /text\/html/);
   });
 
+  it('sirve la capa de comunicación del cliente', async () => {
+    const r = await servidor.peticion('GET', '/js/api.js');
+    assert.equal(r.estado, 200);
+    assert.match(r.cabeceras.get('content-type'), /javascript/);
+  });
+
   it('una ruta inexistente de la API responde 404 en JSON', async () => {
     const r = await servidor.peticion('GET', '/api/no-existe');
     assert.equal(r.estado, 404);

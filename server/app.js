@@ -25,7 +25,7 @@ function crearApp({ servicioUsuarios, servicioSesiones, logger = loggerSilencios
     const inicio = process.hrtime.bigint();
     res.on('finish', () => {
       const ms = Number(process.hrtime.bigint() - inicio) / 1e6;
-      const nivel = res.statusCode >= 500 ? 'error' : req.path === '/api/salud' ? 'debug' : 'info';
+      const nivel = res.statusCode >= 500 ? 'error' : req.originalUrl === '/api/salud' ? 'debug' : 'info';
       logger[nivel]('Petición HTTP', {
         metodo: req.method,
         ruta: req.originalUrl.split('?')[0],

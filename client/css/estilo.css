@@ -1,7 +1,16 @@
 :root {
   --fondo: #f7f7f5;
+  --superficie: #ffffff;
   --texto: #1f2328;
+  --texto-suave: #5b6168;
+  --borde: #dcdcd6;
   --acento: #0b6e4f;
+  --acento-oscuro: #08553d;
+  --peligro: #b42318;
+  --exito-fondo: #e6f4ee;
+  --error-fondo: #fdecea;
+  --info-fondo: #eef2f7;
+  --radio: 8px;
 }
 
 * { box-sizing: border-box; }
@@ -11,14 +20,87 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--fondo);
   color: var(--texto);
+  line-height: 1.5;
 }
+
+[hidden] { display: none !important; }
 
 .contenedor {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 48px 16px;
+  padding: 24px 16px;
 }
 
-h1 { color: var(--acento); }
-
+/* Cabecera */
+.cabecera { background: var(--superficie); border-bottom: 1px solid var(--borde); }
+.cabecera-contenido { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; padding-bottom: 12px; }
+.marca { font-weight: 700; color: var(--acento); }
+.estado { font-size: 0.85rem; color: var(--texto-suave); }
 .estado span { font-weight: 600; }
+
+/* Tarjetas */
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.tarjeta-estrecha { max-width: 420px; margin-left: auto; margin-right: auto; }
+
+h1, h2 { margin: 0; }
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1.15rem; }
+.secundario { color: var(--texto-suave); margin: 4px 0 0; font-weight: normal; font-size: 0.95rem; }
+.opcional { color: var(--texto-suave); font-weight: normal; font-size: 0.85rem; }
+
+/* Avisos */
+.aviso { border-radius: var(--radio); padding: 12px 16px; margin: 0 0 16px; }
+.aviso-info { background: var(--info-fondo); }
+.aviso-exito { background: var(--exito-fondo); color: var(--acento-oscuro); }
+.aviso-error { background: var(--error-fondo); color: var(--peligro); }
+
+/* Pestañas */
+.pestanas { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--borde); }
+.pestanas button {
+  flex: 1; background: none; border: none; padding: 10px; cursor: pointer;
+  font: inherit; color: var(--texto-suave); border-bottom: 2px solid transparent;
+}
+.pestanas button[aria-selected="true"] { color: var(--acento); border-bottom-color: var(--acento); font-weight: 600; }
+
+/* Formularios */
+.formulario { display: grid; gap: 14px; }
+.formulario label { display: grid; gap: 4px; font-weight: 600; font-size: 0.95rem; }
+.formulario input {
+  font: inherit; padding: 9px 11px; border: 1px solid var(--borde); border-radius: 6px; background: #fff;
+}
+.formulario input:focus { outline: 2px solid var(--acento); outline-offset: 1px; border-color: var(--acento); }
+
+/* Botones */
+button { font: inherit; cursor: pointer; border-radius: 6px; padding: 8px 14px; }
+button:disabled { opacity: 0.6; cursor: progress; }
+.boton-principal { background: var(--acento); color: #fff; border: 1px solid var(--acento); font-weight: 600; }
+.boton-principal:hover:not(:disabled) { background: var(--acento-oscuro); }
+.boton-secundario { background: var(--superficie); color: var(--texto); border: 1px solid var(--borde); }
+.boton-secundario:hover:not(:disabled) { border-color: var(--texto-suave); }
+.boton-peligro { background: var(--superficie); color: var(--peligro); border: 1px solid var(--peligro); }
+.boton-peligro:hover:not(:disabled) { background: var(--error-fondo); }
+
+/* Panel */
+.perfil { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.etiqueta { background: var(--info-fondo); padding: 1px 8px; border-radius: 999px; font-size: 0.85rem; }
+.titulo-seccion { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+/* Tabla de usuarios */
+.tabla-desplazable { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+th { color: var(--texto-suave); font-weight: 600; }
+td.celda-acciones button { padding: 4px 10px; font-size: 0.85rem; }
+td.celda-acciones button + button { margin-left: 6px; }
+.estado-activo { color: var(--acento); font-weight: 600; }
+.estado-pendiente { color: #9a6700; font-weight: 600; }
+.estado-eliminado { color: var(--peligro); font-weight: 600; }
+.resultado-activo[data-activo="true"] { color: var(--acento); }
+.resultado-activo[data-activo="false"] { color: var(--peligro); }
