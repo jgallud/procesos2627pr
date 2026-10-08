@@ -16,13 +16,17 @@ describe('API /api/usuarios', () => {
   const comoAdmin = () => ({ cabeceras: { 'X-Usuario-Id': admin.id } });
   const como = (id) => ({ cabeceras: { 'X-Usuario-Id': id } });
 
+  const CLAVE = 'contrasena-segura';
+  const tokens = new Map();
+  const notificador = { async enviarConfirmacion({ email, token }) { tokens.set(email, token); } };
+
   async function usuarioActivo(email) {
-    const u = await servicio.registrarUsuario({ email });
-    return servicio.confirmarCuenta(u.id);
+    const u = await servicio.registrarUsuario({ email, contrasena: CLAVE });
+    return servicio.confirmarCuenta(tokens.get(u.email));
   }
 
   beforeEach(async () => {
-    servicio = crearServicioUsuarios({ repositorio: crearRepositorioUsuariosMemoria() });
+    servicio = crearServicioUsuarios({ repositorio: crearRepositorioUsuariosMemoria(), notificador });
     admin = await servicio.asegurarAdministrador({ email: 'admin@ejemplo.com' });
     servidor = await arrancar(crearApp({ servicioUsuarios: servicio }));
   });
@@ -31,7 +35,7 @@ describe('API /api/usuarios', () => {
 
   describe('POST /api/usuarios', () => {
     it('201 y el usuario creado en estado pendiente', async () => {
-      const r = await servidor.peticion('POST', '/api/usuarios', { cuerpo: { email: 'ana@ejemplo.com', nombre: 'Ana' } });
+      const r = await servidor.peticion('POST', '/api/usuarios', { cuerpo: { email: 'ana@ejemplo.com', nombre: 'Ana', contrasena: CLAVE } });
       assert.equal(r.estado, 201);
       assert.equal(r.datos.email, 'ana@ejemplo.com');
       assert.equal(r.datos.estado, 'pendiente');
@@ -39,14 +43,14 @@ describe('API /api/usuarios', () => {
     });
 
     it('409 si el email ya existe', async () => {
-      await servidor.peticion('POST', '/api/usuarios', { cuerpo: { email: 'ana@ejemplo.com' } });
-      const r = await servidor.peticion('POST', '/api/usuarios', { cuerpo: { email: 'ana@ejemplo.com' } });
+      await servidor.peticion('POST', '/api/usuarios', { cuerpo: { email: 'ana@ejemplo.com', contrasena: CLAVE } });
+      const r = await servidor.peticion('POST', '/api/usuarios', { cuerpo: { email: 'ana@ejemplo.com', contrasena: CLAVE } });
       assert.equal(r.estado, 409);
       assert.equal(r.datos.codigo, 'EMAIL_DUPLICADO');
     });
 
     it('400 si el email no es válido', async () => {
-      const r = await servidor.peticion('POST', '/api/usuarios', { cuerpo: { email: 'mal' } });
+      const r = await servidor.peticion('POST', '/api/usuarios', { cuerpo: { email: 'mal', contrasena: CLAVE } });
       assert.equal(r.estado, 400);
       assert.ok(r.datos.error);
     });
@@ -59,7 +63,7 @@ describe('API /api/usuarios', () => {
 
   describe('GET /api/usuarios', () => {
     it('200 con email, rol y estado para el administrador', async () => {
-      await servicio.registrarUsuario({ email: 'ana@ejemplo.com' });
+      await servicio.registrarUsuario({ email: 'ana@ejemplo.com', contrasena: CLAVE });
       const r = await servidor.peticion('GET', '/api/usuarios', comoAdmin());
       assert.equal(r.estado, 200);
       assert.equal(r.datos.length, 2);
@@ -80,12 +84,12 @@ describe('API /api/usuarios', () => {
 
   describe('GET /api/usuarios/:id/activo', () => {
     it('false para un usuario pendiente y true tras confirmar', async () => {
-      const u = await servicio.registrarUsuario({ email: 'ana@ejemplo.com' });
+      const u = await servicio.registrarUsuario({ email: 'ana@ejemplo.com', contrasena: CLAVE });
       let r = await servidor.peticion('GET', `/api/usuarios/${u.id}/activo`, comoAdmin());
       assert.equal(r.estado, 200);
       assert.deepEqual(r.datos, { id: u.id, activo: false });
 
-      await servicio.confirmarCuenta(u.id);
+      await servicio.confirmarCuenta(tokens.get(u.email));
       r = await servidor.peticion('GET', `/api/usuarios/${u.id}/activo`, comoAdmin());
       assert.equal(r.datos.activo, true);
     });

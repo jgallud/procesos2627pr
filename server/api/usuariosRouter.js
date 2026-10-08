@@ -16,8 +16,8 @@ function crearRouterUsuarios({ servicioUsuarios }) {
   const router = express.Router();
 
   router.post('/', async (req, res) => {
-    const { email, nombre } = req.body ?? {};
-    const usuario = await servicioUsuarios.registrarUsuario({ email, nombre });
+    const { email, nombre, contrasena } = req.body ?? {};
+    const usuario = await servicioUsuarios.registrarUsuario({ email, nombre, contrasena });
     res.status(201).json(usuario);
   });
 
