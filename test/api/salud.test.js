@@ -1,16 +1,13 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
-const { crearApp } = require('../../server/app');
 const { arrancar } = require('../ayuda/servidor');
-const { crearServicioUsuarios } = require('../../server/logic/usuarioService');
-const { crearRepositorioUsuariosMemoria } = require('../../server/data/usuarioRepositorioMemoria');
+const { montar } = require('../ayuda/montaje');
 
 describe('Esqueleto del servidor', () => {
   let servidor;
 
   before(async () => {
-    const servicioUsuarios = crearServicioUsuarios({ repositorio: crearRepositorioUsuariosMemoria() });
-    servidor = await arrancar(crearApp({ servicioUsuarios }));
+    servidor = await arrancar(montar().app);
   });
   after(async () => { await servidor.cerrar(); });
 

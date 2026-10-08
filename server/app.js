@@ -1,18 +1,21 @@
 // Construcción de la aplicación Express.
 // El backend sirve el frontend (carpeta client/) y la API bajo /api, en el
-// mismo origen. Las dependencias (servicio, logger) se inyectan desde fuera:
+// mismo origen (así la cookie de sesión funciona sin CORS). Las dependencias
+// (servicios, logger) se inyectan desde fuera:
 // así las pruebas pueden crear la app con datos en memoria y, en el Hito 3,
 // index.js podrá pasar un servicio que use MongoDB sin tocar este archivo.
 
 const path = require('node:path');
 const express = require('express');
 const { loggerSilencioso } = require('./logger');
-const { identificarSolicitante } = require('./api/solicitante');
+const { crearIdentificadorSesion, crearRouterSesion, crearGestorCookie } = require('./api/sesion');
 const { crearRouterUsuarios } = require('./api/usuariosRouter');
 const { crearManejadorErroresApi } = require('./api/errores');
 
-function crearApp({ servicioUsuarios, logger = loggerSilencioso } = {}) {
+function crearApp({ servicioUsuarios, servicioSesiones, logger = loggerSilencioso, cookieSegura = false } = {}) {
   if (!servicioUsuarios) throw new Error('crearApp necesita servicioUsuarios');
+  if (!servicioSesiones) throw new Error('crearApp necesita servicioSesiones');
+  const cookie = crearGestorCookie({ cookieSegura });
 
   const app = express();
   app.disable('x-powered-by');
@@ -25,7 +28,7 @@ function crearApp({ servicioUsuarios, logger = loggerSilencioso } = {}) {
       const nivel = res.statusCode >= 500 ? 'error' : req.path === '/api/salud' ? 'debug' : 'info';
       logger[nivel]('Petición HTTP', {
         metodo: req.method,
-        ruta: req.originalUrl,
+        ruta: req.originalUrl.split('?')[0],
         estado: res.statusCode,
         ms: Math.round(ms),
       });
@@ -36,13 +39,14 @@ function crearApp({ servicioUsuarios, logger = loggerSilencioso } = {}) {
   // --- API -----------------------------------------------------------------
   const api = express.Router();
   api.use(express.json());
-  api.use(identificarSolicitante);
+  api.use(crearIdentificadorSesion({ servicioSesiones, cookie }));
 
   api.get('/salud', (req, res) => {
     res.json({ estado: 'ok' });
   });
 
-  api.use('/usuarios', crearRouterUsuarios({ servicioUsuarios }));
+  api.use('/sesion', crearRouterSesion({ servicioUsuarios, servicioSesiones, cookie }));
+  api.use('/usuarios', crearRouterUsuarios({ servicioUsuarios, servicioSesiones, cookie }));
 
   // Cualquier ruta de la API no definida responde 404 en JSON.
   api.use((req, res) => {
