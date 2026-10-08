@@ -36,7 +36,10 @@ La configuración se hace **una sola vez** desde la consola de Google Cloud.
 4. **Tipo de compilación:** *Dockerfile*, ubicación `/Dockerfile`.
 5. **Nombre del servicio:** `procesos2627pr`; **región:** `europe-west1`.
 6. **Autenticación:** *Permitir acceso público* (sin autenticación).
-7. **Facturación:** basada en solicitudes; **instancias mínimas:** 0.
+7. **Facturación:** basada en solicitudes; **instancias mínimas:** 0;
+   **instancias máximas:** 1 mientras los datos y las sesiones estén en memoria
+   (Hitos 1-2): con varias instancias, cada una tendría sus propios usuarios y
+   sesiones y una sesión abierta en una no valdría en otra.
 8. *Contenedores → Variables y secretos*, añade:
 
    | Variable | Valor |
@@ -44,6 +47,8 @@ La configuración se hace **una sola vez** desde la consola de Google Cloud.
    | `NODE_ENV` | `production` |
    | `LOG_LEVEL` | `info` |
    | `ADMIN_EMAIL` | email del administrador inicial |
+   | `ADMIN_PASSWORD` | contraseña del administrador inicial (mejor como secreto, ver abajo) |
+   | `APP_URL` | URL pública del servicio, p. ej. `https://procesos2627pr-xxxx.europe-west1.run.app` |
 
    `PORT` no se define: Cloud Run lo inyecta (8080).
 9. **Crear**. El primer despliegue tarda unos minutos; la URL pública aparece
@@ -73,6 +78,12 @@ una excepción al administrador de Google Cloud de la organización.
   tarda unos segundos (arranque en frío). Tenlo en cuenta el día de la prueba.
 - Los datos en memoria (Hitos 1-2) se pierden en cada despliegue o cuando la
   instancia se apaga; es lo esperado hasta el Hito 3 (MongoDB Atlas).
-- En los Hitos 3-4, los secretos (cadena de MongoDB, claves OAuth y de correo)
-  se guardarán en Secret Manager y se expondrán al servicio como variables
-  (*Variables y secretos → Hacer referencia a un secreto*), nunca en el código.
+- `ADMIN_PASSWORD` es un secreto: lo recomendable es crearlo en Secret Manager y
+  exponerlo al servicio como variable (*Variables y secretos → Hacer referencia a
+  un secreto*), nunca en el código. Igual se hará en los Hitos 3-4 con la cadena
+  de MongoDB y las claves OAuth y de correo.
+- Hasta el Hito 4 el enlace de confirmación de cuenta no se envía por correo: se
+  consulta en *Cloud Run → servicio → Registros* buscando
+  `Enlace de confirmación de cuenta`.
+- `APP_URL` solo se conoce tras el primer despliegue: añádela después y Cloud Run
+  creará una revisión nueva con ella.

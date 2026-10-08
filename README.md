@@ -13,7 +13,9 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 |------------|---------------|
 | Node.js 22 | Un único lenguaje (JavaScript) en cliente y servidor, con runner de pruebas y carga de `.env` integrados. |
 | Express 5 | Framework HTTP mínimo y muy extendido; permite que el mismo servidor sirva la API y el frontend (mismo origen). |
-| HTML + CSS + JavaScript sin framework | El frontend es pequeño; sin framework se ve claramente la separación entre interfaz y cliente de comunicación. |
+| HTML + CSS + JavaScript sin framework (módulos ES) | El frontend es pequeño; sin framework se ve claramente la separación entre interfaz (`interfaz.js`) y cliente de comunicación (`api.js`). |
+| `scrypt` de `node:crypto` | Función de hash para contraseñas (lenta, con sal y coste de memoria, recomendada por OWASP) incluida en Node: sin dependencias nativas. |
+| Sesiones en servidor con cookie `HttpOnly` | Cerrar sesión invalida de verdad el estado (se borra en el servidor) y el JavaScript de la página no puede leer el identificador; el almacén de sesiones es un repositorio más, sustituible por MongoDB en el Hito 3. |
 | `node:test` | Runner de pruebas incluido en Node: pruebas automatizadas sin dependencias adicionales. |
 | GitHub Actions | CI integrado en el propio repositorio, se ejecuta en cada PR y en cada cambio en `main`. |
 | Google Cloud Run + Cloud Build | Contenedores con capa gratuita (créditos de educación), escalado a cero y URL pública HTTPS; la integración con GitHub despliega cada cambio en `main` sin claves que custodiar. |
@@ -22,8 +24,11 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 ## Arquitectura en capas
 
 ```
- Cliente (navegador)            client/            interfaz servida por el backend
-        │  HTTP/JSON, mismo origen
+ Cliente (navegador)            client/
+   Capa de presentación         client/js/interfaz.js   (DOM, formularios, mensajes)
+        │  llamadas a funciones
+   Capa de comunicación         client/js/api.js        (único módulo con fetch)
+        │  HTTP/JSON, mismo origen, cookie de sesión
         ▼
  Capa API                       server/app.js, server/api/
         │  llamadas a funciones (sin HTTP)
@@ -31,16 +36,21 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
  Capa de lógica de negocio      server/logic/
         │  contrato del repositorio (async)
         ▼
- Capa de acceso a datos         server/data/       memoria (Hito 1) → MongoDB (Hito 3)
+ Capa de acceso a datos         server/data/       memoria (Hitos 1-2) → MongoDB (Hito 3)
 ```
 
-- **Frontera API ↔ lógica:** `server/api/usuariosRouter.js` llama a `servicioUsuarios`.
+- **Frontera interfaz ↔ comunicación (cliente):** `client/js/interfaz.js` solo
+  importa funciones de `client/js/api.js`; no contiene `fetch` ni URLs de la API.
+
+- **Frontera API ↔ lógica:** `server/api/usuariosRouter.js` y `server/api/sesion.js`
+  llaman a `servicioUsuarios` y `servicioSesiones`.
   La API no contiene reglas de negocio y la lógica no conoce HTTP: lanza
   `ErrorDominio` con un código y `server/api/errores.js` lo traduce a un estado HTTP.
-- **Frontera lógica ↔ datos:** `server/logic/usuarioService.js` recibe un
-  `repositorio` que cumple el contrato descrito en `server/data/usuarioRepositorioMemoria.js`.
-- **Composición:** `server/index.js` crea repositorio → servicio → app. Sustituir
-  la base de datos solo cambia qué repositorio se crea ahí.
+- **Frontera lógica ↔ datos:** los servicios de `server/logic/` reciben
+  repositorios que cumplen los contratos descritos en `server/data/usuarioRepositorioMemoria.js`
+  y `server/data/sesionRepositorioMemoria.js`.
+- **Composición:** `server/index.js` crea repositorios → servicios → app. Sustituir
+  la base de datos solo cambia qué repositorios se crean ahí.
 
 ```
 server/
@@ -50,16 +60,24 @@ server/
   logger.js                     Registro de actividad (JSON a stdout)
   api/                          CAPA API
     usuariosRouter.js           Endpoints REST de usuarios
+    sesion.js                   Cookie de sesión y endpoints /api/sesion
     errores.js                  ErrorDominio → código HTTP
-    solicitante.js              Identificación del solicitante (provisional)
   logic/                        CAPA LÓGICA
-    usuarioService.js           Reglas de gestión de usuarios
+    usuarioService.js           Reglas de gestión de usuarios (registro, login, roles…)
+    sesionService.js            Ciclo de vida de las sesiones
+    contrasenas.js              Hash de contraseñas (scrypt)
     errores.js                  Errores de dominio
   data/                         CAPA DE DATOS
     usuarioRepositorioMemoria.js
+    sesionRepositorioMemoria.js
+  notificacion/
+    notificadorLog.js           Enlace de confirmación al log (provisional, Hito 4: correo)
 client/                         Frontend
+  index.html, css/
+  js/interfaz.js                Capa de presentación
+  js/api.js                     Capa de comunicación con el servidor
 test/                           Pruebas automatizadas (node:test)
-  logic/  data/  api/
+  logic/  data/  api/  notificacion/  ayuda/
 docs/                           Documentación de despliegue
 .github/workflows/              Integración continua (CI)
 ```
@@ -74,29 +92,62 @@ docs/                           Documentación de despliegue
 - Eliminar: el administrador a cualquiera; un usuario normal solo a sí mismo.
 - Todas estas comprobaciones se hacen en la capa lógica del servidor.
 
+## Registro, sesión y contraseñas
+
+- **Registro local:** email, nombre (opcional) y contraseña (mínimo 8 caracteres).
+  La cuenta queda `pendiente` y no puede iniciar sesión hasta confirmarla.
+- **Contraseñas:** se guardan con `scrypt` (sal aleatoria por usuario, parámetros
+  dentro del propio hash) y se comparan en tiempo constante. Nunca se guardan,
+  devuelven ni registran en claro.
+- **Confirmación:** al registrarse se genera un token de un solo uso (del que solo
+  se guarda su SHA-256). El enlace es `APP_URL/?confirmar=<token>`; al abrirlo,
+  la interfaz llama a `POST /api/usuarios/confirmacion`.
+  > **Hito 2 (provisional):** aún no se envía correo; el enlace se escribe en el
+  > log del servidor (terminal en local, Cloud Logging en Cloud Run). En el Hito 4
+  > se sustituye el notificador por uno que envía el correo, sin tocar la lógica.
+- **Inicio de sesión:** si las credenciales son correctas, el servidor crea una
+  sesión con un identificador aleatorio de 256 bits y lo envía en la cookie
+  `sesion` (`HttpOnly`, `SameSite=Lax`, `Max-Age`, y `Secure` en producción).
+  Un email inexistente y una contraseña incorrecta dan el mismo error.
+- **Mantenimiento entre recargas:** al cargar la página, la interfaz pide
+  `GET /api/sesion`; el navegador envía la cookie automáticamente.
+- **Cierre de sesión:** `DELETE /api/sesion` borra la sesión del almacén del
+  servidor y la cookie; reutilizar la cookie antigua da `401`.
+- **Rutas protegidas:** el middleware de sesión fija `req.idSolicitante` y la capa
+  lógica rechaza con `401` si no hay sesión válida (o el usuario ya no está activo)
+  y con `403` si falta el rol de administrador. Al eliminar una cuenta se cierran
+  todas sus sesiones.
+
 ## API
 
 | Método | Ruta | Quién | Respuesta |
 |--------|------|-------|-----------|
 | `GET` | `/api/salud` | cualquiera | `200 {estado:"ok"}` |
-| `POST` | `/api/usuarios` | cualquiera | `201` usuario creado (`pendiente`) |
+| `POST` | `/api/sesion` | cualquiera (`{email, contrasena}`) | `200` usuario + cookie de sesión |
+| `GET` | `/api/sesion` | con sesión | `200` usuario de la sesión |
+| `DELETE` | `/api/sesion` | cualquiera | `204` sesión cerrada |
+| `POST` | `/api/usuarios` | cualquiera (`{email, nombre?, contrasena}`) | `201` usuario creado (`pendiente`) |
+| `POST` | `/api/usuarios/confirmacion` | cualquiera (`{token}`) | `200` usuario `activo` |
 | `GET` | `/api/usuarios` | administrador | `200` lista de usuarios |
 | `GET` | `/api/usuarios/:id/activo` | administrador | `200 {id, activo}` |
 | `DELETE` | `/api/usuarios/:id` | administrador o el propio usuario | `204` |
 
-Errores: `400` datos inválidos, `401` sin sesión válida, `403` sin permiso,
-`404` no existe, `409` email duplicado. Siempre en JSON: `{error, codigo}`.
+Errores: `400` datos o token inválidos, `401` sin sesión válida o credenciales
+incorrectas, `403` sin permiso o cuenta pendiente/eliminada, `404` no existe,
+`409` email duplicado. Siempre en JSON: `{error, codigo}`.
 
-> **Hito 1 (provisional):** todavía no hay sesiones. El solicitante se indica con
-> la cabecera `X-Usuario-Id` y la lógica verifica que existe, está activo y tiene
-> el rol necesario. En el Hito 2 se sustituye por la sesión sin cambiar rutas ni lógica.
+El solicitante se identifica por la cookie de sesión (en el Hito 1 era una
+cabecera provisional `X-Usuario-Id`, que ya no se acepta). El cambio no afectó
+a las rutas de usuarios ni a la capa lógica: ambas siguen usando `req.idSolicitante`.
 
 ## Administrador inicial
 
 Al arrancar, el servidor crea (o promueve, si ya existe) una cuenta de
-administrador activa con el email de la variable `ADMIN_EMAIL`. Se eligió así
-porque no requiere tocar la base de datos a mano, es idempotente y el email del
-administrador queda fuera del código. Las credenciales de prueba para la
+administrador activa con el email de `ADMIN_EMAIL` y la contraseña de
+`ADMIN_PASSWORD` (si cambia la variable, cambia la contraseña en el siguiente
+arranque). Se eligió así porque no requiere tocar la base de datos a mano, es
+idempotente y ni el email ni la contraseña del administrador están en el código.
+Para entrar como administrador basta con iniciar sesión con esas credenciales. Las credenciales de prueba para la
 revisión se envían con la entrega, no en el repositorio.
 
 ## Ejecutar en local
@@ -111,6 +162,9 @@ npm run dev              # http://localhost:3000 (recarga al guardar)
 npm start
 ```
 
+Para probar el registro en local: crea una cuenta desde la interfaz y copia el
+enlace de confirmación que aparece en la terminal (`"enlace":"http://localhost:3000/?confirmar=…"`).
+
 ## Ejecutar las pruebas
 
 ```bash
@@ -118,8 +172,9 @@ npm test
 ```
 
 Ejecuta con `node:test` todas las pruebas de `test/`: unitarias de la capa
-lógica (`test/logic`), del contrato del repositorio (`test/data`) y de
-integración de la API con peticiones HTTP reales (`test/api`).
+lógica (`test/logic`: usuarios, sesiones y hash de contraseñas), de los contratos
+de los repositorios (`test/data`) y de integración de la API con peticiones HTTP
+reales y cookie de sesión (`test/api`).
 
 ## Variables de entorno
 
@@ -131,6 +186,9 @@ Ver `.env.example` (solo nombres, sin valores reales):
 | `NODE_ENV` | `development`, `production` o `test`. |
 | `LOG_LEVEL` | `debug`, `info`, `warn`, `error` o `silent`. |
 | `ADMIN_EMAIL` | Email del administrador inicial. |
+| `ADMIN_PASSWORD` | Contraseña del administrador inicial (secreto, mínimo 8 caracteres). |
+| `APP_URL` | URL pública de la aplicación, para el enlace de confirmación (por defecto `http://localhost:PORT`). |
+| `SESION_HORAS` | Duración de la sesión en horas (por defecto 168, una semana). |
 
 ## Flujo de trabajo (GitHub Flow)
 
