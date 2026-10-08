@@ -1,6 +1,8 @@
-# procesos2627pr
+# Proyecto de Procesos de Ingeniería del Software
 
 Procesos de Ingeniería del Software — curso 2026-2027.
+Escuela Superior de Ingeniería Informática de Albacete
+Universidad de Castilla-La Mancha
 Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 
 - **URL pública:** _(se añadirá tras el primer despliegue)_
