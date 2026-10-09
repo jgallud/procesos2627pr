@@ -13,6 +13,11 @@ function leerConfig(env = process.env) {
     // contraseña es un secreto: solo llega por variable de entorno.
     adminEmail: env.ADMIN_EMAIL || '',
     adminContrasena: env.ADMIN_PASSWORD || undefined,
+    // Base de datos (Hito 3). La URI incluye usuario y contraseña: es un
+    // secreto. Sin URI se usan los repositorios en memoria (solo desarrollo
+    // y pruebas; en producción el servidor se niega a arrancar sin ella).
+    mongodbUri: env.MONGODB_URI || '',
+    mongodbBase: env.MONGODB_DB || 'procesos2627pr',
     // URL pública de la aplicación (para construir el enlace de confirmación).
     urlBase: env.APP_URL || `http://localhost:${puerto}`,
     // Duración de la sesión en horas (7 días por defecto).
