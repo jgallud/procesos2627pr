@@ -17,11 +17,11 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 | Express 5 | Framework HTTP mínimo y muy extendido; permite que el mismo servidor sirva la API y el frontend (mismo origen). |
 | HTML + CSS + JavaScript sin framework (módulos ES) | El frontend es pequeño; sin framework se ve claramente la separación entre interfaz (`interfaz.js`) y cliente de comunicación (`api.js`). |
 | `scrypt` de `node:crypto` | Función de hash para contraseñas (lenta, con sal y coste de memoria, recomendada por OWASP) incluida en Node: sin dependencias nativas. |
-| Sesiones en servidor con cookie `HttpOnly` | Cerrar sesión invalida de verdad el estado (se borra en el servidor) y el JavaScript de la página no puede leer el identificador; el almacén de sesiones es un repositorio más, sustituible por MongoDB en el Hito 3. |
+| Sesiones en servidor con cookie `HttpOnly` | Cerrar sesión invalida de verdad el estado (se borra en el servidor) y el JavaScript de la página no puede leer el identificador; el almacén de sesiones es un repositorio más y, desde el Hito 3, vive en MongoDB. |
 | `node:test` | Runner de pruebas incluido en Node: pruebas automatizadas sin dependencias adicionales. |
 | GitHub Actions | CI integrado en el propio repositorio, se ejecuta en cada PR y en cada cambio en `main`. |
 | Google Cloud Run + Cloud Build | Contenedores con capa gratuita (créditos de educación), escalado a cero y URL pública HTTPS; la integración con GitHub despliega cada cambio en `main` sin claves que custodiar. |
-| MongoDB Atlas (Hito 3) | Cluster M0 gratuito y permanente; el modelo de documentos encaja con los objetos de usuario en JavaScript. |
+| MongoDB Atlas + driver oficial `mongodb` (Hito 3) | Cluster M0 gratuito y permanente; el modelo de documentos encaja con los objetos de usuario en JavaScript. Se usa el driver oficial sin ODM (Mongoose): los repositorios ya definen el contrato y la validación está en la capa lógica, así que un esquema adicional duplicaría reglas. |
 
 ## Arquitectura en capas
 
@@ -38,7 +38,7 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
  Capa de lógica de negocio      server/logic/
         │  contrato del repositorio (async)
         ▼
- Capa de acceso a datos         server/data/       memoria (Hitos 1-2) → MongoDB (Hito 3)
+ Capa de acceso a datos         server/data/       MongoDB (producción) o memoria (desarrollo/pruebas)
 ```
 
 - **Frontera interfaz ↔ comunicación (cliente):** `client/js/interfaz.js` solo
@@ -50,9 +50,13 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
   `ErrorDominio` con un código y `server/api/errores.js` lo traduce a un estado HTTP.
 - **Frontera lógica ↔ datos:** los servicios de `server/logic/` reciben
   repositorios que cumplen los contratos descritos en `server/data/usuarioRepositorioMemoria.js`
-  y `server/data/sesionRepositorioMemoria.js`.
-- **Composición:** `server/index.js` crea repositorios → servicios → app. Sustituir
-  la base de datos solo cambia qué repositorios se crean ahí.
+  y `server/data/sesionRepositorioMemoria.js`. Hay dos implementaciones de cada
+  contrato (memoria y MongoDB) y las dos superan la misma batería de pruebas
+  (`test/contratos/`).
+- **Composición:** `server/index.js` crea repositorios → servicios → app. Si
+  existe `MONGODB_URI` usa los repositorios de MongoDB; si no, los de memoria
+  (en producción, sin `MONGODB_URI` el servidor no arranca). El paso a MongoDB
+  en el Hito 3 no modificó ningún archivo de `server/logic/` ni de `server/api/`.
 
 ```
 server/
@@ -70,8 +74,11 @@ server/
     contrasenas.js              Hash de contraseñas (scrypt)
     errores.js                  Errores de dominio
   data/                         CAPA DE DATOS
-    usuarioRepositorioMemoria.js
-    sesionRepositorioMemoria.js
+    conexionMongo.js            Conexión, índices y cierre ordenado
+    usuarioRepositorioMongo.js  Usuarios en MongoDB (producción)
+    sesionRepositorioMongo.js   Sesiones en MongoDB (producción)
+    usuarioRepositorioMemoria.js  Usuarios en memoria (desarrollo y pruebas)
+    sesionRepositorioMemoria.js   Sesiones en memoria (desarrollo y pruebas)
   notificacion/
     notificadorLog.js           Enlace de confirmación al log (provisional, Hito 4: correo)
 client/                         Frontend
@@ -80,6 +87,7 @@ client/                         Frontend
   js/api.js                     Capa de comunicación con el servidor
 test/                           Pruebas automatizadas (node:test)
   logic/  data/  api/  notificacion/  ayuda/
+  contratos/                    Pruebas comunes a todas las implementaciones de repositorio
 docs/                           Documentación de despliegue
 .github/workflows/              Integración continua (CI)
 ```
@@ -93,6 +101,26 @@ docs/                           Documentación de despliegue
 - Listar usuarios y consultar si un usuario está activo: solo administrador.
 - Eliminar: el administrador a cualquiera; un usuario normal solo a sí mismo.
 - Todas estas comprobaciones se hacen en la capa lógica del servidor.
+
+## Persistencia (MongoDB)
+
+Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con dos colecciones:
+
+| Colección | Documento | Índices |
+|-----------|-----------|---------|
+| `usuarios` | `{ _id, email, nombre, rol, estado, origen, creadoEn, eliminadoEn?, hashContrasena?, hashTokenConfirmacion? }` | `email` único |
+| `sesiones` | `{ _id, idUsuario, creadaEn, expiraEn, caducidad }` | `idUsuario`; TTL sobre `caducidad` |
+
+- El `_id` de cada usuario es un UUID generado por el repositorio; fuera de la
+  capa de datos solo existe como `id`, igual que con la implementación en memoria.
+- El índice único de `email` garantiza en la propia base de datos que no hay
+  dos cuentas con el mismo correo, incluso ante dos altas simultáneas.
+- Las sesiones también se guardan en la base de datos: un nuevo despliegue o un
+  reinicio no cierra la sesión de nadie y Cloud Run puede usar varias instancias.
+  El índice TTL hace que MongoDB borre solo las sesiones caducadas.
+- Los índices se crean al arrancar (`createIndex` es idempotente).
+- Al recibir `SIGTERM` (Cloud Run apaga la instancia) el servidor deja de
+  aceptar peticiones, termina las que hay en curso y cierra la conexión.
 
 ## Registro, sesión y contraseñas
 
@@ -175,8 +203,21 @@ npm test
 
 Ejecuta con `node:test` todas las pruebas de `test/`: unitarias de la capa
 lógica (`test/logic`: usuarios, sesiones y hash de contraseñas), de los contratos
-de los repositorios (`test/data`) y de integración de la API con peticiones HTTP
-reales y cookie de sesión (`test/api`).
+de los repositorios (`test/data`, con la batería común de `test/contratos`) y de
+integración de la API con peticiones HTTP reales y cookie de sesión (`test/api`).
+
+Las pruebas de la capa lógica usan siempre los repositorios en memoria: son
+rápidas y no necesitan base de datos. Las pruebas de los repositorios de MongoDB
+y la de persistencia tras un reinicio (`test/api/persistencia.test.js`) solo se
+ejecutan si se define `MONGODB_URI_TEST`; si no, aparecen como omitidas
+(*skipped*). Cada ejecución crea una base de datos temporal `pruebas_<aleatorio>`
+y la borra al terminar. En el CI, GitHub Actions levanta un contenedor de MongoDB
+y define `MONGODB_URI_TEST=mongodb://localhost:27017`, sin usar Atlas ni secretos.
+
+```bash
+# con un MongoDB local (por ejemplo, docker run -p 27017:27017 mongo:8)
+MONGODB_URI_TEST=mongodb://localhost:27017 npm test
+```
 
 ## Variables de entorno
 
@@ -186,6 +227,8 @@ Ver `.env.example` (solo nombres, sin valores reales):
 |----------|-------------|
 | `PORT` | Puerto HTTP (Cloud Run lo fija automáticamente). |
 | `NODE_ENV` | `development`, `production` o `test`. |
+| `MONGODB_URI` | Cadena de conexión de MongoDB Atlas (secreto: incluye usuario y contraseña). Obligatoria en producción; sin ella, en desarrollo los datos se guardan en memoria. |
+| `MONGODB_DB` | Nombre de la base de datos (por defecto `procesos2627pr`). |
 | `LOG_LEVEL` | `debug`, `info`, `warn`, `error` o `silent`. |
 | `ADMIN_EMAIL` | Email del administrador inicial. |
 | `ADMIN_PASSWORD` | Contraseña del administrador inicial (secreto, mínimo 8 caracteres). |

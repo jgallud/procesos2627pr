@@ -11,6 +11,19 @@ jobs:
   pruebas:
     name: Pruebas automatizadas
     runs-on: ubuntu-latest
+    # MongoDB efímero para las pruebas de los repositorios y de persistencia.
+    # Es un contenedor que solo existe durante la ejecución: el CI no usa
+    # Atlas ni necesita ningún secreto.
+    services:
+      mongo:
+        image: mongo:8
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Descargar el código
         uses: actions/checkout@v4
@@ -28,3 +41,4 @@ jobs:
         run: npm test
         env:
           LOG_LEVEL: silent
+          MONGODB_URI_TEST: mongodb://localhost:27017
