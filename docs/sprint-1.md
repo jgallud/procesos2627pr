@@ -8,7 +8,7 @@ timestamp: 2026-10-25
 # Sprint 1
 
 - **Objetivo:** estructura base de una aplicación SaaS en capas con gestión de usuarios (especificación del Sprint 1).
-- **Periodo:** desde el 2026-10-06 (primer commit). Por verificar: fecha de cierre del sprint.
+- **Periodo:** del 2026-10-06 (primer commit) al 2026-10-14 (cierre del sprint).
 - **Seguimiento:** PBI 24 a 29 y 32 en Donetonic. TODO(alumno): enlace al tablero (uno que exija iniciar sesión).
 - **Resultado:** hitos 1 a 3 completados; el Hito 4 pasa al [Sprint 2](sprint-2.md). Estado de cada requisito en [requisitos.md](requisitos.md).
 

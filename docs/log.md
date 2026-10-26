@@ -4,7 +4,9 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-10-26 | PR #8 integrado: bundle OKF del Sprint 1 en `docs/` | `736f104` |
 | 2026-10-25 | Se crea este bundle de documentación | rama `docs/okf-sprint1` |
+| 2026-10-14 | Cierre del Sprint 1, con el Hito 4 sin completar | [Sprint 1](sprint-1.md), [Sprint 2](sprint-2.md) |
 | 2026-10-11 | Etiqueta `hito-3` | `c4c2f3d` |
 | 2026-10-11 | PR #7 integrado: persistencia en MongoDB, pruebas de contrato y MongoDB en el CI | `c4c2f3d`, [Hito 3](sprint-1.md#hito-3-persistencia-y-roles) |
 | 2026-10-09 | Capa de datos con MongoDB sin cambios en la lógica ni en la API | `c35aab8`, [D-05](decisiones.md#d-05-contratos-de-repositorio-con-dos-implementaciones) |
