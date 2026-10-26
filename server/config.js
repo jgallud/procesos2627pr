@@ -24,7 +24,10 @@ function leerConfig(env = process.env) {
     correoRemitente: env.CORREO_REMITENTE || '',
     nombreRemitente: env.CORREO_REMITENTE_NOMBRE || 'procesos2627pr',
     // URL pública de la aplicación (para construir el enlace de confirmación).
+    // En desarrollo, por defecto localhost; en producción es obligatoria
+    // (ver validarConfig), para que el enlace nunca apunte a localhost.
     urlBase: env.APP_URL || `http://localhost:${puerto}`,
+    urlBaseDefinida: Boolean(env.APP_URL),
     // Duración de la sesión en horas (7 días por defecto).
     duracionSesionMs: (horasSesion > 0 ? horasSesion : 24 * 7) * 60 * 60 * 1000,
     // En producción la cookie de sesión solo viaja por HTTPS.
@@ -32,4 +35,17 @@ function leerConfig(env = process.env) {
   };
 }
 
-module.exports = { leerConfig };
+// Comprueba la configuración que no puede faltar en producción. Lanza un
+// error con un mensaje claro: el servidor no arranca y Cloud Run sigue
+// sirviendo la revisión anterior.
+function validarConfig(config) {
+  if (config.entorno !== 'production') return;
+  if (!config.urlBaseDefinida) {
+    throw new Error('APP_URL es obligatoria en producción: es la URL pública que llevan los enlaces de confirmación');
+  }
+  if (!config.urlBase.startsWith('https://')) {
+    throw new Error('APP_URL debe empezar por https:// en producción');
+  }
+}
+
+module.exports = { leerConfig, validarConfig };
