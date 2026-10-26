@@ -21,6 +21,7 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 | `node:test` | Runner de pruebas incluido en Node: pruebas automatizadas sin dependencias adicionales. |
 | GitHub Actions | CI integrado en el propio repositorio, se ejecuta en cada PR y en cada cambio en `main`. |
 | Google Cloud Run + Cloud Build | Contenedores con capa gratuita (créditos de educación), escalado a cero y URL pública HTTPS; la integración con GitHub despliega cada cambio en `main` sin claves que custodiar. |
+| Brevo, API transaccional (Hito 4) | Envío del correo de confirmación de cuenta con una petición HTTP, sin SMTP (bloqueado en muchos servicios cloud) y con capa gratuita. Ver la decisión D-15 en [docs/decisiones.md](docs/decisiones.md). |
 | MongoDB Atlas + driver oficial `mongodb` (Hito 3) | Cluster M0 gratuito y permanente; el modelo de documentos encaja con los objetos de usuario en JavaScript. Se usa el driver oficial sin ODM (Mongoose): los repositorios ya definen el contrato y la validación está en la capa lógica, así que un esquema adicional duplicaría reglas. |
 
 ## Arquitectura en capas
@@ -80,7 +81,8 @@ server/
     usuarioRepositorioMemoria.js  Usuarios en memoria (desarrollo y pruebas)
     sesionRepositorioMemoria.js   Sesiones en memoria (desarrollo y pruebas)
   notificacion/
-    notificadorLog.js           Enlace de confirmación al log (provisional, Hito 4: correo)
+    notificadorBrevo.js         Correo de confirmación con Brevo (si hay BREVO_API_KEY)
+    notificadorLog.js           Enlace de confirmación al log (sin BREVO_API_KEY)
 client/                         Frontend
   index.html, css/
   js/interfaz.js                Capa de presentación
@@ -132,9 +134,10 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con dos colecciones:
 - **Confirmación:** al registrarse se genera un token de un solo uso (del que solo
   se guarda su SHA-256). El enlace es `APP_URL/?confirmar=<token>`; al abrirlo,
   la interfaz llama a `POST /api/usuarios/confirmacion`.
-  > **Hito 2 (provisional):** aún no se envía correo; el enlace se escribe en el
-  > log del servidor (terminal en local, Cloud Logging en Cloud Run). En el Hito 4
-  > se sustituye el notificador por uno que envía el correo, sin tocar la lógica.
+  El enlace se envía por **correo con Brevo** (`server/notificacion/notificadorBrevo.js`).
+  Si no se define `BREVO_API_KEY`, se escribe en el log del servidor (terminal en
+  local, Cloud Logging en Cloud Run); el servidor avisa de ello al arrancar.
+  Cambiar de uno a otro solo afecta a `server/index.js`: la lógica no cambia.
 - **Inicio de sesión:** si las credenciales son correctas, el servidor crea una
   sesión con un identificador aleatorio de 256 bits y lo envía en la cookie
   `sesion` (`HttpOnly`, `SameSite=Lax`, `Max-Age`, y `Secure` en producción).
@@ -192,8 +195,10 @@ npm run dev              # http://localhost:3000 (recarga al guardar)
 npm start
 ```
 
-Para probar el registro en local: crea una cuenta desde la interfaz y copia el
-enlace de confirmación que aparece en la terminal (`"enlace":"http://localhost:3000/?confirmar=…"`).
+Para probar el registro en local sin correo, deja `BREVO_API_KEY` vacía: crea una
+cuenta desde la interfaz y copia el enlace de confirmación que aparece en la
+terminal (`"enlace":"http://localhost:3000/?confirmar=…"`). Para recibir el correo
+de verdad, define `BREVO_API_KEY` y `CORREO_REMITENTE` en tu `.env`.
 
 ## Ejecutar las pruebas
 
@@ -234,6 +239,9 @@ Ver `.env.example` (solo nombres, sin valores reales):
 | `ADMIN_PASSWORD` | Contraseña del administrador inicial (secreto, mínimo 8 caracteres). |
 | `APP_URL` | URL pública de la aplicación, para el enlace de confirmación (por defecto `http://localhost:PORT`). |
 | `SESION_HORAS` | Duración de la sesión en horas (por defecto 168, una semana). |
+| `BREVO_API_KEY` | Clave del API de Brevo (secreto). Sin ella, el enlace de confirmación se escribe en el log. |
+| `CORREO_REMITENTE` | Dirección remitente del correo de confirmación, verificada en Brevo. Obligatoria si hay `BREVO_API_KEY`. |
+| `CORREO_REMITENTE_NOMBRE` | Nombre del remitente (por defecto `procesos2627pr`). |
 
 ## Flujo de trabajo (GitHub Flow)
 

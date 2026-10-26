@@ -2,7 +2,7 @@
 type: Requisitos
 title: Requisitos del Sprint 1
 description: Estado de cada requisito de la especificación del Sprint 1, con la evidencia que lo respalda.
-timestamp: 2026-10-25
+timestamp: 2026-10-26
 ---
 
 # Requisitos
@@ -15,7 +15,7 @@ Estado comparado con lo que pide la especificación del Sprint 1. **hecho**: se 
 | ARQ-02 | Capas del backend: API, lógica y datos | hecho | `server/api/`, `server/logic/`, `server/data/`; ver [arquitectura](arquitectura.md#backend) |
 | ARQ-03 | Capas del frontend: presentación y comunicación | hecho | `client/js/interfaz.js`, `client/js/api.js` |
 | RF-01 | Registro de usuario local | hecho | `registrarUsuario` en `server/logic/usuarioService.js`; 7 casos en `test/logic/usuarioService.test.js`; `test/api/usuarios.test.js` |
-| RF-02 | Confirmación de cuenta por correo | **pendiente** | No se envía correo: el enlace se escribe en el log (`server/notificacion/notificadorLog.js`) y se abre a mano. Preparado: la lógica recibe un notificador inyectado con `enviarConfirmacion`; basta sustituirlo en `server/index.js`. La confirmación por token ya funciona (`confirmarCuenta`, 3 casos) |
+| RF-02 | Confirmación de cuenta por correo | hecho | Correo con el API de Brevo (`server/notificacion/notificadorBrevo.js`), elegido en `server/index.js` si hay `BREVO_API_KEY`; 6 casos en `test/notificacion/notificadorBrevo.test.js`; confirmación por token con `confirmarCuenta` (3 casos). Decisión [D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo). Por verificar: envío real en producción tras configurar el secreto en Cloud Run |
 | RF-03 | Inicio de sesión local | hecho | `iniciarSesion` en `usuarioService.js` (mismo error para email inexistente y contraseña incorrecta); 7 casos en `test/logic/usuarioService.test.js` |
 | RF-04 | Inicio de sesión con OAuth | **pendiente** | No implementado. Preparado: el modelo de usuario tiene el campo `origen` (`local` u `oauth`) |
 | RF-05 | Cierre de sesión | hecho | `DELETE /api/sesion` en `server/api/sesion.js`; `test/api/sesion.test.js` («la sesión deja de valer aunque se reutilice») |
@@ -25,7 +25,7 @@ Estado comparado con lo que pide la especificación del Sprint 1. **hecho**: se 
 | RF-09 | Eliminar usuario | hecho | `eliminarUsuario` (eliminación lógica); 6 casos en `test/logic/usuarioService.test.js` |
 | RF-10 | Creación del primer administrador | hecho | `asegurarAdministrador` con `ADMIN_EMAIL` y `ADMIN_PASSWORD` desde `server/index.js`; 3 casos; ver [D-07](decisiones.md#d-07-administrador-inicial-por-variables-de-entorno) |
 | RNF-01 | Persistencia en una base de datos real | hecho | `server/data/*Mongo.js`; `test/api/persistencia.test.js` («sobreviven a un reinicio»); `test/data/repositoriosMongo.test.js` |
-| RNF-02 | Secretos fuera del código y `.env.example` | hecho | `.env.example` sin valores; `.env` en `.gitignore`; `server/config.js` lee el entorno; Secret Manager en [despliegue](despliegue-cloud-run.md) |
+| RNF-02 | Secretos fuera del código y `.env.example` | hecho | `.env.example` sin valores (incluida `BREVO_API_KEY`); `.env` en `.gitignore`; `server/config.js` lee el entorno; Secret Manager en [despliegue](despliegue-cloud-run.md) |
 | RNF-03 | Hash seguro de contraseñas | hecho | scrypt en `server/logic/contrasenas.js`; 5 casos en `test/logic/contrasenas.test.js` |
 | RNF-04 | Rutas protegidas por sesión y rol | hecho | `obtenerSolicitante` y `exigirAdministrador` en `usuarioService.js` (401/403 desde la lógica); `test/api/usuarios.test.js` |
 | RNF-05 | Despliegue en cloud con URL pública | hecho | Cloud Run ([despliegue](despliegue-cloud-run.md)). Por verificar: el README aún no tiene la URL pública |

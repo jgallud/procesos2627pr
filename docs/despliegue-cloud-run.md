@@ -51,6 +51,9 @@ La configuración se hace **una sola vez** desde la consola de Google Cloud.
    | `ADMIN_EMAIL` | email del administrador inicial |
    | `ADMIN_PASSWORD` | contraseña del administrador inicial (mejor como secreto, ver abajo) |
    | `APP_URL` | URL pública del servicio, p. ej. `https://procesos2627pr-xxxx.europe-west1.run.app` |
+   | `BREVO_API_KEY` | clave del API de Brevo (secreto, ver sección 2c) |
+   | `CORREO_REMITENTE` | dirección remitente verificada en Brevo |
+   | `CORREO_REMITENTE_NOMBRE` | nombre del remitente (opcional) |
 
    `PORT` no se define: Cloud Run lo inyecta (8080).
 9. **Crear**. El primer despliegue tarda unos minutos; la URL pública aparece
@@ -89,6 +92,28 @@ nueva revisión (o integra cualquier cambio en `main`). Tras el despliegue el
 usuario sigue existiendo y la sesión sigue abierta. En Atlas, *Browse
 Collections* muestra las colecciones `usuarios` y `sesiones`.
 
+## 2c. Correo de confirmación: Brevo (Hito 4)
+
+1. **Cuenta:** crea una cuenta gratuita en Brevo.
+2. **Remitente:** en *Senders, domains & dedicated IPs* añade y verifica la
+   dirección remitente (o, mejor, un dominio propio con sus registros DNS:
+   así es menos probable que el correo llegue a spam).
+3. **Clave de API:** en *SMTP & API → API keys* genera una clave. Solo se ve
+   una vez: cópiala directamente al secreto del paso siguiente, no la guardes
+   en ningún archivo del repositorio.
+4. **Guardarla como secreto:** *Secret Manager → Crear secreto* `brevo-api-key`
+   y expónlo en Cloud Run como variable `BREVO_API_KEY` (igual que `mongodb-uri`
+   en la sección 2b).
+5. Añade `CORREO_REMITENTE` (la dirección verificada) y, si quieres,
+   `CORREO_REMITENTE_NOMBRE` como variables normales.
+
+Al arrancar, en *Registros* debe aparecer `Correo de confirmación con Brevo`.
+Si aparece en cambio el aviso `BREVO_API_KEY no está definida`, el secreto no
+está llegando al servicio. Si Brevo rechaza un envío, el registro de la
+aplicación muestra `Brevo rechazó el correo de confirmación` con el código de
+estado y el motivo que da Brevo (por ejemplo, remitente sin verificar o
+dirección IP no autorizada en la configuración de seguridad de la cuenta).
+
 ## 3. Comprobar el despliegue continuo
 
 - *Cloud Build → Activadores*: aparece el activador sobre `^main$`.
@@ -113,11 +138,11 @@ una excepción al administrador de Google Cloud de la organización.
   repositorios en memoria (solo para desarrollo).
 - `ADMIN_PASSWORD` y `MONGODB_URI` son secretos: se crean en Secret Manager y se
   exponen al servicio como variables (*Variables y secretos → Hacer referencia a
-  un secreto*), nunca en el código. Igual se hará en el Hito 4 con las claves
-  OAuth y de correo.
+  un secreto*), nunca en el código. Igual con `BREVO_API_KEY` (sección 2c) y,
+  más adelante, con las claves de OAuth.
 - Si la contraseña del usuario de Atlas cambia, basta con añadir una versión
   nueva al secreto `mongodb-uri` y desplegar una revisión nueva.
-- Hasta el Hito 4 el enlace de confirmación de cuenta no se envía por correo: se
+- Sin `BREVO_API_KEY`, el enlace de confirmación no se envía por correo: se
   consulta en *Cloud Run → servicio → Registros* buscando
   `Enlace de confirmación de cuenta`.
 - `APP_URL` solo se conoce tras el primer despliegue: añádela después y Cloud Run
