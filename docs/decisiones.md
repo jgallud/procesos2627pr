@@ -93,3 +93,8 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Por qué:** TODO(alumno): ¿por qué Brevo frente a las alternativas?
 - **Consecuencias:** sin `BREVO_API_KEY`, el servidor sigue usando el notificador del log (desarrollo y pruebas, o producción mientras no se configure el secreto), y lo avisa al arrancar. Si Brevo rechaza un envío, el registro responde con error 500 y la cuenta queda pendiente sin forma de pedir otro enlace: el reenvío queda fuera de esta decisión.
 - **Estado:** vigente.
+
+### D-16 APP_URL obligatoria en producción
+- **Qué:** en producción el servidor no arranca si falta `APP_URL` o si no empieza por `https://` (`validarConfig` en `server/config.js`). En desarrollo sigue valiendo `http://localhost:PORT` por defecto.
+- **Por qué:** sin `APP_URL` en Cloud Run, los correos de confirmación llevaban un enlace a `http://localhost:8080` (detectado el 2026-10-26). Es el mismo criterio que con `MONGODB_URI`: mejor no arrancar que funcionar mal sin que nadie lo note. No se usa la cabecera `Host` de la petición para construir la URL, porque la controla el cliente y permitiría enviar enlaces a otro sitio.
+- **Estado:** vigente. Evidencia: `test/config.test.js`.

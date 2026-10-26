@@ -7,7 +7,7 @@
 // ni la API cambian. El envío del enlace de confirmación (por correo con
 // Brevo, o en el log si no hay clave) solo afecta a la creación del notificador.
 
-const { leerConfig } = require('./config');
+const { leerConfig, validarConfig } = require('./config');
 const { crearLogger } = require('./logger');
 const { conectarMongo } = require('./data/conexionMongo');
 const { crearRepositorioUsuariosMongo } = require('./data/usuarioRepositorioMongo');
@@ -65,6 +65,7 @@ function crearNotificador(config, logger) {
 
 async function main() {
   const config = leerConfig();
+  validarConfig(config);
   const logger = crearLogger({ nivel: config.nivelLog });
 
   const repositorios = await crearRepositorios(config, logger);
