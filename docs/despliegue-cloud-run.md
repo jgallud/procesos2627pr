@@ -54,6 +54,8 @@ La configuración se hace **una sola vez** desde la consola de Google Cloud.
    | `BREVO_API_KEY` | clave del API de Brevo (secreto, ver sección 2c) |
    | `CORREO_REMITENTE` | dirección remitente verificada en Brevo |
    | `CORREO_REMITENTE_NOMBRE` | nombre del remitente (opcional) |
+   | `GOOGLE_CLIENT_ID` | ID de cliente OAuth de Google (ver sección 2d) |
+   | `GOOGLE_CLIENT_SECRET` | secreto de cliente OAuth de Google (secreto, ver sección 2d) |
 
    `PORT` no se define: Cloud Run lo inyecta (8080).
 9. **Crear**. El primer despliegue tarda unos minutos; la URL pública aparece
@@ -113,6 +115,26 @@ está llegando al servicio. Si Brevo rechaza un envío, el registro de la
 aplicación muestra `Brevo rechazó el correo de confirmación` con el código de
 estado y el motivo que da Brevo (por ejemplo, remitente sin verificar o
 dirección IP no autorizada en la configuración de seguridad de la cuenta).
+
+## 2d. Inicio de sesión con Google (Hito 4)
+
+En la consola de Google Cloud (puede ser el mismo proyecto de Cloud Run):
+
+1. *APIs y servicios → Pantalla de consentimiento de OAuth*: tipo **Externo**,
+   con el nombre de la aplicación y un correo de contacto. Mientras esté en modo
+   de prueba, solo pueden entrar los usuarios añadidos como usuarios de prueba.
+2. *APIs y servicios → Credenciales → Crear credenciales → ID de cliente de
+   OAuth*, tipo **Aplicación web**.
+3. **URI de redirección autorizados**, exactamente así (protocolo, dominio y ruta):
+   - `http://localhost:3000/api/oauth/google/retorno`
+   - `https://procesos2627pr-56307806056.europe-west1.run.app/api/oauth/google/retorno`
+4. Copia el ID de cliente a la variable `GOOGLE_CLIENT_ID` del servicio.
+5. Guarda el secreto de cliente en Secret Manager (`google-client-secret`) y
+   expónlo como `GOOGLE_CLIENT_SECRET`, igual que `mongodb-uri` en la sección 2b.
+
+Al arrancar, en *Registros* debe aparecer `Inicio de sesión con Google activado`
+con la URL de retorno, que tiene que coincidir con la registrada en el paso 3.
+Si Google muestra `redirect_uri_mismatch`, no coinciden.
 
 ## 3. Comprobar el despliegue continuo
 

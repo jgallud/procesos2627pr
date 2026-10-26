@@ -18,7 +18,7 @@ Corresponden al Hito 4, que no se completó en el [Sprint 1](sprint-1.md#hito-4-
 | ID | Requisito | Estado | Punto de partida |
 |----|-----------|--------|------------------|
 | RF-02 | Confirmación de cuenta por correo | hecho (PR #10) | Notificador con Brevo ([D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo)) en lugar del de log ([D-11](decisiones.md#d-11-notificador-de-confirmación-desacoplado)) |
-| RF-04 | Inicio de sesión con OAuth | pendiente | Campo `origen` en el modelo de usuario |
+| RF-04 | Inicio de sesión con OAuth | hecho (PR #12) | Google, implementado a mano ([D-17](decisiones.md#d-17-inicio-de-sesión-externo-con-google) a [D-19](decisiones.md#d-19-flujo-oauth-implementado-a-mano)) |
 
 Tareas de cierre del Hito 4 que no son requisitos nuevos:
 
