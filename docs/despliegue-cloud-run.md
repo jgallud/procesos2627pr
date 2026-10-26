@@ -50,7 +50,7 @@ La configuración se hace **una sola vez** desde la consola de Google Cloud.
    | `LOG_LEVEL` | `info` |
    | `ADMIN_EMAIL` | email del administrador inicial |
    | `ADMIN_PASSWORD` | contraseña del administrador inicial (mejor como secreto, ver abajo) |
-   | `APP_URL` | URL pública del servicio, p. ej. `https://procesos2627pr-xxxx.europe-west1.run.app` |
+   | `APP_URL` | URL pública del servicio, p. ej. `https://procesos2627pr-xxxx.europe-west1.run.app` (**obligatoria**: sin ella el servidor no arranca en producción) |
    | `BREVO_API_KEY` | clave del API de Brevo (secreto, ver sección 2c) |
    | `CORREO_REMITENTE` | dirección remitente verificada en Brevo |
    | `CORREO_REMITENTE_NOMBRE` | nombre del remitente (opcional) |
@@ -145,5 +145,8 @@ una excepción al administrador de Google Cloud de la organización.
 - Sin `BREVO_API_KEY`, el enlace de confirmación no se envía por correo: se
   consulta en *Cloud Run → servicio → Registros* buscando
   `Enlace de confirmación de cuenta`.
-- `APP_URL` solo se conoce tras el primer despliegue: añádela después y Cloud Run
-  creará una revisión nueva con ella.
+- `APP_URL` es obligatoria en producción: si falta o no empieza por `https://`, el
+  servidor no arranca y el registro lo indica (Cloud Run sigue sirviendo la
+  revisión anterior). La URL de Cloud Run tiene la forma
+  `https://<servicio>-<número de proyecto>.<región>.run.app`, así que se puede
+  definir antes del primer despliegue. La de este proyecto está en el README.

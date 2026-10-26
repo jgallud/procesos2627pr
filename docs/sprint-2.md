@@ -23,5 +23,5 @@ Corresponden al Hito 4, que no se completó en el [Sprint 1](sprint-1.md#hito-4-
 Tareas de cierre del Hito 4 que no son requisitos nuevos:
 
 - Revisar [RNF-07](requisitos.md) (errores con feedback claro) en los flujos de OAuth y de correo.
-- Poner la URL pública en el README ([RNF-05](requisitos.md)).
+- ~~Poner la URL pública en el README ([RNF-05](requisitos.md)).~~ Hecho en el PR #11.
 - Etiquetar `hito-4` con el CI en verde y la aplicación desplegada funcionando.

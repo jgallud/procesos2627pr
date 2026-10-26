@@ -5,7 +5,7 @@ Escuela Superior de Ingeniería Informática de Albacete
 Universidad de Castilla-La Mancha
 Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 
-- **URL pública:** _(se añadirá tras el primer despliegue)_
+- **URL pública:** <https://procesos2627pr-56307806056.europe-west1.run.app>
 - **Integración continua:** pestaña *Actions* → workflow **CI**
 - **Despliegue continuo:** Cloud Run conectado al repositorio (activador de Cloud Build sobre `main`)
 
@@ -237,7 +237,7 @@ Ver `.env.example` (solo nombres, sin valores reales):
 | `LOG_LEVEL` | `debug`, `info`, `warn`, `error` o `silent`. |
 | `ADMIN_EMAIL` | Email del administrador inicial. |
 | `ADMIN_PASSWORD` | Contraseña del administrador inicial (secreto, mínimo 8 caracteres). |
-| `APP_URL` | URL pública de la aplicación, para el enlace de confirmación (por defecto `http://localhost:PORT`). |
+| `APP_URL` | URL pública de la aplicación, para el enlace de confirmación. **Obligatoria en producción** y con `https://`; en desarrollo, por defecto `http://localhost:PORT`. |
 | `SESION_HORAS` | Duración de la sesión en horas (por defecto 168, una semana). |
 | `BREVO_API_KEY` | Clave del API de Brevo (secreto). Sin ella, el enlace de confirmación se escribe en el log. |
 | `CORREO_REMITENTE` | Dirección remitente del correo de confirmación, verificada en Brevo. Obligatoria si hay `BREVO_API_KEY`. |

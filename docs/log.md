@@ -4,7 +4,9 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
-| 2026-10-26 | PR #10: confirmación de cuenta por correo con Brevo (RF-02) | [D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo), [RF-02](requisitos.md) |
+| 2026-10-26 | PR #11: `APP_URL` obligatoria en producción y URL pública en el README | [D-16](decisiones.md#d-16-app_url-obligatoria-en-producción) |
+| 2026-10-26 | Incidencia: los correos de confirmación llevan un enlace a `localhost` porque `APP_URL` no está definida en Cloud Run. Solución: definirla en el servicio | [D-16](decisiones.md#d-16-app_url-obligatoria-en-producción) |
+| 2026-10-26 | PR #10 integrado: confirmación de cuenta por correo con Brevo (RF-02) | [D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo), [RF-02](requisitos.md) |
 | 2026-10-26 | PR #9 integrado: fecha de cierre del Sprint 1 | `c4b88bd` |
 | 2026-10-26 | PR #8 integrado: bundle OKF del Sprint 1 en `docs/` | `736f104` |
 | 2026-10-25 | Se crea este bundle de documentación | rama `docs/okf-sprint1` |

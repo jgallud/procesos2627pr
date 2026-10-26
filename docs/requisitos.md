@@ -15,7 +15,7 @@ Estado comparado con lo que pide la especificación del Sprint 1. **hecho**: se 
 | ARQ-02 | Capas del backend: API, lógica y datos | hecho | `server/api/`, `server/logic/`, `server/data/`; ver [arquitectura](arquitectura.md#backend) |
 | ARQ-03 | Capas del frontend: presentación y comunicación | hecho | `client/js/interfaz.js`, `client/js/api.js` |
 | RF-01 | Registro de usuario local | hecho | `registrarUsuario` en `server/logic/usuarioService.js`; 7 casos en `test/logic/usuarioService.test.js`; `test/api/usuarios.test.js` |
-| RF-02 | Confirmación de cuenta por correo | hecho | Correo con el API de Brevo (`server/notificacion/notificadorBrevo.js`), elegido en `server/index.js` si hay `BREVO_API_KEY`; 6 casos en `test/notificacion/notificadorBrevo.test.js`; confirmación por token con `confirmarCuenta` (3 casos). Decisión [D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo). Por verificar: envío real en producción tras configurar el secreto en Cloud Run |
+| RF-02 | Confirmación de cuenta por correo | hecho | Correo con el API de Brevo (`server/notificacion/notificadorBrevo.js`), elegido en `server/index.js` si hay `BREVO_API_KEY`; 6 casos en `test/notificacion/notificadorBrevo.test.js`; confirmación por token con `confirmarCuenta` (3 casos). Decisión [D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo). Envío comprobado en producción el 2026-10-26; el enlace usa `APP_URL`, obligatoria en producción ([D-16](decisiones.md#d-16-app_url-obligatoria-en-producción)) |
 | RF-03 | Inicio de sesión local | hecho | `iniciarSesion` en `usuarioService.js` (mismo error para email inexistente y contraseña incorrecta); 7 casos en `test/logic/usuarioService.test.js` |
 | RF-04 | Inicio de sesión con OAuth | **pendiente** | No implementado. Preparado: el modelo de usuario tiene el campo `origen` (`local` u `oauth`) |
 | RF-05 | Cierre de sesión | hecho | `DELETE /api/sesion` en `server/api/sesion.js`; `test/api/sesion.test.js` («la sesión deja de valer aunque se reutilice») |
@@ -28,7 +28,7 @@ Estado comparado con lo que pide la especificación del Sprint 1. **hecho**: se 
 | RNF-02 | Secretos fuera del código y `.env.example` | hecho | `.env.example` sin valores (incluida `BREVO_API_KEY`); `.env` en `.gitignore`; `server/config.js` lee el entorno; Secret Manager en [despliegue](despliegue-cloud-run.md) |
 | RNF-03 | Hash seguro de contraseñas | hecho | scrypt en `server/logic/contrasenas.js`; 5 casos en `test/logic/contrasenas.test.js` |
 | RNF-04 | Rutas protegidas por sesión y rol | hecho | `obtenerSolicitante` y `exigirAdministrador` en `usuarioService.js` (401/403 desde la lógica); `test/api/usuarios.test.js` |
-| RNF-05 | Despliegue en cloud con URL pública | hecho | Cloud Run ([despliegue](despliegue-cloud-run.md)). Por verificar: el README aún no tiene la URL pública |
+| RNF-05 | Despliegue en cloud con URL pública | hecho | Cloud Run ([despliegue](despliegue-cloud-run.md)); URL pública en el [README](../README.md) |
 | RNF-06 | Pruebas unitarias de la lógica (5 o más) | hecho | 48 casos en `test/logic/`, con casos de error (email duplicado, cuenta pendiente, usuario que elimina a otro) |
 | RNF-07 | Manejo de errores con feedback al usuario | hecho | `ErrorDominio` con mensajes en la lógica; `server/api/errores.js`; `mostrarError` en `client/js/interfaz.js`. Revisar de nuevo con OAuth y correo |
 | RNF-08 | Registro de actividad (log) | hecho | `server/logger.js` (JSON a stdout); petición HTTP en `server/app.js`; eventos de usuario en `usuarioService.js` |
