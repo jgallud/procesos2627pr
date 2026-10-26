@@ -18,6 +18,11 @@ function leerConfig(env = process.env) {
     // y pruebas; en producción el servidor se niega a arrancar sin ella).
     mongodbUri: env.MONGODB_URI || '',
     mongodbBase: env.MONGODB_DB || 'procesos2627pr',
+    // Correo de confirmación con Brevo (Hito 4). La clave de API es un
+    // secreto; sin ella, el enlace de confirmación se escribe en el log.
+    brevoApiKey: env.BREVO_API_KEY || '',
+    correoRemitente: env.CORREO_REMITENTE || '',
+    nombreRemitente: env.CORREO_REMITENTE_NOMBRE || 'procesos2627pr',
     // URL pública de la aplicación (para construir el enlace de confirmación).
     urlBase: env.APP_URL || `http://localhost:${puerto}`,
     // Duración de la sesión en horas (7 días por defecto).
