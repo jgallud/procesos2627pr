@@ -103,6 +103,7 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Qué:** el proveedor OAuth es Google (OpenID Connect), con los ámbitos `openid email profile`.
 - **Alternativas consideradas:** GitHub (configuración más sencilla; todos los alumnos tienen cuenta).
 - **Por qué:** TODO(alumno): ¿por qué Google?
+- **Consecuencias:** el botón sigue la [guía de marca de Google](https://developers.google.com/identity/branding-guidelines): tema claro, logotipo oficial sin modificar (de `signin-assets.zip`) y el texto «Iniciar sesión con Google».
 - **Estado:** vigente.
 
 ### D-18 Correo de OAuth que ya tiene cuenta local

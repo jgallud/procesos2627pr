@@ -44,7 +44,13 @@
 
       <div id="acceso-externo" class="acceso-externo" hidden>
         <p class="separador">o</p>
-        <a id="boton-google" class="boton-secundario boton-enlace" href="#">Entrar con Google</a>
+        <!-- Botón según la guía de marca de Google ("Sign in with Google"):
+             tema claro, logotipo oficial sin modificar (img/google-g.svg,
+             extraído de signin-assets.zip) y texto localizado. -->
+        <a id="boton-google" class="boton-google" href="#">
+          <img class="boton-google-logo" src="img/google-g.svg" width="20" height="20" alt="">
+          <span>Iniciar sesión con Google</span>
+        </a>
       </div>
 
       <form id="form-registro" class="formulario" novalidate hidden>
