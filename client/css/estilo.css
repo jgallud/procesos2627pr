@@ -104,3 +104,8 @@ td.celda-acciones button + button { margin-left: 6px; }
 .estado-eliminado { color: var(--peligro); font-weight: 600; }
 .resultado-activo[data-activo="true"] { color: var(--acento); }
 .resultado-activo[data-activo="false"] { color: var(--peligro); }
+
+/* Acceso con un proveedor externo (OAuth) */
+.acceso-externo { margin-top: 1rem; text-align: center; }
+.acceso-externo .separador { margin: 0 0 0.75rem; color: inherit; opacity: 0.7; }
+.boton-enlace { display: block; text-decoration: none; text-align: center; }

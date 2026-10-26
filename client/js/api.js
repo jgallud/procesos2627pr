@@ -65,6 +65,13 @@ export const iniciarSesion = ({ email, contrasena }) => peticion('POST', '/sesio
 export const sesionActual = () => peticion('GET', '/sesion');
 export const cerrarSesion = () => peticion('DELETE', '/sesion');
 
+// --- Inicio de sesión externo (OAuth) ---------------------------------------
+// El inicio con un proveedor es una navegación de página completa (hay que ir
+// a la web del proveedor y volver), no una petición fetch: la interfaz solo
+// necesita saber qué proveedores hay y a qué dirección llevar al navegador.
+export const proveedoresOAuth = () => peticion('GET', '/oauth/proveedores');
+export const urlInicioOAuth = (proveedor) => `/api/oauth/${encodeURIComponent(proveedor)}`;
+
 // --- Usuarios ---------------------------------------------------------------
 export const listarUsuarios = () => peticion('GET', '/usuarios');
 export const estaActivo = (id) => peticion('GET', `/usuarios/${encodeURIComponent(id)}/activo`);
