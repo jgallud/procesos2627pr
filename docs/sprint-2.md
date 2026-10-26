@@ -2,13 +2,13 @@
 type: Sprint
 title: Sprint 2
 description: Objetivo del Sprint 2 y requisitos que pasan del Sprint 1.
-timestamp: 2026-10-25
+timestamp: 2026-10-26
 ---
 
 # Sprint 2
 
 - **Objetivo:** Por definir (pendiente de la especificación del Sprint 2).
-- **Estado:** planificado.
+- **Estado:** en curso.
 - **Seguimiento:** TODO(alumno): enlace al tablero de Donetonic.
 
 ## Pasan del Sprint 1
@@ -17,7 +17,7 @@ Corresponden al Hito 4, que no se completó en el [Sprint 1](sprint-1.md#hito-4-
 
 | ID | Requisito | Estado | Punto de partida |
 |----|-----------|--------|------------------|
-| RF-02 | Confirmación de cuenta por correo | pendiente | Notificador inyectado en la lógica ([D-11](decisiones.md#d-11-notificador-de-confirmación-desacoplado)); falta una implementación que envíe el correo |
+| RF-02 | Confirmación de cuenta por correo | hecho (PR #10) | Notificador con Brevo ([D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo)) en lugar del de log ([D-11](decisiones.md#d-11-notificador-de-confirmación-desacoplado)) |
 | RF-04 | Inicio de sesión con OAuth | pendiente | Campo `origen` en el modelo de usuario |
 
 Tareas de cierre del Hito 4 que no son requisitos nuevos:
