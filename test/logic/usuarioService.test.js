@@ -272,6 +272,62 @@ describe('Servicio de usuarios', () => {
     });
   });
 
+  describe('iniciarSesionOAuth', () => {
+    const datosGoogle = (email, extra = {}) => ({ email, nombre: 'Ana Google', emailVerificado: true, ...extra });
+
+    it('crea un usuario activo con origen oauth la primera vez', async () => {
+      const u = await servicio.iniciarSesionOAuth(datosGoogle('Ana@Ejemplo.com'));
+      assert.equal(u.email, 'ana@ejemplo.com');
+      assert.equal(u.origen, 'oauth');
+      assert.equal(u.estado, ESTADOS.ACTIVO);
+      assert.equal(u.rol, ROLES.USUARIO);
+      assert.equal(await servicio.estaActivo(admin.id, u.id), true);
+    });
+
+    it('la segunda vez devuelve el mismo usuario, sin duplicarlo', async () => {
+      const primero = await servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com'));
+      const segundo = await servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com'));
+      assert.equal(segundo.id, primero.id);
+      assert.equal((await servicio.listarUsuarios(admin.id)).filter((u) => u.email === 'ana@ejemplo.com').length, 1);
+    });
+
+    it('rechaza un email que ya tiene cuenta local: debe entrar con su contraseña', async () => {
+      await crearUsuarioActivo('ana@ejemplo.com');
+      await assert.rejects(servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com')), rechazaCon(CODIGOS.CUENTA_LOCAL));
+    });
+
+    it('rechaza también el email de una cuenta local pendiente de confirmar', async () => {
+      await registrar('ana@ejemplo.com');
+      await assert.rejects(servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com')), rechazaCon(CODIGOS.CUENTA_LOCAL));
+    });
+
+    it('rechaza un email que el proveedor no ha verificado', async () => {
+      await assert.rejects(
+        servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com', { emailVerificado: false })),
+        rechazaCon(CODIGOS.EMAIL_NO_VERIFICADO),
+      );
+    });
+
+    it('una cuenta oauth eliminada no puede volver a entrar', async () => {
+      const u = await servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com'));
+      await servicio.eliminarUsuario(admin.id, u.id);
+      await assert.rejects(servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com')), rechazaCon(CODIGOS.CUENTA_ELIMINADA));
+    });
+
+    it('una cuenta oauth no tiene contraseña: el inicio de sesión local la rechaza', async () => {
+      await servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com'));
+      await assert.rejects(
+        servicio.iniciarSesion({ email: 'ana@ejemplo.com', contrasena: CLAVE }),
+        rechazaCon(CODIGOS.CREDENCIALES_INVALIDAS),
+      );
+    });
+
+    it('un email ya registrado por oauth no se puede registrar como cuenta local', async () => {
+      await servicio.iniciarSesionOAuth(datosGoogle('ana@ejemplo.com'));
+      await assert.rejects(registrar('ana@ejemplo.com'), rechazaCon(CODIGOS.EMAIL_DUPLICADO));
+    });
+  });
+
   describe('asegurarAdministrador', () => {
     it('es idempotente: no duplica el administrador', async () => {
       const otra = await servicio.asegurarAdministrador({ email: 'admin@ejemplo.com' });

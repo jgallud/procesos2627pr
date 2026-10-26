@@ -22,6 +22,7 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 | GitHub Actions | CI integrado en el propio repositorio, se ejecuta en cada PR y en cada cambio en `main`. |
 | Google Cloud Run + Cloud Build | Contenedores con capa gratuita (créditos de educación), escalado a cero y URL pública HTTPS; la integración con GitHub despliega cada cambio en `main` sin claves que custodiar. |
 | Brevo, API transaccional (Hito 4) | Envío del correo de confirmación de cuenta con una petición HTTP, sin SMTP (bloqueado en muchos servicios cloud) y con capa gratuita. Ver la decisión D-15 en [docs/decisiones.md](docs/decisiones.md). |
+| OAuth 2.0 con Google, implementado a mano (Hito 4) | Inicio de sesión externo sin librerías: dos rutas, un `state` contra CSRF y dos peticiones a Google; reutiliza las sesiones propias. Ver las decisiones D-17 a D-19 en [docs/decisiones.md](docs/decisiones.md). |
 | MongoDB Atlas + driver oficial `mongodb` (Hito 3) | Cluster M0 gratuito y permanente; el modelo de documentos encaja con los objetos de usuario en JavaScript. Se usa el driver oficial sin ODM (Mongoose): los repositorios ya definen el contrato y la validación está en la capa lógica, así que un esquema adicional duplicaría reglas. |
 
 ## Arquitectura en capas
@@ -68,6 +69,7 @@ server/
   api/                          CAPA API
     usuariosRouter.js           Endpoints REST de usuarios
     sesion.js                   Cookie de sesión y endpoints /api/sesion
+    oauth.js                    Inicio de sesión con Google: /api/oauth
     errores.js                  ErrorDominio → código HTTP
   logic/                        CAPA LÓGICA
     usuarioService.js           Reglas de gestión de usuarios (registro, login, roles…)
@@ -80,6 +82,8 @@ server/
     sesionRepositorioMongo.js   Sesiones en MongoDB (producción)
     usuarioRepositorioMemoria.js  Usuarios en memoria (desarrollo y pruebas)
     sesionRepositorioMemoria.js   Sesiones en memoria (desarrollo y pruebas)
+  oauth/
+    proveedorGoogle.js          Comunicación con Google (OAuth / OpenID Connect)
   notificacion/
     notificadorBrevo.js         Correo de confirmación con Brevo (si hay BREVO_API_KEY)
     notificadorLog.js           Enlace de confirmación al log (sin BREVO_API_KEY)
@@ -144,6 +148,13 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con dos colecciones:
   Un email inexistente y una contraseña incorrecta dan el mismo error.
 - **Mantenimiento entre recargas:** al cargar la página, la interfaz pide
   `GET /api/sesion`; el navegador envía la cookie automáticamente.
+- **Inicio de sesión con Google:** el botón «Entrar con Google» lleva a
+  `GET /api/oauth/google`, que redirige a Google con un `state` aleatorio guardado
+  en una cookie `HttpOnly`. Google vuelve a `GET /api/oauth/google/retorno`; el
+  servidor comprueba el `state`, obtiene el correo y abre la sesión igual que en
+  el inicio local. La primera vez se crea una cuenta activa con origen `oauth`.
+  Si el correo ya tiene una cuenta local, no se entra con Google: hay que usar la
+  contraseña. Sin `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` el botón no aparece.
 - **Cierre de sesión:** `DELETE /api/sesion` borra la sesión del almacén del
   servidor y la cookie; reutilizar la cookie antigua da `401`.
 - **Rutas protegidas:** el middleware de sesión fija `req.idSolicitante` y la capa
@@ -164,10 +175,15 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con dos colecciones:
 | `GET` | `/api/usuarios` | administrador | `200` lista de usuarios |
 | `GET` | `/api/usuarios/:id/activo` | administrador | `200 {id, activo}` |
 | `DELETE` | `/api/usuarios/:id` | administrador o el propio usuario | `204` |
+| `GET` | `/api/oauth/proveedores` | cualquiera | `200 {proveedores}` |
+| `GET` | `/api/oauth/google` | cualquiera | `302` a Google |
+| `GET` | `/api/oauth/google/retorno` | vuelta desde Google | `302` a `/` con sesión, o a `/?error_oauth=<código>` |
 
 Errores: `400` datos o token inválidos, `401` sin sesión válida o credenciales
 incorrectas, `403` sin permiso o cuenta pendiente/eliminada, `404` no existe,
-`409` email duplicado. Siempre en JSON: `{error, codigo}`.
+`409` email duplicado. Siempre en JSON: `{error, codigo}`, salvo en el retorno de
+OAuth, que redirige con el código en `error_oauth` (`CUENTA_LOCAL`,
+`CUENTA_ELIMINADA`, `EMAIL_NO_VERIFICADO`, `OAUTH_CANCELADO`, `OAUTH_FALLIDO`).
 
 El solicitante se identifica por la cookie de sesión (en el Hito 1 era una
 cabecera provisional `X-Usuario-Id`, que ya no se acepta). El cambio no afectó
@@ -242,6 +258,8 @@ Ver `.env.example` (solo nombres, sin valores reales):
 | `BREVO_API_KEY` | Clave del API de Brevo (secreto). Sin ella, el enlace de confirmación se escribe en el log. |
 | `CORREO_REMITENTE` | Dirección remitente del correo de confirmación, verificada en Brevo. Obligatoria si hay `BREVO_API_KEY`. |
 | `CORREO_REMITENTE_NOMBRE` | Nombre del remitente (por defecto `procesos2627pr`). |
+| `GOOGLE_CLIENT_ID` | ID de cliente OAuth de Google. Sin él (y sin el secreto) no se ofrece el inicio de sesión con Google. |
+| `GOOGLE_CLIENT_SECRET` | Secreto de cliente OAuth de Google (secreto). |
 
 ## Flujo de trabajo (GitHub Flow)
 

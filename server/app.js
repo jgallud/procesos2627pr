@@ -10,9 +10,10 @@ const express = require('express');
 const { loggerSilencioso } = require('./logger');
 const { crearIdentificadorSesion, crearRouterSesion, crearGestorCookie } = require('./api/sesion');
 const { crearRouterUsuarios } = require('./api/usuariosRouter');
+const { crearRouterOAuth } = require('./api/oauth');
 const { crearManejadorErroresApi } = require('./api/errores');
 
-function crearApp({ servicioUsuarios, servicioSesiones, logger = loggerSilencioso, cookieSegura = false } = {}) {
+function crearApp({ servicioUsuarios, servicioSesiones, proveedoresOAuth = {}, logger = loggerSilencioso, cookieSegura = false } = {}) {
   if (!servicioUsuarios) throw new Error('crearApp necesita servicioUsuarios');
   if (!servicioSesiones) throw new Error('crearApp necesita servicioSesiones');
   const cookie = crearGestorCookie({ cookieSegura });
@@ -47,6 +48,9 @@ function crearApp({ servicioUsuarios, servicioSesiones, logger = loggerSilencios
 
   api.use('/sesion', crearRouterSesion({ servicioUsuarios, servicioSesiones, cookie }));
   api.use('/usuarios', crearRouterUsuarios({ servicioUsuarios, servicioSesiones, cookie }));
+  api.use('/oauth', crearRouterOAuth({
+    proveedores: proveedoresOAuth, servicioUsuarios, servicioSesiones, cookie, cookieSegura, logger,
+  }));
 
   // Cualquier ruta de la API no definida responde 404 en JSON.
   api.use((req, res) => {

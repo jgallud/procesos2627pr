@@ -17,7 +17,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 
 | Capa | Archivos | Responsabilidad |
 |------|----------|-----------------|
-| API | `server/app.js`, `server/api/usuariosRouter.js`, `server/api/sesion.js`, `server/api/errores.js` | Leer la petición, llamar al servicio, devolver JSON; cookie de sesión |
+| API | `server/app.js`, `server/api/usuariosRouter.js`, `server/api/sesion.js`, `server/api/oauth.js`, `server/api/errores.js` | Leer la petición, llamar al servicio, devolver JSON; cookie de sesión; redirecciones y `state` de OAuth |
 | Lógica | `server/logic/usuarioService.js`, `server/logic/sesionService.js`, `server/logic/contrasenas.js`, `server/logic/errores.js` | Reglas de usuarios, roles, sesiones y contraseñas |
 | Datos | `server/data/usuarioRepositorioMongo.js`, `server/data/sesionRepositorioMongo.js`, `server/data/conexionMongo.js`, y las versiones `*Memoria.js` | Guardar y buscar usuarios y sesiones |
 | Composición | `server/index.js` | Crear repositorios → servicios → app |
@@ -30,6 +30,8 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 
 **Notificador.** La lógica recibe un `notificador` con `enviarConfirmacion({ email, nombre, token })`. Hay dos implementaciones en `server/notificacion/`: `notificadorBrevo.js` envía el correo con el API de Brevo y `notificadorLog.js` escribe el enlace en el log. `crearNotificador` en `server/index.js` elige la de Brevo si existe `BREVO_API_KEY` ([D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo)). Añadir el correo no modificó `server/logic/` ni `server/api/`.
 
+**Proveedor OAuth.** `server/oauth/proveedorGoogle.js` es el único módulo que habla con Google. `server/index.js` lo crea si existen `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`, y se lo pasa a la API. La API lo usa para redirigir y para obtener los datos del usuario; la lógica (`iniciarSesionOAuth`) solo recibe correo, nombre y si el correo está verificado ([D-19](decisiones.md#d-19-flujo-oauth-implementado-a-mano)).
+
 ## Frontend
 
 | Capa | Archivo | Responsabilidad |
@@ -37,7 +39,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | Presentación | `client/js/interfaz.js` | DOM, formularios, vistas y mensajes |
 | Comunicación | `client/js/api.js` | Único módulo que usa `fetch`; expone funciones y la clase `ErrorApi` |
 
-**Frontera.** `interfaz.js` solo hace `import * as api from './api.js'` y no contiene ningún `fetch` ni URL de la API.
+**Frontera.** `interfaz.js` solo hace `import * as api from './api.js'` y no contiene ningún `fetch` ni URL de la API. Incluso la dirección del botón «Entrar con Google» la da `api.urlInicioOAuth('google')`.
 
 ## Endpoints
 
@@ -52,5 +54,8 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | GET | `/api/usuarios` | administrador | 200 lista |
 | GET | `/api/usuarios/:id/activo` | administrador | 200 `{id, activo}` |
 | DELETE | `/api/usuarios/:id` | administrador o el propio usuario | 204 |
+| GET | `/api/oauth/proveedores` | cualquiera | 200 `{proveedores}` |
+| GET | `/api/oauth/google` | cualquiera | 302 a Google, con el `state` en una cookie |
+| GET | `/api/oauth/google/retorno` | vuelta desde Google | 302 a `/` con sesión, o a `/?error_oauth=<código>` |
 
-Errores en JSON `{error, codigo}`: 400 datos o token inválidos, 401 sin sesión o credenciales incorrectas, 403 sin permiso o cuenta pendiente o eliminada, 404 no existe, 409 email duplicado. La comprobación de sesión y rol se hace en la lógica (`obtenerSolicitante` y `exigirAdministrador` en `usuarioService.js`), no en la interfaz.
+Errores en JSON `{error, codigo}`: 400 datos o token inválidos, 401 sin sesión o credenciales incorrectas, 403 sin permiso o cuenta pendiente o eliminada, 404 no existe, 409 email duplicado o cuenta local al entrar con OAuth. El retorno de OAuth no responde JSON: redirige con el código en `error_oauth`. La comprobación de sesión y rol se hace en la lógica (`obtenerSolicitante` y `exigirAdministrador` en `usuarioService.js`), no en la interfaz.

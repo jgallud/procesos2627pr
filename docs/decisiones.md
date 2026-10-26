@@ -98,3 +98,22 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Qué:** en producción el servidor no arranca si falta `APP_URL` o si no empieza por `https://` (`validarConfig` en `server/config.js`). En desarrollo sigue valiendo `http://localhost:PORT` por defecto.
 - **Por qué:** sin `APP_URL` en Cloud Run, los correos de confirmación llevaban un enlace a `http://localhost:8080` (detectado el 2026-10-26). Es el mismo criterio que con `MONGODB_URI`: mejor no arrancar que funcionar mal sin que nadie lo note. No se usa la cabecera `Host` de la petición para construir la URL, porque la controla el cliente y permitiría enviar enlaces a otro sitio.
 - **Estado:** vigente. Evidencia: `test/config.test.js`.
+
+### D-17 Inicio de sesión externo con Google
+- **Qué:** el proveedor OAuth es Google (OpenID Connect), con los ámbitos `openid email profile`.
+- **Alternativas consideradas:** GitHub (configuración más sencilla; todos los alumnos tienen cuenta).
+- **Por qué:** TODO(alumno): ¿por qué Google?
+- **Estado:** vigente.
+
+### D-18 Correo de OAuth que ya tiene cuenta local
+- **Qué:** si alguien entra con Google usando un correo que ya tiene cuenta local (con contraseña), no se le deja entrar con Google: se le pide que inicie sesión con su contraseña. Las cuentas no se vinculan.
+- **Alternativas consideradas:** vincular la cuenta de Google a la cuenta local existente (más cómodo, pero obliga a confiar en la verificación del correo del proveedor y a diseñar cómo se unen las dos formas de entrar).
+- **Por qué:** TODO(alumno): ¿por qué rechazar en vez de vincular?
+- **Consecuencias:** una cuenta es local u OAuth según su `origen`, y no cambia. Una cuenta OAuth no tiene contraseña: el inicio de sesión local la rechaza con el error genérico de credenciales. Si Google no confirma que el correo está verificado (`email_verified`), tampoco se entra.
+- **Estado:** vigente.
+
+### D-19 Flujo OAuth implementado a mano
+- **Qué:** flujo *authorization code* sin librerías: `GET /api/oauth/google` redirige a Google con un `state` aleatorio guardado en una cookie `HttpOnly` de 10 minutos; `GET /api/oauth/google/retorno` comprueba el `state`, cambia el código por un token y pide los datos del usuario a Google. La comunicación con Google está en un módulo inyectado (`server/oauth/proveedorGoogle.js`), igual que el notificador de Brevo; la lógica solo recibe correo, nombre y si el correo está verificado.
+- **Alternativas consideradas:** Passport.js (menos código propio, pero añade dependencias y su propio manejo de sesiones, distinto de las sesiones en MongoDB de [D-10](#d-10-sesiones-en-servidor-con-cookie-httponly)).
+- **Por qué:** TODO(alumno): ¿por qué a mano? (el resto del proyecto resuelve sesiones y hash sin librerías externas).
+- **Estado:** vigente.

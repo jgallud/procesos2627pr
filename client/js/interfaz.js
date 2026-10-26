@@ -249,6 +249,33 @@ async function confirmarSiProcede() {
   }
 }
 
+// Muestra el botón de cada proveedor externo configurado en el servidor.
+async function mostrarAccesoExterno() {
+  try {
+    const { proveedores } = await api.proveedoresOAuth();
+    if (!proveedores.includes('google')) return;
+    $('#boton-google').href = api.urlInicioOAuth('google');
+    $('#acceso-externo').hidden = false;
+  } catch {
+    // Sin la lista de proveedores, simplemente no se ofrece el acceso externo.
+  }
+}
+
+// Si se vuelve del proveedor externo con un error (?error_oauth=<código>), se
+// explica al usuario y se limpia la URL.
+const MENSAJES_OAUTH = {
+  CUENTA_LOCAL: 'Ya tienes una cuenta con ese email. Inicia sesión con tu contraseña.',
+  CUENTA_ELIMINADA: 'Esta cuenta ha sido eliminada.',
+  EMAIL_NO_VERIFICADO: 'Google no ha verificado tu email, así que no se puede usar para entrar.',
+  OAUTH_CANCELADO: 'Has cancelado el inicio de sesión con Google.',
+};
+function avisarErrorOAuthSiProcede() {
+  const codigo = new URLSearchParams(window.location.search).get('error_oauth');
+  if (!codigo) return;
+  window.history.replaceState(null, '', window.location.pathname);
+  avisar(MENSAJES_OAUTH[codigo] || 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.', 'error');
+}
+
 // Al cargar (o recargar) la página se pregunta al servidor si ya hay sesión:
 // así un usuario que ya entró no tiene que volver a autenticarse.
 async function recuperarSesion() {
@@ -285,6 +312,8 @@ async function iniciar() {
   enlazarEventos();
   elegirPestana('entrar');
   comprobarServidor();
+  mostrarAccesoExterno();
+  avisarErrorOAuthSiProcede();
   await confirmarSiProcede();
   await recuperarSesion();
 }

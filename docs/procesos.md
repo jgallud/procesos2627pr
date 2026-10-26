@@ -36,4 +36,4 @@ Un activador de Cloud Build vigila `main`. En cada cambio construye la imagen co
 
 ## Variables de entorno
 
-Solo nombres; los valores están en `.env` (local, no versionado) o en Cloud Run y Secret Manager (producción): `PORT`, `NODE_ENV`, `MONGODB_URI` (secreto), `MONGODB_DB`, `LOG_LEVEL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (secreto), `APP_URL` (obligatoria en producción), `SESION_HORAS`, `BREVO_API_KEY` (secreto), `CORREO_REMITENTE`, `CORREO_REMITENTE_NOMBRE`. Para las pruebas: `MONGODB_URI_TEST`. Descripción de cada una en el [README](../README.md#variables-de-entorno).
+Solo nombres; los valores están en `.env` (local, no versionado) o en Cloud Run y Secret Manager (producción): `PORT`, `NODE_ENV`, `MONGODB_URI` (secreto), `MONGODB_DB`, `LOG_LEVEL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (secreto), `APP_URL` (obligatoria en producción), `SESION_HORAS`, `BREVO_API_KEY` (secreto), `CORREO_REMITENTE`, `CORREO_REMITENTE_NOMBRE`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (secreto). Para las pruebas: `MONGODB_URI_TEST`. Descripción de cada una en el [README](../README.md#variables-de-entorno).

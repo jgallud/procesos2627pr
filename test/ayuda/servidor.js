@@ -3,7 +3,8 @@
 //
 // fetch de Node no guarda cookies como un navegador, así que la cookie de
 // sesión se pasa a mano con la opción `cookie` y las recibidas se devuelven
-// en `cookies` (cabeceras Set-Cookie).
+// en `cookies` (cabeceras Set-Cookie). Las redirecciones no se siguen: se
+// devuelven tal cual (estado 302 y cabecera Location) para poder comprobarlas.
 
 async function arrancar(app) {
   const servidor = await new Promise((resolve) => {
@@ -13,7 +14,7 @@ async function arrancar(app) {
   const base = `http://127.0.0.1:${port}`;
 
   async function peticion(metodo, ruta, { cuerpo, cabeceras = {}, cookie } = {}) {
-    const opciones = { method: metodo, headers: { ...cabeceras } };
+    const opciones = { method: metodo, headers: { ...cabeceras }, redirect: 'manual' };
     if (cookie) opciones.headers.Cookie = cookie;
     if (cuerpo !== undefined) {
       opciones.headers['Content-Type'] = 'application/json';

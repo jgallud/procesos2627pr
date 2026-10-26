@@ -230,6 +230,44 @@ function crearServicioUsuarios({
       return vistaPublica(usuario);
     },
 
+    // Inicio de sesión con un proveedor externo (OAuth, decisiones D-17 a
+    // D-19). Recibe los datos que el proveedor ya ha comprobado: no sabe nada
+    // de Google ni de HTTP. Si el correo no tiene cuenta, la crea activa (un
+    // usuario de OAuth no necesita confirmar el correo); si tiene una cuenta
+    // local, no deja entrar por esta vía (D-18).
+    async iniciarSesionOAuth({ email, nombre, emailVerificado } = {}) {
+      const emailNormalizado = normalizarEmail(email);
+      if (emailVerificado !== true) {
+        logger.warn('OAuth rechazado: email no verificado por el proveedor', { email: emailNormalizado });
+        throw new ErrorDominio(CODIGOS.EMAIL_NO_VERIFICADO, 'El proveedor no ha verificado tu email');
+      }
+
+      const existente = await repositorio.buscarPorEmail(emailNormalizado);
+      if (existente && existente.origen !== 'oauth') {
+        logger.info('OAuth rechazado: el email tiene una cuenta local', { id: existente.id });
+        throw new ErrorDominio(CODIGOS.CUENTA_LOCAL, 'Ya existe una cuenta con ese email: inicia sesión con tu contraseña');
+      }
+      if (existente?.estado === ESTADOS.ELIMINADO) {
+        logger.info('OAuth rechazado: cuenta eliminada', { id: existente.id });
+        throw new ErrorDominio(CODIGOS.CUENTA_ELIMINADA, 'Esta cuenta ha sido eliminada');
+      }
+      if (existente) {
+        logger.info('Inicio de sesión con OAuth', { id: existente.id });
+        return vistaPublica(existente);
+      }
+
+      const creado = await repositorio.crear({
+        email: emailNormalizado,
+        nombre: normalizarNombre(typeof nombre === 'string' ? nombre.slice(0, LONGITUD_MAXIMA_NOMBRE) : undefined),
+        rol: ROLES.USUARIO,
+        estado: ESTADOS.ACTIVO,
+        origen: 'oauth',
+        creadoEn: reloj().toISOString(),
+      });
+      logger.info('Usuario registrado con OAuth', { id: creado.id, email: creado.email });
+      return vistaPublica(creado);
+    },
+
     // Usuario asociado a una sesión. Falla si ya no puede operar (p. ej. ha
     // sido eliminado después de iniciar sesión).
     async usuarioDeSesion(idSolicitante) {
