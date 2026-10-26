@@ -16,6 +16,7 @@ const { crearRepositorioUsuariosMemoria } = require('./data/usuarioRepositorioMe
 const { crearRepositorioSesionesMemoria } = require('./data/sesionRepositorioMemoria');
 const { crearNotificadorLog } = require('./notificacion/notificadorLog');
 const { crearNotificadorBrevo } = require('./notificacion/notificadorBrevo');
+const { crearProveedorGoogle } = require('./oauth/proveedorGoogle');
 const { crearServicioUsuarios } = require('./logic/usuarioService');
 const { crearServicioSesiones } = require('./logic/sesionService');
 const { crearApp } = require('./app');
@@ -63,6 +64,22 @@ function crearNotificador(config, logger) {
   return crearNotificadorLog({ logger, urlBase: config.urlBase });
 }
 
+// Proveedores de inicio de sesión externo (OAuth) configurados. Sin las
+// credenciales de Google, no se ofrece y todo lo demás funciona igual.
+function crearProveedoresOAuth(config, logger) {
+  const { googleClientId, googleClientSecret } = config;
+  if (!googleClientId && !googleClientSecret) {
+    logger.info('GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET no están definidas: inicio de sesión con Google desactivado');
+    return {};
+  }
+  if (!googleClientId || !googleClientSecret) {
+    throw new Error('Para el inicio de sesión con Google hacen falta GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET');
+  }
+  const urlRetorno = `${config.urlBase.replace(/\/+$/, '')}/api/oauth/google/retorno`;
+  logger.info('Inicio de sesión con Google activado', { urlRetorno });
+  return { google: crearProveedorGoogle({ clientId: googleClientId, clientSecret: googleClientSecret, urlRetorno }) };
+}
+
 async function main() {
   const config = leerConfig();
   validarConfig(config);
@@ -87,7 +104,8 @@ async function main() {
     logger.warn('ADMIN_EMAIL no está definida: no habrá administrador inicial');
   }
 
-  const app = crearApp({ servicioUsuarios, servicioSesiones, logger, cookieSegura: config.cookieSegura });
+  const proveedoresOAuth = crearProveedoresOAuth(config, logger);
+  const app = crearApp({ servicioUsuarios, servicioSesiones, proveedoresOAuth, logger, cookieSegura: config.cookieSegura });
   const servidor = app.listen(config.puerto, () => {
     logger.info('Servidor iniciado', { puerto: config.puerto, entorno: config.entorno });
   });

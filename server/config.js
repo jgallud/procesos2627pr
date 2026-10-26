@@ -23,6 +23,10 @@ function leerConfig(env = process.env) {
     brevoApiKey: env.BREVO_API_KEY || '',
     correoRemitente: env.CORREO_REMITENTE || '',
     nombreRemitente: env.CORREO_REMITENTE_NOMBRE || 'procesos2627pr',
+    // Inicio de sesión con Google (Hito 4). El client secret es un secreto;
+    // sin las dos variables, el inicio de sesión con Google no se ofrece.
+    googleClientId: env.GOOGLE_CLIENT_ID || '',
+    googleClientSecret: env.GOOGLE_CLIENT_SECRET || '',
     // URL pública de la aplicación (para construir el enlace de confirmación).
     // En desarrollo, por defecto localhost; en producción es obligatoria
     // (ver validarConfig), para que el enlace nunca apunte a localhost.
