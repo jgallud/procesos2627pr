@@ -102,7 +102,7 @@ async function alRegistrarse(evento) {
     form.reset();
     elegirPestana('entrar');
     $('#form-entrar').email.value = usuario.email;
-    avisar(`Cuenta creada para ${usuario.email}. Confirma tu cuenta con el enlace de confirmación antes de iniciar sesión.`, 'exito');
+    avisar(`Cuenta creada para ${usuario.email}. Te hemos enviado un correo con el enlace para confirmarla (revisa también la carpeta de spam). Después podrás iniciar sesión.`, 'exito');
   } catch (error) {
     mostrarError(error);
   }

@@ -4,6 +4,8 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-10-26 | PR #10: confirmación de cuenta por correo con Brevo (RF-02) | [D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo), [RF-02](requisitos.md) |
+| 2026-10-26 | PR #9 integrado: fecha de cierre del Sprint 1 | `c4b88bd` |
 | 2026-10-26 | PR #8 integrado: bundle OKF del Sprint 1 en `docs/` | `736f104` |
 | 2026-10-25 | Se crea este bundle de documentación | rama `docs/okf-sprint1` |
 | 2026-10-14 | Cierre del Sprint 1, con el Hito 4 sin completar | [Sprint 1](sprint-1.md), [Sprint 2](sprint-2.md) |

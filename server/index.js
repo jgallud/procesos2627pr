@@ -4,8 +4,8 @@
 //   capa API       -> app Express (recibe los servicios)
 // Cambiar la base de datos solo afecta a esta función: los repositorios de
 // MongoDB cumplen el mismo contrato que los de memoria, así que ni la lógica
-// ni la API cambian. Cambiar el envío del enlace de confirmación (Hito 4)
-// solo afecta a la creación del notificador.
+// ni la API cambian. El envío del enlace de confirmación (por correo con
+// Brevo, o en el log si no hay clave) solo afecta a la creación del notificador.
 
 const { leerConfig } = require('./config');
 const { crearLogger } = require('./logger');
@@ -15,6 +15,7 @@ const { crearRepositorioSesionesMongo } = require('./data/sesionRepositorioMongo
 const { crearRepositorioUsuariosMemoria } = require('./data/usuarioRepositorioMemoria');
 const { crearRepositorioSesionesMemoria } = require('./data/sesionRepositorioMemoria');
 const { crearNotificadorLog } = require('./notificacion/notificadorLog');
+const { crearNotificadorBrevo } = require('./notificacion/notificadorBrevo');
 const { crearServicioUsuarios } = require('./logic/usuarioService');
 const { crearServicioSesiones } = require('./logic/sesionService');
 const { crearApp } = require('./app');
@@ -40,12 +41,34 @@ async function crearRepositorios(config, logger) {
   };
 }
 
+// Elige cómo se envía el enlace de confirmación de cuenta: por correo con
+// Brevo si hay clave de API; si no, se escribe en el log (desarrollo, o
+// producción mientras no se configure el secreto).
+function crearNotificador(config, logger) {
+  if (config.brevoApiKey) {
+    if (!config.correoRemitente) {
+      throw new Error('CORREO_REMITENTE es obligatoria si se define BREVO_API_KEY');
+    }
+    logger.info('Correo de confirmación con Brevo', { remitente: config.correoRemitente });
+    return crearNotificadorBrevo({
+      apiKey: config.brevoApiKey,
+      remitente: { email: config.correoRemitente, nombre: config.nombreRemitente },
+      urlBase: config.urlBase,
+      logger,
+    });
+  }
+  const aviso = 'BREVO_API_KEY no está definida: el enlace de confirmación se escribe en el log';
+  if (config.entorno === 'production') logger.warn(aviso);
+  else logger.info(aviso);
+  return crearNotificadorLog({ logger, urlBase: config.urlBase });
+}
+
 async function main() {
   const config = leerConfig();
   const logger = crearLogger({ nivel: config.nivelLog });
 
   const repositorios = await crearRepositorios(config, logger);
-  const notificador = crearNotificadorLog({ logger, urlBase: config.urlBase });
+  const notificador = crearNotificador(config, logger);
 
   const servicioUsuarios = crearServicioUsuarios({ repositorio: repositorios.usuarios, logger, notificador });
   const servicioSesiones = crearServicioSesiones({

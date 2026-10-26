@@ -2,7 +2,7 @@
 type: Decisiones
 title: Decisiones de diseño
 description: Decisiones de diseño del proyecto, en orden cronológico, con su motivo y su estado.
-timestamp: 2026-10-25
+timestamp: 2026-10-26
 ---
 
 # Decisiones de diseño
@@ -84,3 +84,12 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Qué:** la colección `sesiones` guarda las sesiones y un índice TTL borra las caducadas.
 - **Por qué:** «un nuevo despliegue o un reinicio no cierra la sesión de nadie y Cloud Run puede usar varias instancias» (README, Persistencia).
 - **Estado:** vigente. Evidencia: `c35aab8`, `test/data/repositoriosMongo.test.js`.
+
+## Sprint 2 · Hito 4
+
+### D-15 Correo de confirmación con Brevo
+- **Qué:** la confirmación de cuenta se envía por correo con el API transaccional de Brevo (`POST https://api.brevo.com/v3/smtp/email`), desde un notificador nuevo que cumple el mismo contrato que `notificadorLog.js` ([D-11](#d-11-notificador-de-confirmación-desacoplado)). La clave de API es un secreto.
+- **Alternativas consideradas:** Resend (sin un dominio verificado solo envía a la dirección del propio titular de la cuenta, así que la revisión entre pares no podría registrarse); SMTP autenticado de Gmail (sin servicio nuevo, pero con peor entrega y límites diarios bajos). Brevo ofrece en su plan gratuito 300 correos al día por API, con su logo en cada correo.
+- **Por qué:** TODO(alumno): ¿por qué Brevo frente a las alternativas?
+- **Consecuencias:** sin `BREVO_API_KEY`, el servidor sigue usando el notificador del log (desarrollo y pruebas, o producción mientras no se configure el secreto), y lo avisa al arrancar. Si Brevo rechaza un envío, el registro responde con error 500 y la cuenta queda pendiente sin forma de pedir otro enlace: el reenvío queda fuera de esta decisión.
+- **Estado:** vigente.

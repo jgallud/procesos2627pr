@@ -2,7 +2,7 @@
 type: Arquitectura
 title: Arquitectura en capas
 description: Capas del backend y del frontend, fronteras exactas entre ellas y endpoints de la API.
-timestamp: 2026-10-25
+timestamp: 2026-10-26
 ---
 
 # Arquitectura en capas
@@ -28,7 +28,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 
 **Composición.** `server/index.js` elige MongoDB si existe `MONGODB_URI` y memoria si no; en producción, sin `MONGODB_URI` el servidor no arranca. El paso a MongoDB en el Hito 3 no modificó `server/logic/` ni `server/api/`.
 
-**Notificador.** La lógica recibe un `notificador` con `enviarConfirmacion({ email, nombre, token })`. La implementación actual, `server/notificacion/notificadorLog.js`, escribe el enlace en el log; el envío por correo se hará sustituyéndola en `server/index.js` ([RF-02](requisitos.md)).
+**Notificador.** La lógica recibe un `notificador` con `enviarConfirmacion({ email, nombre, token })`. Hay dos implementaciones en `server/notificacion/`: `notificadorBrevo.js` envía el correo con el API de Brevo y `notificadorLog.js` escribe el enlace en el log. `crearNotificador` en `server/index.js` elige la de Brevo si existe `BREVO_API_KEY` ([D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo)). Añadir el correo no modificó `server/logic/` ni `server/api/`.
 
 ## Frontend
 
