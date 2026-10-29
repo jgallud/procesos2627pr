@@ -17,6 +17,12 @@ jobs:
     services:
       mongo:
         image: mongo:8
+        # Desde octubre de 2026 los runners de GitHub usan el kernel 7.0 y
+        # MongoDB 8 se niega a arrancar por una comprobación de compatibilidad
+        # que detecta mal ese kernel (actions/runner-images#15005). Esta
+        # variable evita el fallo sin cambiar de versión de MongoDB.
+        env:
+          GLIBC_TUNABLES: glibc.pthread.rseq=1
         ports:
           - 27017:27017
         options: >-
