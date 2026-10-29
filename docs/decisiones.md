@@ -2,7 +2,7 @@
 type: Decisiones
 title: Decisiones de diseño
 description: Decisiones de diseño del proyecto, en orden cronológico, con su motivo y su estado.
-timestamp: 2026-10-26
+timestamp: 2026-10-29
 ---
 
 # Decisiones de diseño
@@ -117,4 +117,12 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Qué:** flujo *authorization code* sin librerías: `GET /api/oauth/google` redirige a Google con un `state` aleatorio guardado en una cookie `HttpOnly` de 10 minutos; `GET /api/oauth/google/retorno` comprueba el `state`, cambia el código por un token y pide los datos del usuario a Google. La comunicación con Google está en un módulo inyectado (`server/oauth/proveedorGoogle.js`), igual que el notificador de Brevo; la lógica solo recibe correo, nombre y si el correo está verificado.
 - **Alternativas consideradas:** Passport.js (menos código propio, pero añade dependencias y su propio manejo de sesiones, distinto de las sesiones en MongoDB de [D-10](#d-10-sesiones-en-servidor-con-cookie-httponly)).
 - **Por qué:** TODO(alumno): ¿por qué a mano? (el resto del proyecto resuelve sesiones y hash sin librerías externas).
+- **Estado:** vigente.
+
+### D-20 MongoDB 8 en el CI con el kernel 7.0 de GitHub
+- **Qué:** el contenedor `mongo:8` del CI arranca con la variable `GLIBC_TUNABLES=glibc.pthread.rseq=1` (`.github/workflows/ci.yml`).
+- **Contexto:** desde el 18 de octubre de 2026 los runners `ubuntu-latest` de GitHub usan el kernel de Linux 7.0, y MongoDB 8 se niega a arrancar porque detecta mal ese kernel ([actions/runner-images#15005](https://github.com/actions/runner-images/issues/15005)). El CI falló el 2026-10-29 sin llegar a ejecutar las pruebas.
+- **Alternativas consideradas:** fijar `runs-on: ubuntu-22.04` (esa imagen se retirará); usar `mongo:7.0` o `mongo:9.0` (el CI dejaría de probar la misma versión mayor que Atlas).
+- **Por qué:** mantiene en el CI la misma versión mayor de MongoDB que en producción con un cambio de una línea. TODO(alumno): confirmar o elegir otra alternativa.
+- **Consecuencias:** cuando MongoDB publique una versión 8 que detecte bien el kernel (según la incidencia, 8.0.35), se puede quitar la variable.
 - **Estado:** vigente.
