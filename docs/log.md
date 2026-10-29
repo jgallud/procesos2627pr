@@ -4,7 +4,9 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
-| 2026-10-26 | PR #13: botón «Iniciar sesión con Google» según la guía de marca de Google | [D-17](decisiones.md#d-17-inicio-de-sesión-externo-con-google) |
+| 2026-10-29 | PR #14: cierre del Hito 4 en la documentación | [Sprint 2](sprint-2.md) |
+| 2026-10-29 | Etiqueta `hito-4`: Hito 4 cerrado (RF-02, RF-04 y RNF-07 comprobados en producción) | `5b0ac4c` |
+| 2026-10-26 | PR #13 integrado: botón «Iniciar sesión con Google» según la guía de marca de Google | [D-17](decisiones.md#d-17-inicio-de-sesión-externo-con-google) |
 | 2026-10-26 | PR #12 integrado: inicio de sesión con Google (RF-04) | [D-17](decisiones.md#d-17-inicio-de-sesión-externo-con-google), [RF-04](requisitos.md) |
 | 2026-10-26 | PR #11 integrado: `APP_URL` obligatoria en producción y URL pública en el README | [D-16](decisiones.md#d-16-app_url-obligatoria-en-producción) |
 | 2026-10-26 | Incidencia: los correos de confirmación llevan un enlace a `localhost` porque `APP_URL` no está definida en Cloud Run. Solución: definirla en el servicio | [D-16](decisiones.md#d-16-app_url-obligatoria-en-producción) |

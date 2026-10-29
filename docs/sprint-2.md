@@ -2,7 +2,7 @@
 type: Sprint
 title: Sprint 2
 description: Objetivo del Sprint 2 y requisitos que pasan del Sprint 1.
-timestamp: 2026-10-26
+timestamp: 2026-10-29
 ---
 
 # Sprint 2
@@ -22,6 +22,8 @@ Corresponden al Hito 4, que no se completó en el [Sprint 1](sprint-1.md#hito-4-
 
 Tareas de cierre del Hito 4 que no son requisitos nuevos:
 
-- Revisar [RNF-07](requisitos.md) (errores con feedback claro) en los flujos de OAuth y de correo.
+- ~~Revisar [RNF-07](requisitos.md) (errores con feedback claro) en los flujos de OAuth y de correo.~~ Revisado el 2026-10-29.
 - ~~Poner la URL pública en el README ([RNF-05](requisitos.md)).~~ Hecho en el PR #11.
-- Etiquetar `hito-4` con el CI en verde y la aplicación desplegada funcionando.
+- ~~Etiquetar `hito-4` con el CI en verde y la aplicación desplegada funcionando.~~ Etiqueta `hito-4` sobre `5b0ac4c`.
+
+Con esto el Hito 4 queda cerrado. Queda pendiente decidir si se añade el reenvío del enlace de confirmación (limitación de [D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo)).
