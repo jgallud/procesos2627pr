@@ -2,7 +2,7 @@
 type: Decisiones
 title: Decisiones de diseño
 description: Decisiones de diseño del proyecto, en orden cronológico, con su motivo y su estado.
-timestamp: 2026-10-26
+timestamp: 2026-11-01
 ---
 
 # Decisiones de diseño
@@ -117,4 +117,20 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Qué:** flujo *authorization code* sin librerías: `GET /api/oauth/google` redirige a Google con un `state` aleatorio guardado en una cookie `HttpOnly` de 10 minutos; `GET /api/oauth/google/retorno` comprueba el `state`, cambia el código por un token y pide los datos del usuario a Google. La comunicación con Google está en un módulo inyectado (`server/oauth/proveedorGoogle.js`), igual que el notificador de Brevo; la lógica solo recibe correo, nombre y si el correo está verificado.
 - **Alternativas consideradas:** Passport.js (menos código propio, pero añade dependencias y su propio manejo de sesiones, distinto de las sesiones en MongoDB de [D-10](#d-10-sesiones-en-servidor-con-cookie-httponly)).
 - **Por qué:** TODO(alumno): ¿por qué a mano? (el resto del proyecto resuelve sesiones y hash sin librerías externas).
+- **Estado:** vigente.
+
+## Sprint 2 · Hundir la flota
+
+### D-20 Etiqueta base como punto de partida
+- **Qué:** la etiqueta `base` marca el último commit de `main` con el Sprint 1 completo, incluido el Hito 4 (`5b0ac4c`). Hundir la flota se desarrolla en este repositorio, sobre `main`, con el flujo de siempre. Una aplicación futura distinta parte de `base`: como repositorio nuevo (clonar, `git reset --hard base` y cambiar el remoto) si se va a desplegar, o como rama si solo es una prueba.
+- **Alternativas consideradas:** un repositorio por aplicación desde ya, con la base preparada para enchufar módulos (más trabajo ahora para un beneficio que solo aparece con varias aplicaciones); una rama larga por aplicación en este repositorio (choca con GitHub Flow, donde las ramas se integran en `main`, y con el despliegue, que solo publica `main`).
+- **Por qué:** TODO(alumno): ¿por qué una etiqueta en vez de preparar ya varias aplicaciones?
+- **Consecuencias:** `base` no se mueve nunca. Las mejoras que se hagan en la gestión de usuarios durante el Sprint 2 no llegan a `base`; si se quieren en una aplicación futura, habrá que traerlas a mano.
+- **Estado:** vigente.
+
+### D-21 Un PBI por incremento y una tarea por requisito
+- **Qué:** Hundir la flota se divide en 8 incrementos. Cada incremento es un PBI de Donetonic (historia de usuario), una rama `feature/HF-xx-…` y un pull request; cada requisito HF es una tarea del PBI y un commit cuyo mensaje empieza por su identificador. Plan en [sprint-2.md](sprint-2.md#hundir-la-flota).
+- **Alternativas consideradas:** un único PBI con una tarea por requisito (el PBI estaría en curso todo el sprint y no mostraría el progreso); un PBI y un PR por requisito (39 PR para cambios a menudo de pocas líneas).
+- **Por qué:** TODO(alumno): ¿por qué este tamaño de PBI?
+- **Consecuencias:** cada requisito se puede seguir de la tarea al commit, a la prueba y a su fila en [requisitos-hundir-la-flota.md](requisitos-hundir-la-flota.md).
 - **Estado:** vigente.

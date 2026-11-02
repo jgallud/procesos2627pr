@@ -4,6 +4,8 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-01 | Requisitos de Hundir la flota y plan del Sprint 2 en el bundle | rama `docs/requisitos-hundir-la-flota`, [D-21](decisiones.md#d-21-un-pbi-por-incremento-y-una-tarea-por-requisito) |
+| 2026-11-01 | Etiqueta `base`: punto de partida para futuras aplicaciones | `5b0ac4c`, [D-20](decisiones.md#d-20-etiqueta-base-como-punto-de-partida) |
 | 2026-10-26 | PR #13: botón «Iniciar sesión con Google» según la guía de marca de Google | [D-17](decisiones.md#d-17-inicio-de-sesión-externo-con-google) |
 | 2026-10-26 | PR #12 integrado: inicio de sesión con Google (RF-04) | [D-17](decisiones.md#d-17-inicio-de-sesión-externo-con-google), [RF-04](requisitos.md) |
 | 2026-10-26 | PR #11 integrado: `APP_URL` obligatoria en producción y URL pública en el README | [D-16](decisiones.md#d-16-app_url-obligatoria-en-producción) |
