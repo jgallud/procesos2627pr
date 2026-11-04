@@ -2,7 +2,7 @@
 type: Sprint
 title: Sprint 1
 description: Resumen de cierre de los hitos 1 a 4 del Sprint 1, desviaciones del flujo y retrospectiva.
-timestamp: 2026-10-25
+timestamp: 2026-10-29
 ---
 
 # Sprint 1
@@ -40,7 +40,7 @@ timestamp: 2026-10-25
 ## Hito 4: servicios externos y cierre
 
 - **Objetivo:** inicio de sesión con OAuth, confirmación de cuenta por correo, errores con feedback claro, README completo y revisión final.
-- **Estado:** no completado. Pasan al [Sprint 2](sprint-2.md): [RF-02](requisitos.md) y [RF-04](requisitos.md), la revisión de [RNF-07](requisitos.md) con los nuevos flujos y la URL pública en el README.
+- **Estado:** no completado en el Sprint 1. Pasó al [Sprint 2](sprint-2.md), donde se completó: RF-02 (PR #10), RF-04 (PR #12 y #13), la revisión de RNF-07 y la URL pública en el README (PR #11). Etiqueta `hito-4` (`5b0ac4c`).
 
 ## Desviaciones del flujo
 
