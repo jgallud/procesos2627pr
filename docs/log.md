@@ -4,7 +4,9 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-04 | PR #15 integrado: el contenedor de MongoDB del CI arranca con el kernel 7.0 | [D-20](decisiones.md#d-20-mongodb-8-en-el-ci-con-el-kernel-70-de-github) |
 | 2026-10-29 | PR #14: cierre del Hito 4 en la documentación | [Sprint 2](sprint-2.md) |
+| 2026-10-29 | Incidencia: el CI falla al iniciar el contenedor `mongo:8` (kernel 7.0 en los runners de GitHub); las pruebas no llegan a ejecutarse | [D-20](decisiones.md#d-20-mongodb-8-en-el-ci-con-el-kernel-70-de-github) |
 | 2026-10-29 | Etiqueta `hito-4`: Hito 4 cerrado (RF-02, RF-04 y RNF-07 comprobados en producción) | `5b0ac4c` |
 | 2026-10-26 | PR #13 integrado: botón «Iniciar sesión con Google» según la guía de marca de Google | [D-17](decisiones.md#d-17-inicio-de-sesión-externo-con-google) |
 | 2026-10-26 | PR #12 integrado: inicio de sesión con Google (RF-04) | [D-17](decisiones.md#d-17-inicio-de-sesión-externo-con-google), [RF-04](requisitos.md) |

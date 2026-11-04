@@ -2,7 +2,7 @@
 type: Proceso
 title: Flujo de trabajo y pipeline de CI/CD
 description: Cómo llega un cambio desde la rama hasta producción, qué hace el CI y cómo funciona el despliegue continuo.
-timestamp: 2026-10-26
+timestamp: 2026-10-29
 ---
 
 # Flujo de trabajo y pipeline de CI/CD
@@ -23,7 +23,7 @@ En el Sprint 1 este flujo no se cumplió siempre: ver [desviaciones del flujo](s
 
 Workflow `.github/workflows/ci.yml`, que se ejecuta en cada pull request y en cada push a `main`:
 
-1. Levanta un contenedor `mongo:8` efímero, con comprobación de salud.
+1. Levanta un contenedor `mongo:8` efímero, con comprobación de salud y la variable `GLIBC_TUNABLES` que necesita con el kernel actual de los runners ([D-20](decisiones.md#d-20-mongodb-8-en-el-ci-con-el-kernel-70-de-github)).
 2. Descarga el código y prepara Node.js 22.
 3. Instala dependencias con `npm ci`.
 4. Ejecuta `npm test` con `LOG_LEVEL=silent` y `MONGODB_URI_TEST` apuntando al contenedor, de modo que también se ejecutan las pruebas de MongoDB y de persistencia.
