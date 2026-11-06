@@ -1,11 +1,13 @@
 ---
 type: Requisitos
-title: Requisitos del Sprint 1
-description: Estado de cada requisito de la especificación del Sprint 1, con la evidencia que lo respalda.
-timestamp: 2026-10-29
+title: Requisitos
+description: Estado de cada requisito de las especificaciones del Sprint 1 y del Sprint 2 (Hundir la Flota), con la evidencia que lo respalda.
+timestamp: 2026-11-06
 ---
 
 # Requisitos
+
+## Sprint 1
 
 Estado comparado con lo que pide la especificación del Sprint 1. **hecho**: se cumple, con evidencia. **parcial**: se cumple una parte. **pendiente**: no se cumple (una solución provisional que sustituye al requisito cuenta como pendiente). Los parciales y pendientes pasan al [Sprint 2](sprint-2.md).
 
@@ -35,3 +37,43 @@ Estado comparado con lo que pide la especificación del Sprint 1. **hecho**: se 
 | PRO-01 | Flujo de trabajo GitHub Flow | **parcial** | Seis PR integrados (#2 a #7) con el CI en verde. Desviación: `c9afe0f` se editó directamente en `main` (ver [Sprint 1](sprint-1.md#desviaciones-del-flujo)) |
 | PRO-02 | Integración continua | hecho | `.github/workflows/ci.yml` (en cada PR y en cada push a `main`, con MongoDB efímero). Última ejecución en `main` (`c4c2f3d`): verde |
 | PRO-03 | Despliegue continuo | hecho | Activador de Cloud Build sobre `main` ([despliegue](despliegue-cloud-run.md)). Por verificar: el activador está en Google Cloud y no se puede consultar desde GitHub |
+
+## Sprint 2 · Hundir la Flota
+
+Fuente: especificación del Sprint 2 («Sprint 2 · Hundir la Flota: requisitos»). Mismos estados que en el Sprint 1. Plan por hitos en [sprint-2.md](sprint-2.md#hundir-la-flota).
+
+### Reglas del juego
+
+| Elemento | Regla |
+|----------|-------|
+| Tablero | 10 × 10 por jugador (propio y de disparos), coordenadas A1 a J10 |
+| Flota | Portaaviones (5), acorazado (4), crucero (3), submarino (3) y destructor (2) |
+| Colocación | En horizontal o vertical, dentro del tablero, sin solaparse y sin tocarse, tampoco en diagonal ([D-25](decisiones.md#d-25-reglas-del-juego-fijadas-por-la-especificación)) |
+| Disparo | Agua, tocado o hundido (con el barco); no se repite casilla |
+| Turnos | Quien acierta repite; tras un agua, turno del rival. Empieza quien crea la partida (contra la máquina, el jugador) |
+| Victoria | Gana quien hunde primero toda la flota del rival |
+
+### Requisitos
+
+| ID | Requisito | Hito | Estado | Evidencia |
+|----|-----------|------|--------|-----------|
+| RF-11 | Crear partida contra la máquina | 5 | pendiente | — |
+| RF-12 | Colocar la flota (manual o automática), validada en la lógica | 5 | pendiente | — |
+| RF-13 | Disparar: agua, tocado o hundido; rechazo de disparos inválidos sin consumir turno | 5 | pendiente | — |
+| RF-14 | Turno de la máquina | 5 | pendiente | — |
+| RF-15 | Fin de partida y abandono | 5 | pendiente | — |
+| RF-16 | Vista de la partida: tablero propio y de disparos, turno y estado | 5 | pendiente | — |
+| RF-17 | Reanudar una partida tras recargar o redesplegar | 6 | pendiente | — |
+| RF-18 | Historial de partidas | 6 | pendiente | — |
+| RF-19 | Estadísticas del jugador | 6 | pendiente | — |
+| RF-20 | Clasificación | 6 | pendiente | — |
+| RF-21 | Gestión de partidas (administrador) | 6 | pendiente | — |
+| RF-22 | Crear partida entre jugadores y unirse | 7 | pendiente | — |
+| RF-23 | Turnos entre jugadores | 7 | pendiente | — |
+| RF-24 | Avisos en tiempo real por WebSocket | 7 | pendiente | — |
+| RF-25 | Reconexión | 7 | pendiente | — |
+| RF-26 | Abandono (y, opcional, tiempo máximo de turno) | 7 | pendiente | — |
+| RNF-09 | Motor del juego en la capa lógica, sin dependencias de HTTP, WebSocket, base de datos ni interfaz | 5 | pendiente | — |
+| RNF-10 | Servidor autoritativo: el cliente nunca recibe la flota del rival durante la partida | 5 | pendiente | — |
+| RNF-11 | Al menos 10 pruebas unitarias del motor, con casos de error; jugador máquina con azar fijo | 5 | pendiente | — |
+| RNF-12 | WebSocket en el despliegue: instancias justificadas y reconexión tras un despliegue | 7 | pendiente | — |
