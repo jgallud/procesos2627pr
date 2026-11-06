@@ -4,7 +4,9 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-06 | PR #16: plan de Hundir la Flota en el bundle (requisitos RF-11 a RF-26 y RNF-09 a RNF-12, decisiones D-21 a D-25) | [Sprint 2](sprint-2.md#hundir-la-flota) |
 | 2026-11-04 | PR #15 integrado: el contenedor de MongoDB del CI arranca con el kernel 7.0 | [D-20](decisiones.md#d-20-mongodb-8-en-el-ci-con-el-kernel-70-de-github) |
+| 2026-11-01 | Etiqueta `base`: punto de partida para futuras aplicaciones | `5b0ac4c`, [D-21](decisiones.md#d-21-etiqueta-base-como-punto-de-partida) |
 | 2026-10-29 | PR #14: cierre del Hito 4 en la documentación | [Sprint 2](sprint-2.md) |
 | 2026-10-29 | Incidencia: el CI falla al iniciar el contenedor `mongo:8` (kernel 7.0 en los runners de GitHub); las pruebas no llegan a ejecutarse | [D-20](decisiones.md#d-20-mongodb-8-en-el-ci-con-el-kernel-70-de-github) |
 | 2026-10-29 | Etiqueta `hito-4`: Hito 4 cerrado (RF-02, RF-04 y RNF-07 comprobados en producción) | `5b0ac4c` |
