@@ -2,7 +2,7 @@
 type: Decisiones
 title: Decisiones de diseño
 description: Decisiones de diseño del proyecto, en orden cronológico, con su motivo y su estado.
-timestamp: 2026-10-29
+timestamp: 2026-11-06
 ---
 
 # Decisiones de diseño
@@ -125,4 +125,37 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Alternativas consideradas:** fijar `runs-on: ubuntu-22.04` (esa imagen se retirará); usar `mongo:7.0` o `mongo:9.0` (el CI dejaría de probar la misma versión mayor que Atlas).
 - **Por qué:** mantiene en el CI la misma versión mayor de MongoDB que en producción con un cambio de una línea. TODO(alumno): confirmar o elegir otra alternativa.
 - **Consecuencias:** cuando MongoDB publique una versión 8 que detecte bien el kernel (según la incidencia, 8.0.35), se puede quitar la variable.
+- **Estado:** vigente.
+
+## Sprint 2 · Hundir la Flota
+
+### D-21 Etiqueta base como punto de partida
+- **Qué:** la etiqueta `base` marca el último commit de `main` con el Sprint 1 completo, incluido el Hito 4 (`5b0ac4c`). Hundir la Flota se desarrolla en este repositorio, sobre `main`, con el flujo de siempre. Una aplicación futura distinta parte de `base`: como repositorio nuevo (clonar, `git reset --hard base` y cambiar el remoto) si se va a desplegar, o como rama si solo es una prueba.
+- **Alternativas consideradas:** un repositorio por aplicación desde ya, con la base preparada para enchufar módulos (más trabajo ahora para un beneficio que solo aparece con varias aplicaciones); una rama larga por aplicación en este repositorio (choca con GitHub Flow, donde las ramas se integran en `main`, y con el despliegue, que solo publica `main`).
+- **Por qué:** TODO(alumno): ¿por qué una etiqueta en vez de preparar ya varias aplicaciones?
+- **Consecuencias:** `base` no se mueve nunca. Las mejoras que se hagan en la gestión de usuarios durante el Sprint 2 no llegan a `base`; si se quieren en una aplicación futura, habrá que traerlas a mano.
+- **Estado:** vigente.
+
+### D-22 Motor del juego en la capa lógica
+- **Qué:** todas las reglas del juego (colocación, disparos, turnos, hundido, fin de partida) están en un motor de funciones puras en `server/logic/`. Un servicio de partidas carga la partida, aplica la jugada con el motor y la guarda; el jugador máquina también está en la lógica, con una fuente de azar inyectable. La API, el WebSocket y el cliente no contienen reglas. El servidor es la única autoridad: el cliente nunca recibe la flota del rival mientras dura la partida.
+- **Alternativas consideradas:** repartir la validación entre cliente y servidor (respuesta más inmediata, pero reglas duplicadas y posibilidad de hacer trampas desde el navegador).
+- **Por qué:** que las reglas se prueben sin HTTP, sin base de datos y sin navegador, y que nadie pueda hacer trampas desde el cliente (especificación del Sprint 2, RNF-09 y RNF-10).
+- **Estado:** vigente.
+
+### D-23 WebSocket solo para avisos y avisador inyectado
+- **Qué:** las jugadas se envían siempre por la API REST; el WebSocket solo lleva avisos del servidor al cliente (disparo, rival unido, fin de partida, abandono). Los avisos los emite el servicio de partidas a través de un avisador inyectado (`avisar(idPartida, evento)`), que implementa el módulo de tiempo real de la capa API y conecta `server/index.js`, como el notificador de correo ([D-11](#d-11-notificador-de-confirmación-desacoplado)). En el cliente y en el servidor, REST y WebSocket son módulos distintos de la misma capa.
+- **Alternativas consideradas:** enviar también las jugadas por el WebSocket (algo menos de latencia, pero un segundo protocolo de errores y una reconexión más difícil); emitir los avisos desde las rutas REST (no cubre las jugadas de la máquina ni el fin de turno por tiempo).
+- **Por qué:** una sola forma de enviar jugadas, con la validación y los mensajes de error que ya existen, y una reconexión que se reduce a pedir el estado por REST y volver a escuchar.
+- **Estado:** vigente.
+
+### D-24 Una sola instancia de Cloud Run con WebSocket
+- **Qué:** con el Hito 7, el servicio de Cloud Run pasa a tener como máximo una instancia. El estado de las partidas está en MongoDB; las conexiones WebSocket solo viven en memoria y se recuperan al reconectar.
+- **Alternativas consideradas:** afinidad de sesión (no garantiza que los dos jugadores caigan en la misma instancia); un canal de avisos entre instancias (funciona con cualquier número de instancias, pero añade otra pieza a la arquitectura).
+- **Por qué:** con varias instancias, el aviso de una jugada puede producirse en una instancia distinta de la que tiene abierta la conexión del rival. Una instancia basta para la carga prevista y no añade piezas (RNF-12).
+- **Consecuencias:** las conexiones se cortan en cada despliegue y al llegar al tiempo máximo de petición de Cloud Run; el cliente debe reconectarse (RF-25).
+- **Estado:** vigente desde el Hito 7.
+
+### D-25 Reglas del juego fijadas por la especificación
+- **Qué:** los barcos no pueden tocarse, ni en diagonal; quien acierta repite turno; empieza quien crea la partida (contra la máquina, el jugador).
+- **Por qué:** las fija la especificación del Sprint 2.
 - **Estado:** vigente.
