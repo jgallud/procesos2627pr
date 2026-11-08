@@ -2,7 +2,7 @@
 type: Decisiones
 title: Decisiones de diseño
 description: Decisiones de diseño del proyecto, en orden cronológico, con su motivo y su estado.
-timestamp: 2026-11-06
+timestamp: 2026-11-08
 ---
 
 # Decisiones de diseño
@@ -159,3 +159,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Qué:** los barcos no pueden tocarse, ni en diagonal; quien acierta repite turno; empieza quien crea la partida (contra la máquina, el jugador).
 - **Por qué:** las fija la especificación del Sprint 2.
 - **Estado:** vigente.
+
+### D-26 Estado de la partida como objeto plano y motor inmutable
+- **Qué:** el estado de una partida es un objeto plano (`estado`, `turno`, `ganador`, `motivoFin` y, por jugador, `flota` y `disparosRecibidos`), y cada función del motor devuelve un estado nuevo sin modificar el recibido. Los jugadores se identifican como 0 (quien crea la partida) y 1; el servicio de partidas traducirá usuarios y máquina a esos índices. Las casillas se escriben de A1 a J10, con la fila en letra y la columna en número. Los errores reutilizan los códigos `DATOS_INVALIDOS` y `ESTADO_INVALIDO`, que la API ya traduce a 400 y 409. Antes de empezar, un barco colocado se puede retirar para corregir la colocación.
+- **Alternativas consideradas:** clases con métodos que cambian el estado (más cercano a la orientación a objetos, pero hay que reconstruir los objetos al leerlos de MongoDB); códigos de error propios del juego (más precisos, pero obligan a tocar la tabla de la API sin cambiar la respuesta).
+- **Por qué:** TODO(alumno): ¿por qué objeto plano e inmutable? (pista: guardarlo en MongoDB en el Hito 6 sin conversiones y comparar estados en las pruebas).
+- **Estado:** vigente. Evidencia: `server/logic/motor/estado.js`; `test/logic/motor/`.
+

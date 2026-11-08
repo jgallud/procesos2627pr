@@ -2,7 +2,7 @@
 type: Requisitos
 title: Requisitos
 description: Estado de cada requisito de las especificaciones del Sprint 1 y del Sprint 2 (Hundir la Flota), con la evidencia que lo respalda.
-timestamp: 2026-11-06
+timestamp: 2026-11-08
 ---
 
 # Requisitos
@@ -58,11 +58,11 @@ Fuente: especificación del Sprint 2 («Sprint 2 · Hundir la Flota: requisitos�
 | ID | Requisito | Hito | Estado | Evidencia |
 |----|-----------|------|--------|-----------|
 | RF-11 | Crear partida contra la máquina | 5 | pendiente | — |
-| RF-12 | Colocar la flota (manual o automática), validada en la lógica | 5 | pendiente | — |
-| RF-13 | Disparar: agua, tocado o hundido; rechazo de disparos inválidos sin consumir turno | 5 | pendiente | — |
+| RF-12 | Colocar la flota (manual o automática), validada en la lógica | 5 | **parcial** | Reglas en el motor: `colocarBarco`, `retirarBarco` y `colocarFlotaAleatoria` en `colocacion.js` (`server/logic/motor/`); 12 casos en `test/logic/motor/colocacion.test.js`. Falta: servicio, API e interfaz |
+| RF-13 | Disparar: agua, tocado o hundido; rechazo de disparos inválidos sin consumir turno | 5 | **parcial** | `disparar` en `partida.js` (`server/logic/motor/`): agua, tocado, hundido con el barco; disparo repetido, fuera del tablero o fuera de turno rechazado sin consumir turno; 6 casos en `test/logic/motor/partida.test.js`. Falta: servicio, API e interfaz |
 | RF-14 | Turno de la máquina | 5 | pendiente | — |
-| RF-15 | Fin de partida y abandono | 5 | pendiente | — |
-| RF-16 | Vista de la partida: tablero propio y de disparos, turno y estado | 5 | pendiente | — |
+| RF-15 | Fin de partida y abandono | 5 | **parcial** | Fin por flota hundida y `abandonar` en `partida.js`; partida terminada sin más jugadas; 3 casos en `test/logic/motor/partida.test.js`. Falta: servicio, API e interfaz |
+| RF-16 | Vista de la partida: tablero propio y de disparos, turno y estado | 5 | **parcial** | `vistaPara` en `partida.js`: tablero propio, disparos propios, turno, estado y barcos pendientes; 3 casos. Falta: interfaz |
 | RF-17 | Reanudar una partida tras recargar o redesplegar | 6 | pendiente | — |
 | RF-18 | Historial de partidas | 6 | pendiente | — |
 | RF-19 | Estadísticas del jugador | 6 | pendiente | — |
@@ -73,7 +73,7 @@ Fuente: especificación del Sprint 2 («Sprint 2 · Hundir la Flota: requisitos�
 | RF-24 | Avisos en tiempo real por WebSocket | 7 | pendiente | — |
 | RF-25 | Reconexión | 7 | pendiente | — |
 | RF-26 | Abandono (y, opcional, tiempo máximo de turno) | 7 | pendiente | — |
-| RNF-09 | Motor del juego en la capa lógica, sin dependencias de HTTP, WebSocket, base de datos ni interfaz | 5 | pendiente | — |
-| RNF-10 | Servidor autoritativo: el cliente nunca recibe la flota del rival durante la partida | 5 | pendiente | — |
-| RNF-11 | Al menos 10 pruebas unitarias del motor, con casos de error; jugador máquina con azar fijo | 5 | pendiente | — |
+| RNF-09 | Motor del juego en la capa lógica, sin dependencias de HTTP, WebSocket, base de datos ni interfaz | 5 | **parcial** | El motor (`server/logic/motor/`) solo importa sus propios módulos y `../errores`: `test/logic/motor/capas.test.js`. Falta comprobarlo en la API y el WebSocket cuando existan |
+| RNF-10 | Servidor autoritativo: el cliente nunca recibe la flota del rival durante la partida | 5 | **parcial** | `vistaPara` solo incluye la flota rival con la partida terminada: 2 casos en `test/logic/motor/partida.test.js`. Falta que el servicio y la API solo devuelvan esa vista |
+| RNF-11 | Al menos 10 pruebas unitarias del motor, con casos de error; jugador máquina con azar fijo | 5 | **parcial** | 26 casos del motor en `test/logic/motor/`, con errores de colocación, disparo repetido, fuera de turno y partida terminada; colocación aleatoria con azar fijo (`azarFijo` en `test/logic/motor/ayuda.js`). Falta: jugador máquina con azar fijo |
 | RNF-12 | WebSocket en el despliegue: instancias justificadas y reconexión tras un despliegue | 7 | pendiente | — |
