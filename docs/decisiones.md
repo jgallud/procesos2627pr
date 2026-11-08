@@ -173,3 +173,9 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** cualquiera puede leer el código y su historial. No hay secretos en el repositorio: `.env` nunca se ha subido y los secretos de producción están en Secret Manager ([RNF-02](requisitos.md)). Queda pendiente activar la protección de `main`.
 - **Estado:** vigente.
 
+### D-28 Estrategia del jugador máquina
+- **Qué:** la máquina caza al azar entre las casillas que aún pueden tener barco; tras un tocado remata disparando a las vecinas por un lado y, con dos o más tocados alineados, por los extremos de la línea. Descarta las casillas vecinas de un barco hundido y las diagonales de un tocado, que por la regla de no tocarse ([D-25](#d-25-reglas-del-juego-fijadas-por-la-especificación)) siempre son agua. Agrupa los aciertos en barcos por adyacencia, sin saber dónde están los barcos.
+- **Alternativas consideradas:** solo disparo aleatorio (el mínimo de RF-14; unos 95 disparos de media para hundir la flota); estrategias probabilísticas que puntúan cada casilla según los barcos que quedan (mejores, pero más difíciles de explicar y de probar).
+- **Por qué:** TODO(alumno): ¿por qué esta estrategia? (cumple el «deseable» de RF-14 y en una simulación de 300 partidas hunde la flota en unos 50 disparos de media).
+- **Estado:** vigente. Evidencia: `server/logic/jugadorMaquina.js`; `test/logic/jugadorMaquina.test.js`.
+
