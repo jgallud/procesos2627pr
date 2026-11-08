@@ -4,6 +4,7 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-08 | Jugador máquina en la capa lógica, con 11 pruebas con azar fijo | rama `feature/hito5-jugador-maquina`, [D-28](decisiones.md#d-28-estrategia-del-jugador-máquina) |
 | 2026-11-08 | El repositorio pasa a ser público para que el CI vuelva a ejecutarse | [D-27](decisiones.md#d-27-repositorio-público) |
 | 2026-11-08 | Incidencia: el CI del PR de `feature/hito5-motor-juego` no llega a arrancar porque GitHub bloquea Actions en la cuenta por un problema de facturación | [D-27](decisiones.md#d-27-repositorio-público) |
 | 2026-11-08 | Motor del juego en la capa lógica, con 26 pruebas unitarias | rama `feature/hito5-motor-juego`, [D-22](decisiones.md#d-22-motor-del-juego-en-la-capa-lógica), [D-26](decisiones.md#d-26-estado-de-la-partida-como-objeto-plano-y-motor-inmutable) |
