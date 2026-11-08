@@ -19,6 +19,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 |------|----------|-----------------|
 | API | `server/app.js`, `server/api/usuariosRouter.js`, `server/api/sesion.js`, `server/api/oauth.js`, `server/api/errores.js` | Leer la petición, llamar al servicio, devolver JSON; cookie de sesión; redirecciones y `state` de OAuth |
 | Lógica | `server/logic/usuarioService.js`, `server/logic/sesionService.js`, `server/logic/contrasenas.js`, `server/logic/errores.js` | Reglas de usuarios, roles, sesiones y contraseñas |
+| Lógica · motor del juego | `server/logic/motor/` (`reglas.js`, `coordenadas.js`, `colocacion.js`, `partida.js`, `estado.js`, `index.js`) | Reglas de Hundir la Flota: colocación, disparos, turnos, fin, abandono y vista de cada jugador, como funciones puras ([D-22](decisiones.md#d-22-motor-del-juego-en-la-capa-lógica)) |
 | Datos | `server/data/usuarioRepositorioMongo.js`, `server/data/sesionRepositorioMongo.js`, `server/data/conexionMongo.js`, y las versiones `*Memoria.js` | Guardar y buscar usuarios y sesiones |
 | Composición | `server/index.js` | Crear repositorios → servicios → app |
 
@@ -31,6 +32,8 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 **Notificador.** La lógica recibe un `notificador` con `enviarConfirmacion({ email, nombre, token })`. Hay dos implementaciones en `server/notificacion/`: `notificadorBrevo.js` envía el correo con el API de Brevo y `notificadorLog.js` escribe el enlace en el log. `crearNotificador` en `server/index.js` elige la de Brevo si existe `BREVO_API_KEY` ([D-15](decisiones.md#d-15-correo-de-confirmación-con-brevo)). Añadir el correo no modificó `server/logic/` ni `server/api/`.
 
 **Proveedor OAuth.** `server/oauth/proveedorGoogle.js` es el único módulo que habla con Google. `server/index.js` lo crea si existen `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`, y se lo pasa a la API. La API lo usa para redirigir y para obtener los datos del usuario; la lógica (`iniciarSesionOAuth`) solo recibe correo, nombre y si el correo está verificado ([D-19](decisiones.md#d-19-flujo-oauth-implementado-a-mano)).
+
+**Motor del juego.** `server/logic/motor/` recibe el estado de una partida (un objeto plano con el estado, el turno, el ganador y, por jugador, su flota y los disparos recibidos) y devuelve uno nuevo, sin modificar el recibido. Solo importa sus propios módulos y `server/logic/errores.js` (`test/logic/motor/capas.test.js`): no conoce HTTP, WebSocket, MongoDB ni la interfaz. Lanza `ErrorDominio` con `DATOS_INVALIDOS` (colocación o casilla inválida, disparo repetido) o `ESTADO_INVALIDO` (fuera de turno, partida no empezada o terminada), que la API ya traduce a 400 y 409. `vistaPara(partida, jugador)` es lo único que debe llegar al cliente ([D-26](decisiones.md#d-26-estado-de-la-partida-como-objeto-plano-y-motor-inmutable)).
 
 ## Frontend
 
