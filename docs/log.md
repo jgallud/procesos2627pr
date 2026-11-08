@@ -4,6 +4,8 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-08 | El repositorio pasa a ser público para que el CI vuelva a ejecutarse | [D-27](decisiones.md#d-27-repositorio-público) |
+| 2026-11-08 | Incidencia: el CI del PR de `feature/hito5-motor-juego` no llega a arrancar porque GitHub bloquea Actions en la cuenta por un problema de facturación | [D-27](decisiones.md#d-27-repositorio-público) |
 | 2026-11-08 | Motor del juego en la capa lógica, con 26 pruebas unitarias | rama `feature/hito5-motor-juego`, [D-22](decisiones.md#d-22-motor-del-juego-en-la-capa-lógica), [D-26](decisiones.md#d-26-estado-de-la-partida-como-objeto-plano-y-motor-inmutable) |
 | 2026-11-06 | PR #16: plan de Hundir la Flota en el bundle (requisitos RF-11 a RF-26 y RNF-09 a RNF-12, decisiones D-21 a D-25) | [Sprint 2](sprint-2.md#hundir-la-flota) |
 | 2026-11-04 | PR #15 integrado: el contenedor de MongoDB del CI arranca con el kernel 7.0 | [D-20](decisiones.md#d-20-mongodb-8-en-el-ci-con-el-kernel-70-de-github) |

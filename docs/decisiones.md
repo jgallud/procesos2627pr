@@ -166,3 +166,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Por qué:** TODO(alumno): ¿por qué objeto plano e inmutable? (pista: guardarlo en MongoDB en el Hito 6 sin conversiones y comparar estados en las pruebas).
 - **Estado:** vigente. Evidencia: `server/logic/motor/estado.js`; `test/logic/motor/`.
 
+### D-27 Repositorio público
+- **Qué:** el repositorio `jgallud/procesos2627pr` pasa a ser público el 2026-11-08.
+- **Por qué:** GitHub bloqueó la ejecución de Actions en la cuenta por un problema de facturación, y sin CI no se puede integrar ningún PR (PRO-02). Los repositorios públicos no consumen minutos de Actions y, además, permiten activar la protección de `main` en GitHub gratuito (apartado 7 de la especificación).
+- **Alternativas consideradas:** resolver la facturación y seguir en privado; esperar al siguiente ciclo de facturación.
+- **Consecuencias:** cualquiera puede leer el código y su historial. No hay secretos en el repositorio: `.env` nunca se ha subido y los secretos de producción están en Secret Manager ([RNF-02](requisitos.md)). Queda pendiente activar la protección de `main`.
+- **Estado:** vigente.
+
