@@ -6,7 +6,7 @@
   <title>Procesos 26-27</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/estilo.css">
-  <!-- Capa de presentación; importa la capa de comunicación (js/api.js). -->
+  <!-- Capa de presentación (js/interfaz.js y js/juego.js); importa la capa de comunicación (js/api.js). -->
   <script type="module" src="js/interfaz.js"></script>
 </head>
 <body>
@@ -80,6 +80,54 @@
         <div class="acciones">
           <button id="boton-salir" type="button" class="boton-secundario">Cerrar sesión</button>
           <button id="boton-eliminar-cuenta" type="button" class="boton-peligro">Eliminar mi cuenta</button>
+        </div>
+      </div>
+
+      <!-- Hundir la Flota (Hito 5): lo gestiona js/juego.js -->
+      <div id="seccion-juego" class="tarjeta juego" hidden>
+        <div class="titulo-seccion">
+          <h2>Hundir la Flota</h2>
+        </div>
+
+        <div id="juego-sin-partida">
+          <p class="secundario">Juega contra la máquina: coloca tus cinco barcos y hunde los suyos antes de que ella hunda los tuyos.</p>
+          <button id="boton-nueva-partida" type="button" class="boton-principal">Nueva partida contra la máquina</button>
+        </div>
+
+        <div id="juego-partida" hidden>
+          <p id="juego-estado" class="juego-estado" role="status" aria-live="polite"></p>
+
+          <div id="juego-colocacion" class="juego-colocacion" hidden>
+            <p class="secundario">Elige un barco y pulsa en tu tablero la casilla donde empieza. Pulsa un barco ya colocado para quitarlo.</p>
+            <div id="juego-barcos" class="acciones"></div>
+            <div class="acciones">
+              <button id="juego-orientacion" type="button" class="boton-secundario">Horizontal ↔</button>
+              <button id="boton-colocacion-automatica" type="button" class="boton-secundario">Colocación automática</button>
+            </div>
+          </div>
+
+          <div class="tableros">
+            <figure class="tablero-con-titulo">
+              <figcaption>Tu flota</figcaption>
+              <div id="tablero-propio" class="tablero" role="grid"></div>
+            </figure>
+            <figure class="tablero-con-titulo">
+              <figcaption>Flota de la máquina</figcaption>
+              <div id="tablero-rival" class="tablero" role="grid"></div>
+            </figure>
+          </div>
+
+          <ul class="leyenda">
+            <li><span class="casilla barco"></span> Tu barco</li>
+            <li><span class="casilla agua"></span> Agua</li>
+            <li><span class="casilla tocado"></span> Tocado</li>
+            <li><span class="casilla hundido"></span> Hundido</li>
+          </ul>
+
+          <div class="acciones">
+            <button id="boton-abandonar" type="button" class="boton-peligro">Abandonar partida</button>
+            <button id="boton-otra-partida" type="button" class="boton-principal" hidden>Nueva partida</button>
+          </div>
         </div>
       </div>
 

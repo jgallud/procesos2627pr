@@ -8,6 +8,7 @@
 // las aplica el servidor en cada petición.
 
 import * as api from './api.js';
+import { prepararJuego, mostrarJuego, ocultarJuego } from './juego.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -53,6 +54,7 @@ async function conBotonOcupado(boton, accion) {
 function mostrarError(error) {
   if (error instanceof api.ErrorApi && error.sinSesion && usuarioActual) {
     usuarioActual = null;
+    ocultarJuego();
     mostrarVista('acceso');
     avisar('Tu sesión ha caducado o ya no es válida. Vuelve a iniciar sesión.', 'error');
     return;
@@ -118,6 +120,7 @@ async function entrarEnPanel(usuario) {
   const esAdmin = usuario.rol === 'administrador';
   $('#seccion-admin').hidden = !esAdmin;
   mostrarVista('panel');
+  await mostrarJuego();
   if (esAdmin) await cargarUsuarios();
 }
 
@@ -131,6 +134,7 @@ async function alCerrarSesion() {
     if (!(error instanceof api.ErrorApi && error.sinSesion)) mostrarError(error);
   }
   usuarioActual = null;
+  ocultarJuego();
   mostrarVista('acceso');
   elegirPestana('entrar');
   avisar('Has cerrado la sesión.', 'info');
@@ -142,6 +146,7 @@ async function alEliminarMiCuenta() {
   try {
     await api.eliminarUsuario(usuarioActual.id);
     usuarioActual = null;
+    ocultarJuego();
     mostrarVista('acceso');
     avisar('Tu cuenta ha sido eliminada.', 'info');
   } catch (error) {
@@ -310,6 +315,7 @@ function enlazarEventos() {
 
 async function iniciar() {
   enlazarEventos();
+  prepararJuego({ avisar, mostrarError });
   elegirPestana('entrar');
   comprobarServidor();
   mostrarAccesoExterno();
