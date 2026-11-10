@@ -19,6 +19,8 @@ const { crearNotificadorBrevo } = require('./notificacion/notificadorBrevo');
 const { crearProveedorGoogle } = require('./oauth/proveedorGoogle');
 const { crearServicioUsuarios } = require('./logic/usuarioService');
 const { crearServicioSesiones } = require('./logic/sesionService');
+const { crearServicioPartidas } = require('./logic/partidaService');
+const { crearRepositorioPartidasMemoria } = require('./data/partidaRepositorioMemoria');
 const { crearApp } = require('./app');
 
 // Elige la implementación de la capa de datos según la configuración.
@@ -105,7 +107,18 @@ async function main() {
   }
 
   const proveedoresOAuth = crearProveedoresOAuth(config, logger);
-  const app = crearApp({ servicioUsuarios, servicioSesiones, proveedoresOAuth, logger, cookieSegura: config.cookieSegura });
+  // Hito 5: las partidas viven en memoria (se pierden al reiniciar y no se
+  // comparten entre instancias, D-29). En el Hito 6 pasan a MongoDB con el
+  // mismo contrato, sin cambiar el servicio de partidas.
+  const servicioPartidas = crearServicioPartidas({
+    repositorio: crearRepositorioPartidasMemoria(),
+    servicioUsuarios,
+    logger,
+  });
+
+  const app = crearApp({
+    servicioUsuarios, servicioSesiones, servicioPartidas, proveedoresOAuth, logger, cookieSegura: config.cookieSegura,
+  });
   const servidor = app.listen(config.puerto, () => {
     logger.info('Servidor iniciado', { puerto: config.puerto, entorno: config.entorno });
   });

@@ -7,16 +7,20 @@ const { crearServicioUsuarios } = require('../../server/logic/usuarioService');
 const { crearServicioSesiones } = require('../../server/logic/sesionService');
 const { crearRepositorioUsuariosMemoria } = require('../../server/data/usuarioRepositorioMemoria');
 const { crearRepositorioSesionesMemoria } = require('../../server/data/sesionRepositorioMemoria');
+const { crearServicioPartidas } = require('../../server/logic/partidaService');
+const { crearRepositorioPartidasMemoria } = require('../../server/data/partidaRepositorioMemoria');
 
 const CLAVE = 'contrasena-segura';
 const CLAVE_ADMIN = 'clave-del-admin';
 
-function montar({ cookieSegura = false, proveedoresOAuth } = {}) {
+function montar({ cookieSegura = false, proveedoresOAuth, azar } = {}) {
   const tokens = new Map();
   const notificador = { async enviarConfirmacion({ email, token }) { tokens.set(email, token); } };
   const servicioUsuarios = crearServicioUsuarios({ repositorio: crearRepositorioUsuariosMemoria(), notificador });
   const servicioSesiones = crearServicioSesiones({ repositorio: crearRepositorioSesionesMemoria() });
-  const app = crearApp({ servicioUsuarios, servicioSesiones, proveedoresOAuth, cookieSegura });
+  const repositorioPartidas = crearRepositorioPartidasMemoria();
+  const servicioPartidas = crearServicioPartidas({ repositorio: repositorioPartidas, servicioUsuarios, azar });
+  const app = crearApp({ servicioUsuarios, servicioSesiones, servicioPartidas, proveedoresOAuth, cookieSegura });
 
   // Registra y confirma un usuario normal directamente en la capa lógica.
   async function usuarioActivo(email) {
@@ -24,7 +28,7 @@ function montar({ cookieSegura = false, proveedoresOAuth } = {}) {
     return servicioUsuarios.confirmarCuenta(tokens.get(u.email));
   }
 
-  return { app, servicioUsuarios, servicioSesiones, tokens, usuarioActivo };
+  return { app, servicioUsuarios, servicioSesiones, servicioPartidas, repositorioPartidas, tokens, usuarioActivo };
 }
 
 module.exports = { montar, CLAVE, CLAVE_ADMIN };

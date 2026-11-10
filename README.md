@@ -178,10 +178,18 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con dos colecciones:
 | `GET` | `/api/oauth/proveedores` | cualquiera | `200 {proveedores}` |
 | `GET` | `/api/oauth/google` | cualquiera | `302` a Google |
 | `GET` | `/api/oauth/google/retorno` | vuelta desde Google | `302` a `/` con sesión, o a `/?error_oauth=<código>` |
+| `POST` | `/api/partidas` | con sesión | `201` partida contra la máquina (`200` si ya había una en curso) |
+| `GET` | `/api/partidas/actual` | con sesión | `200` partida en curso o `null` |
+| `GET` | `/api/partidas/:id` | quien juega la partida | `200` vista de la partida |
+| `POST` | `/api/partidas/:id/barcos` | quien juega la partida | `200` vista (`{barco, casilla, orientacion}`) |
+| `DELETE` | `/api/partidas/:id/barcos/:barco` | quien juega la partida | `200` vista |
+| `POST` | `/api/partidas/:id/flota-aleatoria` | quien juega la partida | `200` vista |
+| `POST` | `/api/partidas/:id/disparos` | quien juega la partida | `200 {disparo, disparosRival, partida}` (`{casilla}`) |
+| `POST` | `/api/partidas/:id/abandono` | quien juega la partida | `200` vista |
 
 Errores: `400` datos o token inválidos, `401` sin sesión válida o credenciales
 incorrectas, `403` sin permiso o cuenta pendiente/eliminada, `404` no existe,
-`409` email duplicado. Siempre en JSON: `{error, codigo}`, salvo en el retorno de
+`409` email duplicado o jugada que no corresponde al estado de la partida. Una partida que no existe da `404`. Siempre en JSON: `{error, codigo}`, salvo en el retorno de
 OAuth, que redirige con el código en `error_oauth` (`CUENTA_LOCAL`,
 `CUENTA_ELIMINADA`, `EMAIL_NO_VERIFICADO`, `OAUTH_CANCELADO`, `OAUTH_FALLIDO`).
 

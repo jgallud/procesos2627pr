@@ -4,6 +4,9 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-10 | PR #20: servicio de partidas contra la máquina, repositorio en memoria y rutas `/api/partidas` | [D-29](decisiones.md#d-29-partidas-en-memoria-durante-el-hito-5) |
+| 2026-11-10 | El bloqueo de Actions continúa con el repositorio público; se escribe al soporte de GitHub y se ejecutan las pruebas en local antes de integrar | [D-27](decisiones.md#d-27-repositorio-público) |
+| 2026-11-08 | Desviación: los PR #17, #18 y #19 se integran sin que llegue a ejecutarse el CI (cuenta bloqueada). Las pruebas del motor y del jugador máquina pasan en local (37 casos) | [D-27](decisiones.md#d-27-repositorio-público) |
 | 2026-11-08 | Jugador máquina en la capa lógica, con 11 pruebas con azar fijo | rama `feature/hito5-jugador-maquina`, [D-28](decisiones.md#d-28-estrategia-del-jugador-máquina) |
 | 2026-11-08 | El repositorio pasa a ser público para que el CI vuelva a ejecutarse | [D-27](decisiones.md#d-27-repositorio-público) |
 | 2026-11-08 | Incidencia: el CI del PR de `feature/hito5-motor-juego` no llega a arrancar porque GitHub bloquea Actions en la cuenta por un problema de facturación | [D-27](decisiones.md#d-27-repositorio-público) |
