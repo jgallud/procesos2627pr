@@ -35,7 +35,7 @@ Tres hitos, un PBI de Donetonic por hito. Cada hito se reparte en varios pull re
 
 | Hito | PBI (Donetonic) | Requisitos | Estado |
 |------|-----------------|------------|--------|
-| 5 | Partida contra la máquina | RF-11 a RF-16, RNF-09, RNF-10, RNF-11 | en curso: motor (#17), jugador máquina (#19), servicio y API (#20); falta la interfaz |
+| 5 | Partida contra la máquina | RF-11 a RF-16, RNF-09, RNF-10, RNF-11 | en curso: motor (#17), jugador máquina (#19), servicio y API (#20) e interfaz (#21); falta comprobarlo en la URL pública y etiquetar `hito-5` |
 | 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | pendiente |
 | 7 | Partida entre jugadores en tiempo real | RF-22 a RF-26, RNF-12 | pendiente |
 

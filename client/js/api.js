@@ -72,6 +72,20 @@ export const cerrarSesion = () => peticion('DELETE', '/sesion');
 export const proveedoresOAuth = () => peticion('GET', '/oauth/proveedores');
 export const urlInicioOAuth = (proveedor) => `/api/oauth/${encodeURIComponent(proveedor)}`;
 
+// --- Partidas de Hundir la Flota (Hito 5) ------------------------------------
+// Todas devuelven la vista de la partida para este jugador: el servidor decide
+// el resultado de cada jugada y nunca envía la flota del rival hasta el final.
+const rutaPartida = (id) => `/partidas/${encodeURIComponent(id)}`;
+export const crearPartidaContraMaquina = () => peticion('POST', '/partidas');
+export const partidaActual = () => peticion('GET', '/partidas/actual');
+export const obtenerPartida = (id) => peticion('GET', rutaPartida(id));
+export const colocarBarco = (id, { barco, casilla, orientacion }) =>
+  peticion('POST', `${rutaPartida(id)}/barcos`, { barco, casilla, orientacion });
+export const retirarBarco = (id, barco) => peticion('DELETE', `${rutaPartida(id)}/barcos/${encodeURIComponent(barco)}`);
+export const colocarFlotaAleatoria = (id) => peticion('POST', `${rutaPartida(id)}/flota-aleatoria`);
+export const disparar = (id, casilla) => peticion('POST', `${rutaPartida(id)}/disparos`, { casilla });
+export const abandonarPartida = (id) => peticion('POST', `${rutaPartida(id)}/abandono`);
+
 // --- Usuarios ---------------------------------------------------------------
 export const listarUsuarios = () => peticion('GET', '/usuarios');
 export const estaActivo = (id) => peticion('GET', `/usuarios/${encodeURIComponent(id)}/activo`);
