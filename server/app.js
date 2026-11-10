@@ -11,9 +11,12 @@ const { loggerSilencioso } = require('./logger');
 const { crearIdentificadorSesion, crearRouterSesion, crearGestorCookie } = require('./api/sesion');
 const { crearRouterUsuarios } = require('./api/usuariosRouter');
 const { crearRouterOAuth } = require('./api/oauth');
+const { crearRouterPartidas } = require('./api/partidasRouter');
 const { crearManejadorErroresApi } = require('./api/errores');
 
-function crearApp({ servicioUsuarios, servicioSesiones, proveedoresOAuth = {}, logger = loggerSilencioso, cookieSegura = false } = {}) {
+function crearApp({
+  servicioUsuarios, servicioSesiones, servicioPartidas, proveedoresOAuth = {}, logger = loggerSilencioso, cookieSegura = false,
+} = {}) {
   if (!servicioUsuarios) throw new Error('crearApp necesita servicioUsuarios');
   if (!servicioSesiones) throw new Error('crearApp necesita servicioSesiones');
   const cookie = crearGestorCookie({ cookieSegura });
@@ -48,6 +51,7 @@ function crearApp({ servicioUsuarios, servicioSesiones, proveedoresOAuth = {}, l
 
   api.use('/sesion', crearRouterSesion({ servicioUsuarios, servicioSesiones, cookie }));
   api.use('/usuarios', crearRouterUsuarios({ servicioUsuarios, servicioSesiones, cookie }));
+  if (servicioPartidas) api.use('/partidas', crearRouterPartidas({ servicioPartidas }));
   api.use('/oauth', crearRouterOAuth({
     proveedores: proveedoresOAuth, servicioUsuarios, servicioSesiones, cookie, cookieSegura, logger,
   }));

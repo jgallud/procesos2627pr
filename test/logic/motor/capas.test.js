@@ -23,4 +23,11 @@ describe('Motor: separación de capas (RNF-09)', () => {
       }
     }
   });
+
+  it('la capa API no contiene reglas del juego: las rutas de partidas no importan el motor', () => {
+    const rutas = path.join(__dirname, '..', '..', '..', 'server', 'api', 'partidasRouter.js');
+    const codigo = fs.readFileSync(rutas, 'utf8');
+    const importados = [...codigo.matchAll(/require\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => m[1]);
+    assert.deepEqual(importados, ['express'], 'partidasRouter.js solo debe importar express y usar el servicio');
+  });
 });
