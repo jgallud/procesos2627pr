@@ -47,9 +47,10 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | Capa | Archivo | Responsabilidad |
 |------|---------|-----------------|
 | Presentación | `client/js/interfaz.js` | DOM, formularios, vistas y mensajes |
+| Presentación | `client/js/juego.js` | Partida de Hundir la Flota: tableros, colocación, disparos y fin de partida ([D-30](decisiones.md#d-30-interfaz-del-juego-en-un-módulo-de-presentación-propio)) |
 | Comunicación | `client/js/api.js` | Único módulo que usa `fetch`; expone funciones y la clase `ErrorApi` |
 
-**Frontera.** `interfaz.js` solo hace `import * as api from './api.js'` y no contiene ningún `fetch` ni URL de la API. Incluso la dirección del botón «Entrar con Google» la da `api.urlInicioOAuth('google')`.
+**Frontera.** `interfaz.js` y `juego.js` solo hacen `import * as api from './api.js'` (y `interfaz.js` importa de `juego.js` las funciones para mostrarlo u ocultarlo). `interfaz.js` y no contiene ningún `fetch` ni URL de la API. Incluso la dirección del botón «Entrar con Google» la da `api.urlInicioOAuth('google')`.
 
 ## Endpoints
 

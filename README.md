@@ -89,7 +89,8 @@ server/
     notificadorLog.js           Enlace de confirmación al log (sin BREVO_API_KEY)
 client/                         Frontend
   index.html, css/
-  js/interfaz.js                Capa de presentación
+  js/interfaz.js                Capa de presentación (usuarios y sesión)
+  js/juego.js                   Capa de presentación (partida de Hundir la Flota)
   js/api.js                     Capa de comunicación con el servidor
 test/                           Pruebas automatizadas (node:test)
   logic/  data/  api/  notificacion/  ayuda/

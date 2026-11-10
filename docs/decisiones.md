@@ -186,3 +186,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Por qué:** la especificación permite que en el Hito 5 las partidas vivan en memoria, y así el hito se centra en el juego.
 - **Consecuencias:** las partidas se pierden en cada despliegue o reinicio, y no se comparten entre instancias de Cloud Run: con más de una instancia, una petición puede llegar a una instancia que no tiene la partida (404). Por eso conviene limitar ya el servicio a una instancia, como prevé [D-24](#d-24-una-sola-instancia-de-cloud-run-con-websocket) para el Hito 7. TODO(alumno): confirmar el cambio en Cloud Run.
 - **Estado:** vigente hasta el Hito 6.
+
+### D-30 Interfaz del juego en un módulo de presentación propio
+- **Qué:** la partida se dibuja en `client/js/juego.js`, otro módulo de la capa de presentación junto a `interfaz.js`. Solo usa `api.js` y no contiene reglas del juego: no decide si un barco cabe ni si un disparo acierta. Envía cada jugada al servidor y pinta la vista que devuelve. `interfaz.js` lo muestra al entrar en el panel (retomando la partida en curso) y lo oculta al cerrar sesión.
+- **Alternativas consideradas:** añadir el juego a `interfaz.js` (que ya tenía unas 320 líneas y mezclaría la gestión de usuarios con el juego).
+- **Por qué:** mantener cada módulo de presentación con una sola responsabilidad. En el Hito 7 el WebSocket (`tiempoReal.js`, [D-23](#d-23-websocket-solo-para-avisos-y-avisador-inyectado)) entregará sus avisos a este mismo módulo.
+- **Consecuencias:** los nombres y tamaños de los barcos aparecen en `juego.js` solo para mostrarlos; quien los valida es el servidor.
+- **Estado:** vigente.
