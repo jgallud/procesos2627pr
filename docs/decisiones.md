@@ -2,7 +2,7 @@
 type: Decisiones
 title: Decisiones de diseño
 description: Decisiones de diseño del proyecto, en orden cronológico, con su motivo y su estado.
-timestamp: 2026-11-08
+timestamp: 2026-11-10
 ---
 
 # Decisiones de diseño
@@ -168,7 +168,8 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 
 ### D-27 Repositorio público
 - **Qué:** el repositorio `jgallud/procesos2627pr` pasa a ser público el 2026-11-08.
-- **Por qué:** GitHub bloqueó la ejecución de Actions en la cuenta por un problema de facturación, y sin CI no se puede integrar ningún PR (PRO-02). Los repositorios públicos no consumen minutos de Actions y, además, permiten activar la protección de `main` en GitHub gratuito (apartado 7 de la especificación).
+- **Por qué:** GitHub bloqueó la ejecución de Actions en la cuenta por un problema de facturación, y sin CI no se puede integrar ningún PR (PRO-02). Se esperaba que, como los repositorios públicos no consumen minutos de Actions, el CI volviera a ejecutarse; además, permiten activar la protección de `main` en GitHub gratuito (apartado 7 de la especificación).
+- **Resultado (2026-11-10):** el CI **no** volvió a ejecutarse: el bloqueo es de la cuenta, no del repositorio, y las ejecuciones posteriores al cambio fallan con el mismo mensaje. Se ha escrito al soporte de GitHub. Mientras dure, las pruebas se ejecutan en local (`npm test`) antes de integrar cada PR, y así se indica en su descripción. Los PR #17, #18 y #19 se integraron sin CI (desviación anotada en [log.md](log.md)).
 - **Alternativas consideradas:** resolver la facturación y seguir en privado; esperar al siguiente ciclo de facturación.
 - **Consecuencias:** cualquiera puede leer el código y su historial. No hay secretos en el repositorio: `.env` nunca se ha subido y los secretos de producción están en Secret Manager ([RNF-02](requisitos.md)). Queda pendiente activar la protección de `main`.
 - **Estado:** vigente.
@@ -179,3 +180,9 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Por qué:** TODO(alumno): ¿por qué esta estrategia? (cumple el «deseable» de RF-14 y en una simulación de 300 partidas hunde la flota en unos 50 disparos de media).
 - **Estado:** vigente. Evidencia: `server/logic/jugadorMaquina.js`; `test/logic/jugadorMaquina.test.js`.
 
+### D-29 Partidas en memoria durante el Hito 5
+- **Qué:** en el Hito 5 las partidas se guardan con `server/data/partidaRepositorioMemoria.js`, con un contrato de repositorio (`test/contratos/repositorioPartidas.js`) que la implementación con MongoDB del Hito 6 deberá cumplir sin cambiar el servicio de partidas. Cada partida guarda los identificadores de sus jugadores, si está en curso y el estado del motor tal cual ([D-26](#d-26-estado-de-la-partida-como-objeto-plano-y-motor-inmutable)).
+- **Alternativas consideradas:** guardar ya en MongoDB (adelanta el Hito 6 y sus pruebas de contrato, que en el CI necesitan el contenedor de MongoDB, ahora bloqueado).
+- **Por qué:** la especificación permite que en el Hito 5 las partidas vivan en memoria, y así el hito se centra en el juego.
+- **Consecuencias:** las partidas se pierden en cada despliegue o reinicio, y no se comparten entre instancias de Cloud Run: con más de una instancia, una petición puede llegar a una instancia que no tiene la partida (404). Por eso conviene limitar ya el servicio a una instancia, como prevé [D-24](#d-24-una-sola-instancia-de-cloud-run-con-websocket) para el Hito 7. TODO(alumno): confirmar el cambio en Cloud Run.
+- **Estado:** vigente hasta el Hito 6.
