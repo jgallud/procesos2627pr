@@ -185,11 +185,18 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Alternativas consideradas:** guardar ya en MongoDB (adelanta el Hito 6 y sus pruebas de contrato, que en el CI necesitan el contenedor de MongoDB, ahora bloqueado).
 - **Por qué:** la especificación permite que en el Hito 5 las partidas vivan en memoria, y así el hito se centra en el juego.
 - **Consecuencias:** las partidas se pierden en cada despliegue o reinicio, y no se comparten entre instancias de Cloud Run: con más de una instancia, una petición puede llegar a una instancia que no tiene la partida (404). Por eso conviene limitar ya el servicio a una instancia, como prevé [D-24](#d-24-una-sola-instancia-de-cloud-run-con-websocket) para el Hito 7. Desde el 2026-11-10 el servicio de Cloud Run tiene como máximo una instancia.
-- **Estado:** vigente hasta el Hito 6.
+- **Descartado:** fijar una instancia mínima en Cloud Run para que no se pare (no evita la pérdida en cada despliegue y mantiene una instancia siempre encendida); se acepta que las partidas se pierdan hasta el Hito 6.
+- **Estado:** sustituida por [D-31](#d-31-partidas-en-mongodb).
 
 ### D-30 Interfaz del juego en un módulo de presentación propio
 - **Qué:** la partida se dibuja en `client/js/juego.js`, otro módulo de la capa de presentación junto a `interfaz.js`. Solo usa `api.js` y no contiene reglas del juego: no decide si un barco cabe ni si un disparo acierta. Envía cada jugada al servidor y pinta la vista que devuelve. `interfaz.js` lo muestra al entrar en el panel (retomando la partida en curso) y lo oculta al cerrar sesión.
 - **Alternativas consideradas:** añadir el juego a `interfaz.js` (que ya tenía unas 320 líneas y mezclaría la gestión de usuarios con el juego).
 - **Por qué:** mantener cada módulo de presentación con una sola responsabilidad. En el Hito 7 el WebSocket (`tiempoReal.js`, [D-23](#d-23-websocket-solo-para-avisos-y-avisador-inyectado)) entregará sus avisos a este mismo módulo.
 - **Consecuencias:** los nombres y tamaños de los barcos aparecen en `juego.js` solo para mostrarlos; quien los valida es el servidor.
+- **Estado:** vigente.
+
+### D-31 Partidas en MongoDB
+- **Qué:** desde el Hito 6 las partidas se guardan en la colección `partidas` de MongoDB (`server/data/partidaRepositorioMongo.js`), con el estado del motor tal cual y un índice para encontrar la partida en curso de un jugador. `server/index.js` usa este repositorio cuando hay `MONGODB_URI` y el de memoria en desarrollo y pruebas, igual que con usuarios y sesiones ([D-05](#d-05-contratos-de-repositorio-con-dos-implementaciones)).
+- **Por qué:** RF-17 pide que la partida sobreviva a una recarga, un reinicio o un despliegue. Al cumplir el mismo contrato que el repositorio en memoria, el cambio no toca el servicio de partidas, la API ni la interfaz (la misma prueba de separación de capas que el Hito 3).
+- **Consecuencias:** las partidas ya no se pierden cuando Cloud Run para la instancia. Cloud Run podría volver a usar varias instancias, pero se mantiene en una porque el Hito 7 la necesita ([D-24](#d-24-una-sola-instancia-de-cloud-run-con-websocket)).
 - **Estado:** vigente.

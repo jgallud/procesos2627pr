@@ -36,7 +36,7 @@ Tres hitos, un PBI de Donetonic por hito. Cada hito se reparte en varios pull re
 | Hito | PBI (Donetonic) | Requisitos | Estado |
 |------|-----------------|------------|--------|
 | 5 | Partida contra la máquina | RF-11 a RF-16, RNF-09, RNF-10, RNF-11 | **cerrado**: motor (#17), jugador máquina (#19), servicio y API (#20) e interfaz (#21); comprobado en la URL pública el 2026-11-11; etiqueta `hito-5` (`40016f2`) |
-| 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | pendiente |
+| 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | en curso: partidas en MongoDB (#23). Incluye además pintar entero el barco hundido |
 | 7 | Partida entre jugadores en tiempo real | RF-22 a RF-26, RNF-12 | pendiente |
 
 Cada hito se cierra como en el Sprint 1: CI en verde, aplicación desplegada funcionando, requisitos actualizados con su evidencia y etiqueta (`hito-5`, `hito-6`, `hito-7`).
