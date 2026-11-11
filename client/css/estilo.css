@@ -175,4 +175,6 @@ td.celda-acciones button + button { margin-left: 6px; }
 .leyenda { display: flex; flex-wrap: wrap; gap: 16px; list-style: none; padding: 0; margin: 0 0 16px; font-size: 0.85rem; color: var(--texto-suave); justify-content: center; }
 .leyenda li { display: flex; align-items: center; gap: 6px; }
 .leyenda .casilla { width: 16px; height: 16px; }
-.juego-ocupado .tablero { opacity: 0.7; pointer-events: none; }
+/* Mientras el servidor responde no se atenúa nada (MJ-02): juego.js ignora los
+   clics y solo cambia el cursor. */
+.juego-ocupado .tablero .casilla:not(:disabled) { cursor: progress; }

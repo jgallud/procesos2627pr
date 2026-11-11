@@ -36,7 +36,7 @@ let ui = { avisar: () => {}, mostrarError: () => {} };
 async function jugar(accion) {
   if (ocupado) return null;
   ocupado = true;
-  document.body.classList.add('juego-ocupado');
+  document.body.classList.add('juego-ocupado'); // solo cambia el cursor (MJ-02)
   try {
     const respuesta = await accion();
     return respuesta;
@@ -138,17 +138,24 @@ function textoEstado() {
 // --- Tableros -------------------------------------------------------------------
 
 // Clases de cada casilla a partir de una lista de barcos y otra de disparos.
-function clasesDeCasillas(barcos, disparos, claseBarco) {
+// Las casillas de un barco hundido se marcan todas como «hundido» (MJ-04),
+// no solo la del último disparo.
+function clasesDeCasillas(barcos, disparos, claseBarco, hundidos) {
+  const casillasHundidas = new Set((hundidos ?? []).flatMap((b) => b.casillas));
   const clases = new Map();
   const anadir = (casilla, clase) => clases.set(casilla, [...(clases.get(casilla) ?? []), clase]);
   for (const barco of barcos ?? []) for (const casilla of barco.casillas) anadir(casilla, claseBarco);
-  for (const { casilla, resultado } of disparos ?? []) anadir(casilla, resultado);
+  for (const { casilla, resultado } of disparos ?? []) {
+    anadir(casilla, casillasHundidas.has(casilla) ? 'hundido' : resultado);
+  }
   return clases;
 }
 
-function pintarTablero(contenedor, { clases, alPulsar, nombre }) {
-  contenedor.replaceChildren();
-  contenedor.setAttribute('aria-label', nombre);
+// Qué hace pulsar una casilla en cada tablero; lo cambia cada pintado.
+const accionesTablero = new Map(); // contenedor -> { puede, accion } | null
+
+// Crea la cuadrícula una sola vez, con un único manejador de clic.
+function crearTablero(contenedor) {
   contenedor.append(document.createElement('span'));
   for (let c = 1; c <= TAMANO; c++) {
     const cabecera = document.createElement('span');
@@ -162,18 +169,35 @@ function pintarTablero(contenedor, { clases, alPulsar, nombre }) {
     etiqueta.textContent = fila;
     contenedor.append(etiqueta);
     for (let c = 1; c <= TAMANO; c++) {
-      const casilla = `${fila}${c}`;
-      const lista = clases.get(casilla) ?? [];
       const celda = document.createElement('button');
       celda.type = 'button';
-      celda.className = ['casilla', ...lista].join(' ');
-      celda.dataset.casilla = casilla;
-      celda.setAttribute('aria-label', [casilla, ...lista].join(', '));
-      const pulsable = alPulsar && alPulsar.puede(casilla, lista);
-      celda.disabled = !pulsable;
-      if (pulsable) celda.addEventListener('click', () => alPulsar.accion(casilla));
+      celda.className = 'casilla';
+      celda.dataset.casilla = `${fila}${c}`;
       contenedor.append(celda);
     }
+  }
+  contenedor.addEventListener('click', (evento) => {
+    const celda = evento.target.closest('button.casilla');
+    const alPulsar = accionesTablero.get(contenedor);
+    if (celda && !celda.disabled && alPulsar && !ocupado) alPulsar.accion(celda.dataset.casilla);
+  });
+}
+
+// MJ-02: actualiza las casillas existentes en lugar de rehacer el tablero,
+// para que disparar no haga parpadear la página. Solo toca lo que cambia.
+function pintarTablero(contenedor, { clases, alPulsar, nombre }) {
+  if (!contenedor.querySelector('button.casilla')) crearTablero(contenedor);
+  contenedor.setAttribute('aria-label', nombre);
+  accionesTablero.set(contenedor, alPulsar);
+  for (const celda of contenedor.querySelectorAll('button.casilla')) {
+    const casilla = celda.dataset.casilla;
+    const lista = clases.get(casilla) ?? [];
+    const clase = ['casilla', ...lista].join(' ');
+    if (celda.className !== clase) celda.className = clase;
+    const etiqueta = [casilla, ...lista].join(', ');
+    if (celda.getAttribute('aria-label') !== etiqueta) celda.setAttribute('aria-label', etiqueta);
+    const pulsable = Boolean(alPulsar && alPulsar.puede(casilla, lista));
+    if (celda.disabled === pulsable) celda.disabled = !pulsable;
   }
 }
 
@@ -213,14 +237,14 @@ function pintar() {
 
   pintarTablero($('#tablero-propio'), {
     nombre: 'Tu flota',
-    clases: clasesDeCasillas(propio.flota, propio.disparosRecibidos, 'barco'),
+    clases: clasesDeCasillas(propio.flota, propio.disparosRecibidos, 'barco', propio.barcosHundidos),
     alPulsar: colocando
       ? { puede: (casilla, lista) => lista.includes('barco') || Boolean(barcoElegido), accion: colocarEn }
       : null,
   });
   pintarTablero($('#tablero-rival'), {
     nombre: 'Flota de la máquina',
-    clases: clasesDeCasillas(terminada ? rival.flota : [], rival.disparos, 'barco-revelado'),
+    clases: clasesDeCasillas(terminada ? rival.flota : [], rival.disparos, 'barco-revelado', rival.barcosHundidos),
     alPulsar: enJuego && esMiTurno
       ? { puede: (casilla, lista) => !lista.some((c) => c in TEXTO_RESULTADO), accion: dispararA }
       : null,

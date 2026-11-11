@@ -192,11 +192,18 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Qué:** la partida se dibuja en `client/js/juego.js`, otro módulo de la capa de presentación junto a `interfaz.js`. Solo usa `api.js` y no contiene reglas del juego: no decide si un barco cabe ni si un disparo acierta. Envía cada jugada al servidor y pinta la vista que devuelve. `interfaz.js` lo muestra al entrar en el panel (retomando la partida en curso) y lo oculta al cerrar sesión.
 - **Alternativas consideradas:** añadir el juego a `interfaz.js` (que ya tenía unas 320 líneas y mezclaría la gestión de usuarios con el juego).
 - **Por qué:** mantener cada módulo de presentación con una sola responsabilidad. En el Hito 7 el WebSocket (`tiempoReal.js`, [D-23](#d-23-websocket-solo-para-avisos-y-avisador-inyectado)) entregará sus avisos a este mismo módulo.
-- **Consecuencias:** los nombres y tamaños de los barcos aparecen en `juego.js` solo para mostrarlos; quien los valida es el servidor.
+- **Consecuencias:** los nombres y tamaños de los barcos aparecen en `juego.js` solo para mostrarlos; quien los valida es el servidor. Desde MJ-02, cada tablero se crea una vez y después solo se actualizan las casillas que cambian, para que disparar no haga parpadear la página.
 - **Estado:** vigente.
 
 ### D-31 Partidas en MongoDB
 - **Qué:** desde el Hito 6 las partidas se guardan en la colección `partidas` de MongoDB (`server/data/partidaRepositorioMongo.js`), con el estado del motor tal cual y un índice para encontrar la partida en curso de un jugador. `server/index.js` usa este repositorio cuando hay `MONGODB_URI` y el de memoria en desarrollo y pruebas, igual que con usuarios y sesiones ([D-05](#d-05-contratos-de-repositorio-con-dos-implementaciones)).
 - **Por qué:** RF-17 pide que la partida sobreviva a una recarga, un reinicio o un despliegue. Al cumplir el mismo contrato que el repositorio en memoria, el cambio no toca el servicio de partidas, la API ni la interfaz (la misma prueba de separación de capas que el Hito 3).
 - **Consecuencias:** las partidas ya no se pierden cuando Cloud Run para la instancia. Cloud Run podría volver a usar varias instancias, pero se mantiene en una porque el Hito 7 la necesita ([D-24](#d-24-una-sola-instancia-de-cloud-run-con-websocket)).
+- **Estado:** vigente.
+
+### D-32 Barcos hundidos en la vista del motor
+- **Qué:** la vista que da el motor a cada jugador incluye `barcosHundidos` (en su tablero y en el del rival), con el nombre y todas las casillas de cada barco hundido. La interfaz pinta esas casillas como hundidas (MJ-04).
+- **Alternativas consideradas:** que la interfaz deduzca el barco a partir de las casillas tocadas y adyacentes (repetiría en el cliente una regla del juego y fallaría con barcos tocados que se apoyan uno en otro); cambiar a «hundido» el resultado de todos los disparos del barco (cambiaría el historial de disparos, del que depende el jugador máquina, [D-28](#d-28-estrategia-del-jugador-máquina)).
+- **Por qué:** quién está hundido es una regla del juego y la decide el motor (RNF-09). Un campo nuevo no cambia nada de lo que ya existía.
+- **Consecuencias:** no revela nada oculto: todas las casillas de un barco hundido ya han recibido disparo, así que la flota rival sigue sin salir del servidor mientras dura la partida (RNF-10).
 - **Estado:** vigente.

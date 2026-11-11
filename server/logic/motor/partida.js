@@ -27,6 +27,14 @@ function hundido(barco, disparosRecibidos) {
   return barco.casillas.every((c) => disparosRecibidos.some((d) => d.casilla === c));
 }
 
+// MJ-04: barcos hundidos de un jugador, con todas sus casillas, para pintarlos
+// enteros. No revela nada oculto: todas esas casillas ya han recibido disparo.
+function barcosHundidos({ flota, disparosRecibidos }) {
+  return flota
+    .filter((barco) => hundido(barco, disparosRecibidos))
+    .map(({ barco, casillas }) => ({ barco, casillas: [...casillas] }));
+}
+
 // RF-13: el jugador dispara a una casilla del tablero rival.
 // Devuelve { partida, disparo } con disparo = { casilla, resultado, barco? };
 // `barco` solo aparece si el disparo lo hunde. Si el disparo no es válido,
@@ -107,10 +115,12 @@ function vistaPara(partida, jugador) {
       flota: clonar(propio.flota),
       barcosPendientes: barcosPendientes(propio.flota),
       disparosRecibidos: clonar(propio.disparosRecibidos),
+      barcosHundidos: barcosHundidos(propio),
     },
     rival: {
       flotaColocada: flotaCompleta(rival.flota),
       disparos: clonar(rival.disparosRecibidos),
+      barcosHundidos: barcosHundidos(rival),
       flota: terminada ? clonar(rival.flota) : null,
     },
   };
