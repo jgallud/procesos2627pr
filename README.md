@@ -111,12 +111,13 @@ docs/                           Documentación de despliegue
 
 ## Persistencia (MongoDB)
 
-Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con dos colecciones:
+Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 
 | Colección | Documento | Índices |
 |-----------|-----------|---------|
 | `usuarios` | `{ _id, email, nombre, rol, estado, origen, creadoEn, eliminadoEn?, hashContrasena?, hashTokenConfirmacion? }` | `email` único |
 | `sesiones` | `{ _id, idUsuario, creadaEn, expiraEn, caducidad }` | `idUsuario`; TTL sobre `caducidad` |
+| `partidas` | `{ _id, modo, jugadores, enCurso, creadaEn, actualizadaEn, juego }` | `jugadores` + `enCurso` + `creadaEn` (partida en curso de un jugador) |
 
 - El `_id` de cada usuario es un UUID generado por el repositorio; fuera de la
   capa de datos solo existe como `id`, igual que con la implementación en memoria.

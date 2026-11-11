@@ -1,14 +1,17 @@
 // Repositorios de MongoDB: mismo contrato que los de memoria, más las
 // garantías propias de una base de datos (índice único de email, TTL de
-// sesiones, datos que sobreviven a cerrar y reabrir la conexión).
+// sesiones, datos que sobreviven a cerrar y reabrir la conexión). Desde el
+// Hito 6 incluye el repositorio de partidas (RF-17).
 
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { crearRepositorioUsuariosMongo } = require('../../server/data/usuarioRepositorioMongo');
 const { crearRepositorioSesionesMongo } = require('../../server/data/sesionRepositorioMongo');
+const { crearRepositorioPartidasMongo } = require('../../server/data/partidaRepositorioMongo');
 const { COLECCIONES, hostDe } = require('../../server/data/conexionMongo');
 const { probarContratoUsuarios } = require('../contratos/repositorioUsuarios');
 const { probarContratoSesiones } = require('../contratos/repositorioSesiones');
+const { probarContratoPartidas } = require('../contratos/repositorioPartidas');
 const { omitirSinMongo, conectarPruebas, nombreBasePruebas } = require('../ayuda/mongo');
 
 describe('hostDe: el host se registra sin credenciales', () => {
@@ -29,10 +32,12 @@ describe('Repositorios MongoDB', { skip: omitirSinMongo }, () => {
   const vaciar = async () => {
     await conexion.db.collection(COLECCIONES.USUARIOS).deleteMany({});
     await conexion.db.collection(COLECCIONES.SESIONES).deleteMany({});
+    await conexion.db.collection(COLECCIONES.PARTIDAS).deleteMany({});
   };
 
   probarContratoUsuarios('MongoDB', { crear: () => crearRepositorioUsuariosMongo({ db: conexion.db }), limpiar: vaciar });
   probarContratoSesiones('MongoDB', { crear: () => crearRepositorioSesionesMongo({ db: conexion.db }), limpiar: vaciar });
+  probarContratoPartidas('MongoDB', { crear: () => crearRepositorioPartidasMongo({ db: conexion.db }), limpiar: vaciar });
 
   describe('garantías de la base de datos', () => {
     it('el índice único impide dos cuentas con el mismo email', async () => {
@@ -58,6 +63,17 @@ describe('Repositorios MongoDB', { skip: omitirSinMongo }, () => {
       assert.equal('caducidad' in (await repo.buscarPorId('s1')), false);
       const indices = await conexion.db.collection(COLECCIONES.SESIONES).indexes();
       assert.ok(indices.some((i) => i.expireAfterSeconds === 0 && i.key.caducidad === 1));
+      await vaciar();
+    });
+
+    it('la partida guarda el estado del motor tal cual y no expone _id', async () => {
+      const repo = crearRepositorioPartidasMongo({ db: conexion.db });
+      const juego = { estado: 'en_juego', turno: 1, jugadores: [{ flota: [{ barco: 'destructor', casillas: ['A1', 'A2'] }] }, { flota: [] }], ganador: null };
+      const creada = await repo.crear({ modo: 'maquina', jugadores: ['u1', null], enCurso: true, creadaEn: '2026-11-11T10:00:00.000Z', actualizadaEn: '2026-11-11T10:00:00.000Z', juego });
+      assert.equal('_id' in creada, false);
+      assert.deepEqual((await repo.buscarPorId(creada.id)).juego, juego);
+      const indices = await conexion.db.collection(COLECCIONES.PARTIDAS).indexes();
+      assert.ok(indices.some((i) => i.name === 'en_curso_por_jugador'));
       await vaciar();
     });
   });

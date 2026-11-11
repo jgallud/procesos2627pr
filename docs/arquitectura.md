@@ -2,7 +2,7 @@
 type: Arquitectura
 title: Arquitectura en capas
 description: Capas del backend y del frontend, fronteras exactas entre ellas y endpoints de la API.
-timestamp: 2026-11-10
+timestamp: 2026-11-11
 ---
 
 # Arquitectura en capas
@@ -23,7 +23,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | Lógica · servicio de partidas | `server/logic/partidaService.js` | Carga la partida, comprueba que el solicitante juega en ella, aplica la jugada con el motor, hace jugar a la máquina y guarda. Devuelve siempre la vista del jugador |
 | Lógica · jugador máquina | `server/logic/jugadorMaquina.js` | Colocación y disparos de la máquina a partir de su tablero de disparos, con azar inyectable ([D-28](decisiones.md#d-28-estrategia-del-jugador-máquina)) |
 | Datos | `server/data/usuarioRepositorioMongo.js`, `server/data/sesionRepositorioMongo.js`, `server/data/conexionMongo.js`, y las versiones `*Memoria.js` | Guardar y buscar usuarios y sesiones |
-| Datos · partidas | `server/data/partidaRepositorioMemoria.js` | Partidas en memoria durante el Hito 5 ([D-29](decisiones.md#d-29-partidas-en-memoria-durante-el-hito-5)), con el contrato de `test/contratos/repositorioPartidas.js` |
+| Datos · partidas | `server/data/partidaRepositorioMongo.js` (producción) y `partidaRepositorioMemoria.js` (desarrollo y pruebas) | Partidas de Hundir la Flota, con el mismo contrato (`test/contratos/repositorioPartidas.js`) en las dos implementaciones ([D-31](decisiones.md#d-31-partidas-en-mongodb)) |
 | Composición | `server/index.js` | Crear repositorios → servicios → app |
 
 **Frontera API ↔ lógica.** Los routers solo llaman a `servicioUsuarios` y `servicioSesiones` (por ejemplo, `router.post('/')` en `usuariosRouter.js` llama a `servicioUsuarios.registrarUsuario`). La lógica no importa Express ni conoce HTTP: lanza `ErrorDominio` con un código, y `server/api/errores.js` lo traduce a estado HTTP con la tabla `ESTADO_HTTP`.
