@@ -21,6 +21,7 @@ const { crearServicioUsuarios } = require('./logic/usuarioService');
 const { crearServicioSesiones } = require('./logic/sesionService');
 const { crearServicioPartidas } = require('./logic/partidaService');
 const { crearRepositorioPartidasMemoria } = require('./data/partidaRepositorioMemoria');
+const { crearRepositorioPartidasMongo } = require('./data/partidaRepositorioMongo');
 const { crearApp } = require('./app');
 
 // Elige la implementación de la capa de datos según la configuración.
@@ -30,6 +31,7 @@ async function crearRepositorios(config, logger) {
     return {
       usuarios: crearRepositorioUsuariosMongo({ db: conexion.db }),
       sesiones: crearRepositorioSesionesMongo({ db: conexion.db }),
+      partidas: crearRepositorioPartidasMongo({ db: conexion.db }),
       cerrar: conexion.cerrar,
     };
   }
@@ -40,6 +42,7 @@ async function crearRepositorios(config, logger) {
   return {
     usuarios: crearRepositorioUsuariosMemoria(),
     sesiones: crearRepositorioSesionesMemoria(),
+    partidas: crearRepositorioPartidasMemoria(),
     cerrar: async () => {},
   };
 }
@@ -107,11 +110,10 @@ async function main() {
   }
 
   const proveedoresOAuth = crearProveedoresOAuth(config, logger);
-  // Hito 5: las partidas viven en memoria (se pierden al reiniciar y no se
-  // comparten entre instancias, D-29). En el Hito 6 pasan a MongoDB con el
-  // mismo contrato, sin cambiar el servicio de partidas.
+  // Las partidas se guardan donde el resto de datos: MongoDB en producción
+  // (Hito 6, RF-17) o memoria en desarrollo y pruebas.
   const servicioPartidas = crearServicioPartidas({
-    repositorio: crearRepositorioPartidasMemoria(),
+    repositorio: repositorios.partidas,
     servicioUsuarios,
     logger,
   });

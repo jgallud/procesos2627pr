@@ -8,7 +8,7 @@
 const { MongoClient } = require('mongodb');
 const { loggerSilencioso } = require('../logger');
 
-const COLECCIONES = Object.freeze({ USUARIOS: 'usuarios', SESIONES: 'sesiones' });
+const COLECCIONES = Object.freeze({ USUARIOS: 'usuarios', SESIONES: 'sesiones', PARTIDAS: 'partidas' });
 
 // Host del cluster sin credenciales, para poder registrarlo sin riesgo.
 function hostDe(uri) {
@@ -20,12 +20,15 @@ function hostDe(uri) {
 async function prepararIndices(db) {
   const usuarios = db.collection(COLECCIONES.USUARIOS);
   const sesiones = db.collection(COLECCIONES.SESIONES);
+  const partidas = db.collection(COLECCIONES.PARTIDAS);
   await Promise.all([
     // Un email solo puede pertenecer a una cuenta (también ante dos altas simultáneas).
     usuarios.createIndex({ email: 1 }, { unique: true, name: 'email_unico' }),
     sesiones.createIndex({ idUsuario: 1 }, { name: 'por_usuario' }),
     // Índice TTL: MongoDB borra solo las sesiones caducadas (revisa cada ~60 s).
     sesiones.createIndex({ caducidad: 1 }, { expireAfterSeconds: 0, name: 'caducidad_ttl' }),
+    // Partida en curso de un jugador (al entrar, para retomarla), la más reciente primero.
+    partidas.createIndex({ jugadores: 1, enCurso: 1, creadaEn: -1 }, { name: 'en_curso_por_jugador' }),
   ]);
 }
 
