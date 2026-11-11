@@ -4,6 +4,10 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-11 | MJ-04 y MJ-02: barcos hundidos pintados enteros y tableros sin parpadeo | [D-32](decisiones.md#d-32-barcos-hundidos-en-la-vista-del-motor) |
+| 2026-11-11 | Niveles de dificultad de MJ-03 aceptados (fácil, normal y difícil) | [Requisitos](requisitos.md#mejoras-del-sprint-2) |
+| 2026-11-11 | RF-17 comprobado en la URL pública: las partidas se guardan en MongoDB | [RF-17](requisitos.md#requisitos-1) |
+| 2026-11-11 | PR #25 integrado: pruebas con MongoDB ejecutadas en local | [RF-17](requisitos.md#requisitos-1) |
 | 2026-11-11 | PR #24: mejoras del Sprint 2 en el bundle (MJ-01 a MJ-04) | [Requisitos](requisitos.md#mejoras-del-sprint-2) |
 | 2026-11-11 | Pruebas con MongoDB ejecutadas en local contra Atlas: 223 pruebas, ninguna omitida | [RF-17](requisitos.md#requisitos-1) |
 | 2026-11-11 | PR #23 integrado: partidas en MongoDB (RF-17) | [D-31](decisiones.md#d-31-partidas-en-mongodb) |

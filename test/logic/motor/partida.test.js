@@ -119,4 +119,20 @@ describe('Motor: vista de cada jugador (RF-16, RNF-10)', () => {
     assert.equal(perdedor.resultado, 'derrota');
     assert.equal(perdedor.rival.flota.length, 5);
   });
+
+  it('marca enteros los barcos hundidos en los dos tableros (MJ-04)', () => {
+    // A1-A5 es el portaaviones; C1 toca el acorazado sin hundirlo.
+    const partida = disparos(partidaEnJuego(), 0, ['A1', 'A2', 'A3', 'A4', 'A5', 'C1']);
+    const atacante = motor.vistaPara(partida, 0);
+    const atacado = motor.vistaPara(partida, 1);
+    const esperado = [{ barco: 'portaaviones', casillas: ['A1', 'A2', 'A3', 'A4', 'A5'] }];
+    assert.deepEqual(atacante.rival.barcosHundidos, esperado);
+    assert.deepEqual(atacado.propio.barcosHundidos, esperado);
+    assert.deepEqual(atacante.propio.barcosHundidos, []);
+    // Los disparos no cambian: solo el último de un barco dice «hundido».
+    assert.deepEqual(atacante.rival.disparos.map((d) => d.resultado),
+      ['tocado', 'tocado', 'tocado', 'tocado', 'hundido', 'tocado']);
+    // Y la flota rival sigue oculta: el acorazado tocado no aparece entero.
+    assert.ok(!JSON.stringify(atacante.rival).includes('"C2"'));
+  });
 });
