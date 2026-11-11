@@ -4,7 +4,10 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
-| 2026-11-10 | PR #21: interfaz de Hundir la Flota contra la máquina (RF-11 a RF-16 hechos) | [D-30](decisiones.md#d-30-interfaz-del-juego-en-un-módulo-de-presentación-propio) |
+| 2026-11-11 | PR #22: cierre del Hito 5 en la documentación | [Sprint 2](sprint-2.md#hundir-la-flota) |
+| 2026-11-11 | Etiqueta `hito-5`: Hito 5 cerrado, partida contra la máquina comprobada en la URL pública. El CI sigue bloqueado: pruebas ejecutadas en local | `40016f2` |
+| 2026-11-10 | Cloud Run limitado a una instancia, porque las partidas viven en memoria | [D-29](decisiones.md#d-29-partidas-en-memoria-durante-el-hito-5) |
+| 2026-11-10 | PR #21 integrado: interfaz de Hundir la Flota contra la máquina (RF-11 a RF-16 hechos) | [D-30](decisiones.md#d-30-interfaz-del-juego-en-un-módulo-de-presentación-propio) |
 | 2026-11-10 | PR #20 integrado: servicio de partidas contra la máquina, repositorio en memoria y rutas `/api/partidas` | [D-29](decisiones.md#d-29-partidas-en-memoria-durante-el-hito-5) |
 | 2026-11-10 | El bloqueo de Actions continúa con el repositorio público; se escribe al soporte de GitHub y se ejecutan las pruebas en local antes de integrar | [D-27](decisiones.md#d-27-repositorio-público) |
 | 2026-11-08 | Desviación: los PR #17, #18 y #19 se integran sin que llegue a ejecutarse el CI (cuenta bloqueada). Las pruebas del motor y del jugador máquina pasan en local (37 casos) | [D-27](decisiones.md#d-27-repositorio-público) |

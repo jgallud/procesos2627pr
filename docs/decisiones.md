@@ -2,7 +2,7 @@
 type: Decisiones
 title: Decisiones de diseño
 description: Decisiones de diseño del proyecto, en orden cronológico, con su motivo y su estado.
-timestamp: 2026-11-10
+timestamp: 2026-11-11
 ---
 
 # Decisiones de diseño
@@ -184,7 +184,7 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Qué:** en el Hito 5 las partidas se guardan con `server/data/partidaRepositorioMemoria.js`, con un contrato de repositorio (`test/contratos/repositorioPartidas.js`) que la implementación con MongoDB del Hito 6 deberá cumplir sin cambiar el servicio de partidas. Cada partida guarda los identificadores de sus jugadores, si está en curso y el estado del motor tal cual ([D-26](#d-26-estado-de-la-partida-como-objeto-plano-y-motor-inmutable)).
 - **Alternativas consideradas:** guardar ya en MongoDB (adelanta el Hito 6 y sus pruebas de contrato, que en el CI necesitan el contenedor de MongoDB, ahora bloqueado).
 - **Por qué:** la especificación permite que en el Hito 5 las partidas vivan en memoria, y así el hito se centra en el juego.
-- **Consecuencias:** las partidas se pierden en cada despliegue o reinicio, y no se comparten entre instancias de Cloud Run: con más de una instancia, una petición puede llegar a una instancia que no tiene la partida (404). Por eso conviene limitar ya el servicio a una instancia, como prevé [D-24](#d-24-una-sola-instancia-de-cloud-run-con-websocket) para el Hito 7. TODO(alumno): confirmar el cambio en Cloud Run.
+- **Consecuencias:** las partidas se pierden en cada despliegue o reinicio, y no se comparten entre instancias de Cloud Run: con más de una instancia, una petición puede llegar a una instancia que no tiene la partida (404). Por eso conviene limitar ya el servicio a una instancia, como prevé [D-24](#d-24-una-sola-instancia-de-cloud-run-con-websocket) para el Hito 7. Desde el 2026-11-10 el servicio de Cloud Run tiene como máximo una instancia.
 - **Estado:** vigente hasta el Hito 6.
 
 ### D-30 Interfaz del juego en un módulo de presentación propio
