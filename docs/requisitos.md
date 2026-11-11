@@ -77,3 +77,14 @@ Fuente: especificación del Sprint 2 («Sprint 2 · Hundir la Flota: requisitos�
 | RNF-10 | Servidor autoritativo: el cliente nunca recibe la flota del rival durante la partida | 5 | hecho | `vistaPara` solo incluye la flota rival con la partida terminada: 2 casos en `test/logic/motor/partida.test.js`. El servicio y la API solo devuelven esa vista; sus pruebas comprueban que ninguna respuesta contiene una casilla de la flota de la máquina. Se volverá a comprobar con el WebSocket en el Hito 7 |
 | RNF-11 | Al menos 10 pruebas unitarias del motor, con casos de error; jugador máquina con azar fijo | 5 | hecho | 26 casos del motor en `test/logic/motor/`, con errores de colocación, disparo repetido, fuera de turno y partida terminada; 11 casos del jugador máquina en `test/logic/jugadorMaquina.test.js`, todos con azar fijo (`azarFijo` en `test/logic/motor/ayuda.js`) |
 | RNF-12 | WebSocket en el despliegue: instancias justificadas y reconexión tras un despliegue | 7 | pendiente | — |
+
+### Mejoras del Sprint 2
+
+Fuente: PBI «Mejoras del Sprint 2» de Donetonic (2026-11-11). No vienen de la especificación, así que llevan su propio prefijo (MJ) para no mezclarse con los RF; cada una se hace en su propio PR, como un requisito más. «Incluir estadísticas del juego», también en ese PBI, es [RF-19](#requisitos-1) del Hito 6.
+
+| ID | Mejora | Criterios de aceptación | Estado | Evidencia |
+|----|--------|-------------------------|--------|-----------|
+| MJ-01 | «Eliminar mi cuenta» en el perfil del usuario | El botón deja de estar a la vista en la cabecera del panel y pasa a una sección de perfil o de opciones de la cuenta; sigue pidiendo confirmación | pendiente | — |
+| MJ-02 | Disparar sin parpadeo | Al disparar, los tableros no se atenúan ni se redibujan enteros: solo cambian las casillas afectadas. Origen: `client/js/juego.js` redibuja los dos tableros en cada jugada y la clase `juego-ocupado` los atenúa mientras espera al servidor | pendiente | — |
+| MJ-03 | Dificultad de la máquina | Al crear la partida se elige la dificultad, que se guarda con la partida. Propuesta: fácil (solo caza al azar), normal (caza y remate) y difícil (la estrategia actual, que además descarta casillas imposibles, [D-28](decisiones.md#d-28-estrategia-del-jugador-máquina)). La dificultad la aplica el jugador máquina en la capa lógica | pendiente | — |
+| MJ-04 | Barco hundido pintado entero | Al hundir un barco, todas sus casillas se ven como hundidas, en los dos tableros. Lo decide la vista del motor, no la interfaz. Incluido en el Hito 6 | pendiente | — |

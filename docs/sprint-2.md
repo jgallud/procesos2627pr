@@ -36,9 +36,12 @@ Tres hitos, un PBI de Donetonic por hito. Cada hito se reparte en varios pull re
 | Hito | PBI (Donetonic) | Requisitos | Estado |
 |------|-----------------|------------|--------|
 | 5 | Partida contra la máquina | RF-11 a RF-16, RNF-09, RNF-10, RNF-11 | **cerrado**: motor (#17), jugador máquina (#19), servicio y API (#20) e interfaz (#21); comprobado en la URL pública el 2026-11-11; etiqueta `hito-5` (`40016f2`) |
-| 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | en curso: partidas en MongoDB (#23). Incluye además pintar entero el barco hundido |
+| 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | en curso: partidas en MongoDB (#23). Incluye además MJ-04 (barco hundido entero) |
 | 7 | Partida entre jugadores en tiempo real | RF-22 a RF-26, RNF-12 | pendiente |
+| — | Mejoras del Sprint 2 | MJ-01 a MJ-04 (y RF-19, ya en el Hito 6) | pendiente |
 
 Cada hito se cierra como en el Sprint 1: CI en verde, aplicación desplegada funcionando, requisitos actualizados con su evidencia y etiqueta (`hito-5`, `hito-6`, `hito-7`).
 
 **Cierre del Hito 5 con el CI bloqueado.** El CI no se ha podido ejecutar en ningún PR del hito por el bloqueo de facturación de la cuenta ([D-27](decisiones.md#d-27-repositorio-público)). En su lugar, las pruebas se ejecutaron en local antes de integrar cada PR, y la partida se comprobó en la URL pública con Cloud Run limitado a una instancia ([D-29](decisiones.md#d-29-partidas-en-memoria-durante-el-hito-5)).
+
+**Mejoras del Sprint 2.** Un PBI aparte en Donetonic con mejoras que no pide la especificación ([requisitos](requisitos.md#mejoras-del-sprint-2)). Orden previsto: MJ-04 y MJ-02 juntas, porque las dos tocan cómo se pintan los tableros; MJ-01, pequeña y solo de interfaz; y MJ-03 después de RF-19, porque la dificultad también conviene reflejarla en el historial y las estadísticas.

@@ -4,7 +4,8 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
-| 2026-11-11 | PR #23: partidas en MongoDB (RF-17) | [D-31](decisiones.md#d-31-partidas-en-mongodb) |
+| 2026-11-11 | PR #24: mejoras del Sprint 2 en el bundle (MJ-01 a MJ-04) | [Requisitos](requisitos.md#mejoras-del-sprint-2) |
+| 2026-11-11 | PR #23 integrado: partidas en MongoDB (RF-17) | [D-31](decisiones.md#d-31-partidas-en-mongodb) |
 | 2026-11-11 | PR #22 integrado: cierre del Hito 5 en la documentación | [Sprint 2](sprint-2.md#hundir-la-flota) |
 | 2026-11-11 | Etiqueta `hito-5`: Hito 5 cerrado, partida contra la máquina comprobada en la URL pública. El CI sigue bloqueado: pruebas ejecutadas en local | `40016f2` |
 | 2026-11-10 | Cloud Run limitado a una instancia, porque las partidas viven en memoria | [D-29](decisiones.md#d-29-partidas-en-memoria-durante-el-hito-5) |
