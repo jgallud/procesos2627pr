@@ -2,7 +2,7 @@
 type: Decisiones
 title: Decisiones de diseño
 description: Decisiones de diseño del proyecto, en orden cronológico, con su motivo y su estado.
-timestamp: 2026-11-11
+timestamp: 2026-11-15
 ---
 
 # Decisiones de diseño
@@ -207,3 +207,11 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Por qué:** quién está hundido es una regla del juego y la decide el motor (RNF-09). Un campo nuevo no cambia nada de lo que ya existía.
 - **Consecuencias:** no revela nada oculto: todas las casillas de un barco hundido ya han recibido disparo, así que la flota rival sigue sin salir del servidor mientras dura la partida (RNF-10).
 - **Estado:** vigente.
+
+### D-33 Historial y estadísticas calculados al consultar
+- **Qué:** el historial y las estadísticas no se guardan: se calculan en la lógica (`server/logic/estadisticas.js`) cada vez que se piden, a partir de las partidas terminadas que devuelve el repositorio (`listarTerminadas`). Solo cuentan las partidas terminadas y no anuladas. El porcentaje de acierto es el de todos los disparos juntos, no la media por partida, y vale `null` (no 0) si no hay disparos. Al terminar una partida se guarda `terminadaEn`; las anteriores usan `actualizadaEn` como fecha.
+- **Alternativas consideradas:** guardar contadores por usuario y actualizarlos al terminar cada partida (consultas más rápidas, pero hay que mantenerlos coherentes al anular partidas con RF-21 y al cambiar cómo se calculan); calcularlos con una agregación de MongoDB (rápido, pero la regla saldría de la capa lógica y el repositorio en memoria tendría que repetirla).
+- **Por qué:** TODO(alumno): ¿por qué calcularlos al consultar? (pista: RF-19 pide que se calculen en la lógica a partir de las partidas guardadas, y una partida anulada deja de contar sin tocar nada más).
+- **Consecuencias:** cada consulta lee todas las partidas terminadas del jugador; con el volumen previsto es suficiente, y el índice `terminadas_por_jugador` evita recorrer la colección entera. RF-20 (clasificación) podrá reutilizar las mismas funciones.
+- **Estado:** vigente. Evidencia: `test/logic/estadisticas.test.js`.
+

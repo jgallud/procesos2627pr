@@ -2,7 +2,7 @@
 type: Requisitos
 title: Requisitos
 description: Estado de cada requisito de las especificaciones del Sprint 1 y del Sprint 2 (Hundir la Flota), con la evidencia que lo respalda.
-timestamp: 2026-11-11
+timestamp: 2026-11-15
 ---
 
 # Requisitos
@@ -64,8 +64,8 @@ Fuente: especificación del Sprint 2 («Sprint 2 · Hundir la Flota: requisitos�
 | RF-15 | Fin de partida y abandono | 5 | hecho | Fin por flota hundida y `abandonar` en `partida.js`; partida terminada sin más jugadas; 3 casos en `test/logic/motor/partida.test.js`; al terminar, la partida deja de estar en curso; `POST /api/partidas/:id/abandono`. Interfaz: mensaje de victoria o derrota, botón «Abandonar partida» con confirmación y flota de la máquina visible al terminar (`client/js/juego.js`). |
 | RF-16 | Vista de la partida: tablero propio y de disparos, turno y estado | 5 | hecho | `vistaPara` en `partida.js`: tablero propio, disparos propios, turno, estado y barcos pendientes; 3 casos. Interfaz: tablero propio y tablero de disparos, turno y estado de la partida (`client/js/juego.js`). |
 | RF-17 | Reanudar una partida tras recargar o redesplegar | 6 | hecho | Partidas en MongoDB (`server/data/partidaRepositorioMongo.js`), guardadas tras cada jugada por el servicio de partidas; mismas 6 pruebas de contrato que el repositorio en memoria (`test/data/repositoriosMongo.test.js`) y prueba de la aplicación completa en la que una partida en curso sigue igual tras un reinicio y se puede seguir jugando (`test/api/persistencia.test.js`). Pruebas ejecutadas en local contra MongoDB Atlas el 2026-11-11 (223 en total, 26 de ellas con MongoDB), porque el CI sigue bloqueado. Comprobado en la URL pública el 2026-11-11: las partidas se guardan en MongoDB y una partida a medias se retoma |
-| RF-18 | Historial de partidas | 6 | pendiente | — |
-| RF-19 | Estadísticas del jugador | 6 | pendiente | — |
+| RF-18 | Historial de partidas | 6 | hecho | `historial` en `server/logic/partidaService.js` y `historialDe`/`resumenDe` en `server/logic/estadisticas.js`: fecha, rival, resultado (con abandono), disparos y % de acierto, de la más reciente a la más antigua; solo las propias, y el administrador las de cualquier usuario (403 si no). `listarTerminadas` en los dos repositorios, con la misma prueba de contrato. 7 casos en `test/logic/estadisticas.test.js`, 6 en `test/logic/partidaService.test.js` y 3 en `test/api/partidas.test.js`. Interfaz: sección «Mis partidas» (`client/js/historial.js`) y botón «Partidas» en la tabla de usuarios del administrador ([D-33](decisiones.md#d-33-historial-y-estadísticas-calculados-al-consultar)) |
+| RF-19 | Estadísticas del jugador | 6 | hecho | `estadisticasDe` en `server/logic/estadisticas.js`, llamada desde `estadisticas` del servicio de partidas con las partidas guardadas: jugadas, ganadas, perdidas, % de victorias y % de acierto (sobre todos los disparos). Solo cuentan las terminadas y no anuladas (preparado para RF-21). Mismos casos y sección que RF-18 |
 | RF-20 | Clasificación | 6 | pendiente | — |
 | RF-21 | Gestión de partidas (administrador) | 6 | pendiente | — |
 | RF-22 | Crear partida entre jugadores y unirse | 7 | pendiente | — |

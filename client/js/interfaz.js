@@ -9,6 +9,9 @@
 
 import * as api from './api.js';
 import { prepararJuego, mostrarJuego, ocultarJuego } from './juego.js';
+import {
+  prepararHistorial, mostrarHistorial, mostrarHistorialDe, ocultarHistorial,
+} from './historial.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -54,7 +57,7 @@ async function conBotonOcupado(boton, accion) {
 function mostrarError(error) {
   if (error instanceof api.ErrorApi && error.sinSesion && usuarioActual) {
     usuarioActual = null;
-    ocultarJuego();
+    ocultarSecciones();
     mostrarVista('acceso');
     avisar('Tu sesión ha caducado o ya no es válida. Vuelve a iniciar sesión.', 'error');
     return;
@@ -112,6 +115,12 @@ async function alRegistrarse(evento) {
 
 // --- Panel del usuario --------------------------------------------------------
 
+// Al salir del panel: el juego y el historial dejan de mostrarse.
+function ocultarSecciones() {
+  ocultarJuego();
+  ocultarHistorial();
+}
+
 async function entrarEnPanel(usuario) {
   usuarioActual = usuario;
   $('#perfil-nombre').textContent = usuario.nombre || usuario.email;
@@ -120,7 +129,7 @@ async function entrarEnPanel(usuario) {
   const esAdmin = usuario.rol === 'administrador';
   $('#seccion-admin').hidden = !esAdmin;
   mostrarVista('panel');
-  await mostrarJuego();
+  await Promise.all([mostrarJuego(), mostrarHistorial()]);
   if (esAdmin) await cargarUsuarios();
 }
 
@@ -134,7 +143,7 @@ async function alCerrarSesion() {
     if (!(error instanceof api.ErrorApi && error.sinSesion)) mostrarError(error);
   }
   usuarioActual = null;
-  ocultarJuego();
+  ocultarSecciones();
   mostrarVista('acceso');
   elegirPestana('entrar');
   avisar('Has cerrado la sesión.', 'info');
@@ -146,7 +155,7 @@ async function alEliminarMiCuenta() {
   try {
     await api.eliminarUsuario(usuarioActual.id);
     usuarioActual = null;
-    ocultarJuego();
+    ocultarSecciones();
     mostrarVista('acceso');
     avisar('Tu cuenta ha sido eliminada.', 'info');
   } catch (error) {
@@ -197,6 +206,7 @@ function pintarUsuarios(usuarios) {
         mostrarError(error);
       }
     }));
+    acciones.append(crearBoton('Partidas', 'boton-secundario', () => mostrarHistorialDe(u)));
     if (u.estado !== 'eliminado') {
       acciones.append(crearBoton('Eliminar', 'boton-peligro', () => eliminarDesdeAdmin(u)));
     }
@@ -316,6 +326,7 @@ function enlazarEventos() {
 async function iniciar() {
   enlazarEventos();
   prepararJuego({ avisar, mostrarError });
+  prepararHistorial({ mostrarError });
   elegirPestana('entrar');
   comprobarServidor();
   mostrarAccesoExterno();

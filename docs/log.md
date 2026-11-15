@@ -4,6 +4,7 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-15 | Historial y estadísticas del jugador (RF-18 y RF-19) | rama `feature/hito6-historial-estadisticas`, [D-33](decisiones.md#d-33-historial-y-estadísticas-calculados-al-consultar) |
 | 2026-11-11 | MJ-04 y MJ-02: barcos hundidos pintados enteros y tableros sin parpadeo | [D-32](decisiones.md#d-32-barcos-hundidos-en-la-vista-del-motor) |
 | 2026-11-11 | Niveles de dificultad de MJ-03 aceptados (fácil, normal y difícil) | [Requisitos](requisitos.md#mejoras-del-sprint-2) |
 | 2026-11-11 | RF-17 comprobado en la URL pública: las partidas se guardan en MongoDB | [RF-17](requisitos.md#requisitos-1) |

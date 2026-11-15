@@ -178,3 +178,11 @@ td.celda-acciones button + button { margin-left: 6px; }
 /* Mientras el servidor responde no se atenúa nada (MJ-02): juego.js ignora los
    clics y solo cambia el cursor. */
 .juego-ocupado .tablero .casilla:not(:disabled) { cursor: progress; }
+
+/* Historial y estadísticas (Hito 6) */
+.estadisticas { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 0 0 16px; }
+.estadisticas div { background: var(--fondo); border: 1px solid var(--borde); border-radius: var(--radio); padding: 10px 12px; }
+.estadisticas dt { color: var(--texto-suave); font-size: 0.85rem; }
+.estadisticas dd { margin: 2px 0 0; font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.resultado-victoria { color: var(--acento); font-weight: 600; }
+.resultado-derrota { color: var(--peligro); }

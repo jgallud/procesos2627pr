@@ -178,4 +178,79 @@ describe('Servicio de partidas contra la máquina', () => {
       await assert.rejects(servicio.disparar(ana.id, vista.id, 'A1'), rechazaCon(CODIGOS.ESTADO_INVALIDO));
     });
   });
+
+  describe('historial y estadísticas (RF-18, RF-19)', () => {
+    // Gana una partida disparando primero a un agua (juega la máquina) y
+    // después a toda la flota de la máquina.
+    async function ganar(idUsuario) {
+      const vista = await partidaEnJuego(idUsuario);
+      await servicio.disparar(idUsuario, vista.id, await agua(vista.id));
+      for (const casilla of await flotaDeLaMaquina(vista.id)) {
+        const actual = await servicio.obtener(idUsuario, vista.id);
+        if (actual.estado === 'terminada') break;
+        await servicio.disparar(idUsuario, vista.id, casilla);
+      }
+      return vista.id;
+    }
+
+    async function abandonar(idUsuario) {
+      const vista = await partidaEnJuego(idUsuario);
+      await servicio.abandonar(idUsuario, vista.id);
+      return vista.id;
+    }
+
+    it('sin partidas terminadas, el historial está vacío y las estadísticas a cero', async () => {
+      await partidaEnJuego(ana.id); // en curso: no cuenta
+      assert.deepEqual(await servicio.historial(ana.id), []);
+      assert.deepEqual(await servicio.estadisticas(ana.id), {
+        jugadas: 0, ganadas: 0, perdidas: 0, porcentajeVictorias: null, disparos: 0, aciertos: 0, porcentajeAcierto: null,
+      });
+    });
+
+    it('el historial muestra fecha, rival, resultado, disparos y acierto, la más reciente primero', async () => {
+      const ganada = await ganar(ana.id);
+      const abandonada = await abandonar(ana.id);
+      const historial = await servicio.historial(ana.id);
+      assert.deepEqual(historial.map((h) => h.id), [abandonada, ganada]);
+      const [derrota, victoria] = historial;
+      assert.equal(victoria.oponente, 'maquina');
+      assert.equal(victoria.resultado, 'victoria');
+      assert.equal(victoria.disparos, 18); // un agua y las 17 casillas de la flota
+      assert.equal(victoria.aciertos, 17);
+      assert.equal(victoria.porcentajeAcierto, 94.4);
+      assert.ok(victoria.fecha);
+      assert.equal(derrota.resultado, 'derrota');
+      assert.equal(derrota.motivoFin, 'abandono');
+      assert.equal(derrota.porcentajeAcierto, null, 'sin disparos no hay porcentaje');
+    });
+
+    it('las estadísticas se calculan a partir de las partidas guardadas', async () => {
+      await ganar(ana.id);
+      await abandonar(ana.id);
+      await abandonar(ana.id);
+      assert.deepEqual(await servicio.estadisticas(ana.id), {
+        jugadas: 3, ganadas: 1, perdidas: 2, porcentajeVictorias: 33.3, disparos: 18, aciertos: 17, porcentajeAcierto: 94.4,
+      });
+    });
+
+    it('cada jugador ve solo sus partidas', async () => {
+      await ganar(ana.id);
+      assert.deepEqual(await servicio.historial(luis.id), []);
+      await assert.rejects(servicio.historial(luis.id, ana.id), rechazaCon(CODIGOS.PROHIBIDO));
+      await assert.rejects(servicio.estadisticas(luis.id, ana.id), rechazaCon(CODIGOS.PROHIBIDO));
+    });
+
+    it('el administrador consulta el historial y las estadísticas de cualquier usuario', async () => {
+      const admin = await usuarios.asegurarAdministrador({ email: 'admin@ejemplo.com', contrasena: 'clave-del-admin' });
+      await ganar(ana.id);
+      assert.equal((await servicio.historial(admin.id, ana.id)).length, 1);
+      assert.equal((await servicio.estadisticas(admin.id, ana.id)).ganadas, 1);
+      await assert.rejects(servicio.historial(admin.id, 'no-existe'), rechazaCon(CODIGOS.USUARIO_NO_ENCONTRADO));
+    });
+
+    it('sin sesión no hay historial ni estadísticas', async () => {
+      await assert.rejects(servicio.historial(undefined), rechazaCon(CODIGOS.NO_AUTENTICADO));
+      await assert.rejects(servicio.estadisticas(undefined), rechazaCon(CODIGOS.NO_AUTENTICADO));
+    });
+  });
 });
