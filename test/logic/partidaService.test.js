@@ -51,7 +51,11 @@ describe('Servicio de partidas contra la máquina', () => {
       notificador: { async enviarConfirmacion({ email, token }) { ultimoToken.set(email, token); } },
     });
     repositorio = crearRepositorioPartidasMemoria();
-    servicio = crearServicioPartidas({ repositorio, servicioUsuarios: usuarios, azar: azarFijo(7) });
+    // Reloj que avanza un segundo en cada lectura: dos partidas nunca
+    // terminan en el mismo instante, así el orden del historial es fijo.
+    let segundos = 0;
+    const reloj = () => new Date(Date.UTC(2026, 10, 1) + 1000 * segundos++);
+    servicio = crearServicioPartidas({ repositorio, servicioUsuarios: usuarios, azar: azarFijo(7), reloj });
     ana = await usuarioActivo('ana@ejemplo.com');
     luis = await usuarioActivo('luis@ejemplo.com');
   });
@@ -251,6 +255,21 @@ describe('Servicio de partidas contra la máquina', () => {
     it('sin sesión no hay historial ni estadísticas', async () => {
       await assert.rejects(servicio.historial(undefined), rechazaCon(CODIGOS.NO_AUTENTICADO));
       await assert.rejects(servicio.estadisticas(undefined), rechazaCon(CODIGOS.NO_AUTENTICADO));
+    });
+
+    it('la clasificación incluye a los jugadores activos con partidas y marca al solicitante (RF-20)', async () => {
+      await ganar(luis.id);
+      await abandonar(ana.id);
+      const tabla = await servicio.clasificacion(ana.id);
+      assert.deepEqual(tabla.map((f) => [f.posicion, f.nombre, f.ganadas, f.esSolicitante]), [
+        [1, 'luis', 1, false],
+        [2, 'ana', 0, true],
+      ]);
+      assert.ok(tabla.every((f) => !('email' in f)));
+
+      await usuarios.eliminarUsuario(luis.id, luis.id); // un usuario eliminado deja de aparecer
+      assert.deepEqual((await servicio.clasificacion(ana.id)).map((f) => f.nombre), ['ana']);
+      await assert.rejects(servicio.clasificacion(undefined), rechazaCon(CODIGOS.NO_AUTENTICADO));
     });
   });
 });
