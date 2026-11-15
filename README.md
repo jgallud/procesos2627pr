@@ -116,7 +116,7 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 
 | Colección | Documento | Índices |
 |-----------|-----------|---------|
-| `usuarios` | `{ _id, email, nombre, rol, estado, origen, creadoEn, eliminadoEn?, hashContrasena?, hashTokenConfirmacion? }` | `email` único |
+| `usuarios` | `{ _id, email, nombre, rol, estado, origen, creadoEn, eliminadoEn?, hashContrasena?, hashTokenConfirmacion?, hashTokenRestablecimiento?, restablecimientoCaducaEn? }` | `email` único |
 | `sesiones` | `{ _id, idUsuario, creadaEn, expiraEn, caducidad }` | `idUsuario`; TTL sobre `caducidad` |
 | `partidas` | `{ _id, modo, dificultad?, jugadores, enCurso, creadaEn, actualizadaEn, terminadaEn?, anulada?, anuladaEn?, anuladaPor?, juego }` | `jugadores` + `enCurso` + `creadaEn` (partida en curso de un jugador); `jugadores` + `enCurso` + `actualizadaEn` (historial y estadísticas); `enCurso` + `creadaEn` (partidas en curso, administrador) |
 
@@ -175,6 +175,8 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 | `DELETE` | `/api/sesion` | cualquiera | `204` sesión cerrada |
 | `POST` | `/api/usuarios` | cualquiera (`{email, nombre?, contrasena}`) | `201` usuario creado (`pendiente`) |
 | `POST` | `/api/usuarios/confirmacion` | cualquiera (`{token}`) | `200` usuario `activo` |
+| `POST` | `/api/usuarios/restablecimiento/solicitud` | cualquiera (`{email}`) | `202` siempre; envía el enlace si la cuenta existe (MJ-12) |
+| `POST` | `/api/usuarios/restablecimiento` | cualquiera (`{token, contrasena}`) | `200` usuario; cierra sus sesiones (MJ-12) |
 | `GET` | `/api/usuarios` | administrador | `200` lista de usuarios |
 | `GET` | `/api/usuarios/:id/activo` | administrador | `200 {id, activo}` |
 | `DELETE` | `/api/usuarios/:id` | administrador o el propio usuario | `204` |

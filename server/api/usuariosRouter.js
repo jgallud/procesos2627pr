@@ -7,6 +7,8 @@
 //
 //   POST   /api/usuarios               alta de usuario            -> 201
 //   POST   /api/usuarios/confirmacion  confirmar cuenta {token}   -> 200
+//   POST   /api/usuarios/restablecimiento/solicitud  {email}      -> 202 (MJ-12; igual exista o no)
+//   POST   /api/usuarios/restablecimiento  {token, contrasena}    -> 200 (MJ-12; cierra sus sesiones)
 //   GET    /api/usuarios               listado (administrador)    -> 200
 //   GET    /api/usuarios/:id/activo    ¿está activo? (admin)      -> 200
 //   DELETE /api/usuarios/:id           eliminar (admin o uno mismo) -> 204
@@ -26,6 +28,22 @@ function crearRouterUsuarios({ servicioUsuarios, servicioSesiones, cookie }) {
 
   router.post('/confirmacion', async (req, res) => {
     const usuario = await servicioUsuarios.confirmarCuenta(req.body?.token);
+    res.json(usuario);
+  });
+
+  // MJ-12: la respuesta es la misma tanto si el email tiene cuenta como si
+  // no, para no revelar qué emails están registrados.
+  router.post('/restablecimiento/solicitud', async (req, res) => {
+    await servicioUsuarios.solicitarRestablecimiento({ email: req.body?.email });
+    res.status(202).json({ mensaje: 'Si el email corresponde a una cuenta, recibirás un enlace para cambiar la contraseña' });
+  });
+
+  router.post('/restablecimiento', async (req, res) => {
+    const { token, contrasena } = req.body ?? {};
+    const usuario = await servicioUsuarios.restablecerContrasena({ token, contrasena });
+    // Con la contraseña cambiada, se cierran todas las sesiones abiertas: si
+    // alguien la conocía, deja de tener acceso.
+    await servicioSesiones.cerrarTodas(usuario.id);
     res.json(usuario);
   });
 

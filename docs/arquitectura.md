@@ -71,6 +71,8 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | DELETE | `/api/sesion` | cualquiera | 204 |
 | POST | `/api/usuarios` | cualquiera | 201 usuario pendiente |
 | POST | `/api/usuarios/confirmacion` | cualquiera (con token) | 200 usuario activo |
+| POST | `/api/usuarios/restablecimiento/solicitud` | cualquiera | 202 siempre; envía el enlace si la cuenta local existe y está activa (MJ-12) |
+| POST | `/api/usuarios/restablecimiento` | cualquiera (`{token, contrasena}`) | 200 usuario; cierra todas sus sesiones (MJ-12) |
 | GET | `/api/usuarios` | administrador | 200 lista |
 | GET | `/api/usuarios/:id/activo` | administrador | 200 `{id, activo}` |
 | DELETE | `/api/usuarios/:id` | administrador o el propio usuario | 204 |

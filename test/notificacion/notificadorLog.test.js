@@ -16,4 +16,12 @@ describe('Notificador por log', () => {
     assert.equal(eventos[0].datos.email, 'ana@ejemplo.com');
     assert.equal(eventos[0].datos.enlace, 'https://app.ejemplo.com/?confirmar=id.secreto');
   });
+
+  it('registra el enlace para restablecer la contraseña (MJ-12)', async () => {
+    const eventos = [];
+    const logger = { info: (mensaje, datos) => eventos.push({ mensaje, datos }) };
+    const notificador = crearNotificadorLog({ logger, urlBase: 'https://app.ejemplo.com' });
+    await notificador.enviarRestablecimiento({ email: 'ana@ejemplo.com', token: 'id.secreto' });
+    assert.equal(eventos[0].datos.enlace, 'https://app.ejemplo.com/?restablecer=id.secreto');
+  });
 });

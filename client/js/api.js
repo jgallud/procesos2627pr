@@ -61,6 +61,9 @@ export const salud = () => peticion('GET', '/salud');
 // --- Cuenta y sesión --------------------------------------------------------
 export const registrar = ({ email, nombre, contrasena }) => peticion('POST', '/usuarios', { email, nombre, contrasena });
 export const confirmarCuenta = (token) => peticion('POST', '/usuarios/confirmacion', { token });
+// Recuperar la contraseña (MJ-12).
+export const pedirRestablecimiento = (email) => peticion('POST', '/usuarios/restablecimiento/solicitud', { email });
+export const restablecerContrasena = ({ token, contrasena }) => peticion('POST', '/usuarios/restablecimiento', { token, contrasena });
 export const iniciarSesion = ({ email, contrasena }) => peticion('POST', '/sesion', { email, contrasena });
 export const sesionActual = () => peticion('GET', '/sesion');
 export const cerrarSesion = () => peticion('DELETE', '/sesion');

@@ -15,7 +15,11 @@ const CLAVE_ADMIN = 'clave-del-admin';
 
 function montar({ cookieSegura = false, proveedoresOAuth, azar, avisador } = {}) {
   const tokens = new Map();
-  const notificador = { async enviarConfirmacion({ email, token }) { tokens.set(email, token); } };
+  const enlacesRestablecimiento = new Map(); // MJ-12: email -> token del último enlace
+  const notificador = {
+    async enviarConfirmacion({ email, token }) { tokens.set(email, token); },
+    async enviarRestablecimiento({ email, token }) { enlacesRestablecimiento.set(email, token); },
+  };
   const servicioUsuarios = crearServicioUsuarios({ repositorio: crearRepositorioUsuariosMemoria(), notificador });
   const servicioSesiones = crearServicioSesiones({ repositorio: crearRepositorioSesionesMemoria() });
   const repositorioPartidas = crearRepositorioPartidasMemoria();
@@ -28,7 +32,9 @@ function montar({ cookieSegura = false, proveedoresOAuth, azar, avisador } = {})
     return servicioUsuarios.confirmarCuenta(tokens.get(u.email));
   }
 
-  return { app, servicioUsuarios, servicioSesiones, servicioPartidas, repositorioPartidas, tokens, usuarioActivo };
+  return {
+    app, servicioUsuarios, servicioSesiones, servicioPartidas, repositorioPartidas, tokens, enlacesRestablecimiento, usuarioActivo,
+  };
 }
 
 module.exports = { montar, CLAVE, CLAVE_ADMIN };
