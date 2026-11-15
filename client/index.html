@@ -19,6 +19,7 @@
       <nav id="menu" class="menu" aria-label="Secciones" hidden>
         <a href="#jugar" data-menu="jugar">Jugar</a>
         <a href="#estadisticas" data-menu="estadisticas">Estadísticas</a>
+        <a href="#cuenta" data-menu="cuenta">Mi cuenta</a>
         <a href="#administracion" data-menu="administracion" hidden>Administración</a>
       </nav>
       <span class="estado">Servidor: <span id="estado-servidor">comprobando…</span></span>
@@ -91,7 +92,6 @@
         </div>
         <div class="acciones">
           <button id="boton-salir" type="button" class="boton-secundario">Cerrar sesión</button>
-          <button id="boton-eliminar-cuenta" type="button" class="boton-peligro">Eliminar mi cuenta</button>
         </div>
       </div>
 
@@ -202,6 +202,25 @@
         </div>
       </div>
 
+      </div>
+
+      <!-- Sección «Mi cuenta» del menú (MJ-01): datos de la cuenta y eliminarla -->
+      <div data-panel="cuenta" hidden>
+        <div class="tarjeta">
+          <h2>Mi cuenta</h2>
+          <dl class="datos-cuenta">
+            <dt>Nombre</dt><dd id="cuenta-nombre"></dd>
+            <dt>Email</dt><dd id="cuenta-email"></dd>
+            <dt>Rol</dt><dd id="cuenta-rol"></dd>
+            <dt>Acceso</dt><dd id="cuenta-origen"></dd>
+            <dt>Alta</dt><dd id="cuenta-alta"></dd>
+          </dl>
+        </div>
+        <div class="tarjeta zona-peligro">
+          <h2>Eliminar la cuenta</h2>
+          <p class="secundario">Ya no podrás volver a iniciar sesión con esta cuenta. Tus partidas terminadas se conservan en el historial de tus rivales.</p>
+          <button id="boton-eliminar-cuenta" type="button" class="boton-peligro">Eliminar mi cuenta</button>
+        </div>
       </div>
 
       <!-- Sección «Administración» del menú, solo administrador (MJ-05) -->

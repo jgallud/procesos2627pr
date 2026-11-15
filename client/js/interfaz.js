@@ -54,7 +54,7 @@ function avisar(texto, tipo = 'info') {
 // (#jugar, #estadisticas, #administracion): así funcionan el botón «atrás»,
 // recargar la página y el enlace de la marca, que lleva a #jugar.
 
-const SECCIONES = ['jugar', 'estadisticas', 'administracion'];
+const SECCIONES = ['jugar', 'estadisticas', 'cuenta', 'administracion'];
 
 function seccionPedida() {
   const nombre = window.location.hash.slice(1);
@@ -174,6 +174,12 @@ async function entrarEnPanel(usuario) {
   $('#perfil-nombre').textContent = usuario.nombre || usuario.email;
   $('#perfil-email').textContent = usuario.email;
   $('#perfil-rol').textContent = usuario.rol;
+  // Mi cuenta (MJ-01)
+  $('#cuenta-nombre').textContent = usuario.nombre || '—';
+  $('#cuenta-email').textContent = usuario.email;
+  $('#cuenta-rol').textContent = usuario.rol;
+  $('#cuenta-origen').textContent = usuario.origen === 'oauth' ? 'Google' : 'Email y contraseña';
+  $('#cuenta-alta').textContent = formatearFecha(usuario.creadoEn);
   const esAdmin = usuario.rol === 'administrador';
   $('#seccion-admin').hidden = !esAdmin;
   $('[data-menu="administracion"]').hidden = !esAdmin;
