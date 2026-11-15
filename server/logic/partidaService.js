@@ -16,6 +16,8 @@
 
 const motor = require('./motor');
 const jugadorMaquina = require('./jugadorMaquina');
+const { historialDe, estadisticasDe } = require('./estadisticas');
+const { ROLES } = require('./usuarioService');
 const { ErrorDominio, CODIGOS } = require('./errores');
 const { loggerSilencioso } = require('../logger');
 
@@ -35,6 +37,19 @@ function crearServicioPartidas({
   // Solo juegan usuarios con sesión y activos (RF-11): lo decide el servicio
   // de usuarios, que lanza NO_AUTENTICADO si no.
   const solicitante = (idSolicitante) => servicioUsuarios.usuarioDeSesion(idSolicitante);
+
+  // RF-18: cada jugador consulta sus partidas; el administrador, las de
+  // cualquier usuario. Devuelve el id del usuario cuyas partidas se piden.
+  async function usuarioConsultado(idSolicitante, idUsuario) {
+    const usuario = await solicitante(idSolicitante);
+    if (!idUsuario || idUsuario === usuario.id) return usuario.id;
+    if (usuario.rol !== ROLES.ADMINISTRADOR) {
+      logger.warn('Acceso denegado al historial de otro usuario', { solicitante: usuario.id, objetivo: idUsuario });
+      throw new ErrorDominio(CODIGOS.PROHIBIDO, 'Solo puedes consultar tus propias partidas');
+    }
+    await servicioUsuarios.estaActivo(idSolicitante, idUsuario); // USUARIO_NO_ENCONTRADO si no existe
+    return idUsuario;
+  }
 
   function vista(partida, jugador) {
     return {
@@ -63,12 +78,15 @@ function crearServicioPartidas({
   // en curso y se registra el resultado.
   async function guardar(partida, juego) {
     const terminada = juego.estado === motor.ESTADOS.TERMINADA;
+    const ahora = reloj().toISOString();
+    const recienTerminada = terminada && partida.juego.estado !== motor.ESTADOS.TERMINADA;
     const guardada = await repositorio.actualizar(partida.id, {
       juego,
       enCurso: !terminada,
-      actualizadaEn: reloj().toISOString(),
+      actualizadaEn: ahora,
+      ...(recienTerminada ? { terminadaEn: ahora } : {}),
     });
-    if (terminada && partida.juego.estado !== motor.ESTADOS.TERMINADA) {
+    if (recienTerminada) {
       logger.info('Partida terminada', {
         partida: partida.id,
         ganador: guardada.jugadores[juego.ganador] ?? 'maquina',
@@ -165,6 +183,21 @@ function crearServicioPartidas({
     // RF-15: abandonar cuenta como derrota.
     abandonar(idSolicitante, idPartida) {
       return jugada(idSolicitante, idPartida, (juego, jugador) => motor.abandonar(juego, jugador));
+    },
+
+    // RF-18: partidas terminadas de un usuario (las propias, o las de
+    // cualquiera si lo pide el administrador): fecha, rival, resultado,
+    // disparos y porcentaje de acierto.
+    async historial(idSolicitante, idUsuario) {
+      const id = await usuarioConsultado(idSolicitante, idUsuario);
+      return historialDe(await repositorio.listarTerminadas({ idUsuario: id }), id);
+    },
+
+    // RF-19: estadísticas calculadas aquí, en la lógica, a partir de las
+    // partidas guardadas.
+    async estadisticas(idSolicitante, idUsuario) {
+      const id = await usuarioConsultado(idSolicitante, idUsuario);
+      return estadisticasDe(historialDe(await repositorio.listarTerminadas({ idUsuario: id }), id));
     },
   };
 }
