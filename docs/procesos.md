@@ -14,6 +14,7 @@ timestamp: 2026-10-29
 3. Subir la rama y abrir un pull request contra `main`.
 4. Integrar solo con el CI en verde, con *Create a merge commit*.
 5. Al cerrar un hito, etiquetar el último commit de `main` (`hito-1`, `hito-2`…).
+6. Versión ([D-41](decisiones.md#d-41-versión-de-la-aplicación)): en el mismo PR que el cambio, subir la versión de `package.json` con `npm version minor --no-git-tag-version` (funcionalidad) o `npm version patch --no-git-tag-version` (corrección). Tras integrar, `git tag vX.Y.Z` sobre `main`. Tras el despliegue, el pie de la página debe mostrar la nueva versión.
 
 En el Sprint 1 este flujo no se cumplió siempre: ver [desviaciones del flujo](sprint-1.md#desviaciones-del-flujo). Requisito [PRO-01](requisitos.md).
 

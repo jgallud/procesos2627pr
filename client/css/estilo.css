@@ -253,3 +253,7 @@ button.enlace:hover { color: var(--acento-oscuro); }
 .dialogo-acciones { justify-content: flex-end; margin-top: 20px; }
 .boton-peligro-lleno { background: var(--peligro); color: #fff; border: 1px solid var(--peligro); font-weight: 600; }
 .boton-peligro-lleno:hover:not(:disabled) { filter: brightness(0.9); }
+
+/* Pie con la versión (MJ-17) */
+.pie { color: var(--texto-suave); font-size: 0.8rem; text-align: center; }
+.pie .contenedor { padding-top: 8px; padding-bottom: 24px; }

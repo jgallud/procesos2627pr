@@ -425,9 +425,15 @@ async function recuperarSesion() {
 
 // MJ-11: el estado del servidor ya no ocupa la cabecera; solo se avisa si no
 // responde, que es cuando le sirve al usuario saberlo.
+// MJ-17: muestra en el pie la versión que sirve el servidor y su revisión de
+// Cloud Run (en local, «local»). Sirve para saber si un despliegue ya ha llegado.
 async function comprobarServidor() {
   try {
-    await api.salud();
+    const { version, revision } = await api.salud();
+    const numero = /-(\d+)-/.exec(revision ?? '')?.[1];
+    const elemento = $('#version-app');
+    elemento.textContent = `versión ${version}${numero ? ` · revisión ${Number(numero)}` : revision === 'local' ? ' · local' : ''}`;
+    elemento.title = revision ?? '';
   } catch {
     avisar('No se puede conectar con el servidor. Comprueba tu conexión y recarga la página.', 'error');
   }

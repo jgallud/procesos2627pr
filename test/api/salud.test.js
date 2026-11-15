@@ -11,10 +11,23 @@ describe('Esqueleto del servidor', () => {
   });
   after(async () => { await servidor.cerrar(); });
 
+  it('GET /api/salud incluye la versión y la revisión (MJ-17)', async () => {
+    const { crearApp } = require('../../server/app');
+    const ctx = require('../ayuda/montaje').montar();
+    const app = crearApp({
+      servicioUsuarios: ctx.servicioUsuarios, servicioSesiones: ctx.servicioSesiones,
+      infoVersion: { version: '9.8.7', revision: 'procesos2627pr-00042-abc' },
+    });
+    const otro = await require('../ayuda/servidor').arrancar(app);
+    const r = await otro.peticion('GET', '/api/salud');
+    await otro.cerrar();
+    assert.deepEqual(r.datos, { estado: 'ok', version: '9.8.7', revision: 'procesos2627pr-00042-abc' });
+  });
+
   it('GET /api/salud responde 200 con estado ok', async () => {
     const r = await servidor.peticion('GET', '/api/salud');
     assert.equal(r.estado, 200);
-    assert.deepEqual(r.datos, { estado: 'ok' });
+    assert.equal(r.datos.estado, 'ok');
   });
 
   it('sirve el frontend desde el mismo origen', async () => {

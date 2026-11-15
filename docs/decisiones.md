@@ -266,3 +266,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** mientras un usuario tiene abierto el panel sin partida, mantiene una conexión abierta, sin tráfico si no pasa nada. El botón «Actualizar» se mantiene por si se corta la conexión.
 - **Estado:** vigente. Evidencia: `test/api/tiempoReal.test.js` («vestíbulo»).
 
+### D-41 Versión de la aplicación
+- **Qué:** la versión vive en un solo sitio, `package.json`, con el formato MAYOR.MENOR.PARCHE: MAYOR es el sprint (2 en el Sprint 2), MENOR sube en cada PR que añade o cambia funcionalidad y PARCHE en cada PR que solo corrige un error; un PR de solo documentación no la cambia. Empieza en 2.0.0 (MJ-17). Se sube en el mismo PR que el cambio (`npm version minor --no-git-tag-version` actualiza también `package-lock.json`) y, tras integrar, se etiqueta `main` con `vX.Y.Z`. Además, el servidor informa de la revisión de Cloud Run (`K_REVISION`), que identifica cada despliegue aunque la versión no cambie.
+- **Alternativas consideradas:** usar el hash del commit (identifica el código exacto, pero el despliegue automático de Cloud Run desde el repositorio no lo pasa a la imagen sin cambiar la configuración de Cloud Build); solo la fecha del despliegue (no dice qué cambios incluye).
+- **Por qué:** TODO(alumno): ¿por qué estas reglas de numeración? (pista: el 2026-11-15 producción no tenía MJ-15 y no había forma de verlo desde la aplicación).
+- **Consecuencias:** cada PR que cambia código tiene que acordarse de subir la versión; se añade al flujo de trabajo en [procesos.md](procesos.md).
+- **Estado:** vigente.
+

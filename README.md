@@ -169,7 +169,7 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 
 | Método | Ruta | Quién | Respuesta |
 |--------|------|-------|-----------|
-| `GET` | `/api/salud` | cualquiera | `200 {estado:"ok"}` |
+| `GET` | `/api/salud` | cualquiera | `200 {estado:"ok", version, revision}` (MJ-17) |
 | `POST` | `/api/sesion` | cualquiera (`{email, contrasena}`) | `200` usuario + cookie de sesión |
 | `GET` | `/api/sesion` | con sesión | `200` usuario de la sesión |
 | `DELETE` | `/api/sesion` | cualquiera | `204` sesión cerrada |

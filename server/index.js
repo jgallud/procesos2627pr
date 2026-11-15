@@ -125,9 +125,12 @@ async function main() {
 
   const app = crearApp({
     servicioUsuarios, servicioSesiones, servicioPartidas, proveedoresOAuth, logger, cookieSegura: config.cookieSegura,
+    infoVersion: { version: config.version, revision: config.revision },
   });
   const servidor = app.listen(config.puerto, () => {
-    logger.info('Servidor iniciado', { puerto: config.puerto, entorno: config.entorno });
+    logger.info('Servidor iniciado', {
+      puerto: config.puerto, entorno: config.entorno, version: config.version, revision: config.revision,
+    });
   });
   tiempoReal.conectar({ servidorHttp: servidor, servicioSesiones, servicioPartidas });
 

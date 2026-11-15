@@ -27,4 +27,11 @@ describe('Configuración', () => {
     assert.doesNotThrow(() => validarConfig(config));
     assert.equal(config.urlBase, 'https://app.ejemplo.com');
   });
+
+  it('MJ-17: lee la versión de package.json y la revisión de K_REVISION (local si no existe)', () => {
+    const { version } = require('../package.json');
+    assert.equal(leerConfig({}).version, version);
+    assert.equal(leerConfig({}).revision, 'local');
+    assert.equal(leerConfig({ K_REVISION: 'procesos2627pr-00042-abc' }).revision, 'procesos2627pr-00042-abc');
+  });
 });
