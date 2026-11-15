@@ -141,7 +141,7 @@ async function alRecibirAviso({ detail: aviso }) {
   if (aviso.tipo === 'rival-unido') ui.avisar(`${partida.nombreRival} se ha unido a la partida.`, 'info');
   else if (aviso.tipo === 'flota-colocada') ui.avisar(`${NombreDelRival()} ha colocado su flota.`, 'info');
   else if (aviso.tipo === 'disparo') ui.avisar(`${NombreDelRival()} ha disparado a ${describirDisparo(aviso.disparo)}.`, 'info');
-  else if (aviso.tipo === 'fin' || aviso.tipo === 'abandono') ui.avisar(textoFinal(), resultadoComoTipo());
+  else if (aviso.tipo === 'fin' || aviso.tipo === 'abandono') ui.avisar(textoFinal(), 'info');
 }
 
 function alCambiarConexion({ detail: { estado } }) {
@@ -204,7 +204,9 @@ async function dispararA(casilla) {
   const respuesta = await jugar(() => api.disparar(partida.id, casilla));
   if (!respuesta) return;
   actualizar(respuesta.partida);
-  ui.avisar(describirTurno(respuesta), partida.estado === 'terminada' ? resultadoComoTipo() : 'info');
+  // MJ-09: el fin de partida se avisa con el mismo estilo que los disparos;
+  // el resultado ya se destaca en la línea de estado, encima de los tableros.
+  ui.avisar(describirTurno(respuesta), 'info');
 }
 
 async function abandonar() {
@@ -244,7 +246,6 @@ function textoFinal() {
   return `Has perdido: ${nombreDelRival()} ha hundido toda tu flota.`;
 }
 
-const resultadoComoTipo = () => (partida.resultado === 'victoria' ? 'exito' : 'error');
 
 function textoEstado() {
   if (partida.estado === 'colocando') {
