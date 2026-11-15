@@ -1,7 +1,9 @@
 // CAPA API — tiempo real por WebSocket (Hito 7, RF-24 y RF-25; D-23, D-37).
 //
 // Servidor WebSocket sobre el mismo servidor HTTP y el mismo origen, en
-// /api/tiempo-real?partida=<id>. Solo lleva AVISOS del servidor al cliente:
+// /api/tiempo-real?partida=<id> (los avisos de una partida) o en
+// /api/tiempo-real?vestibulo (MJ-14: que la lista de partidas abiertas ha
+// cambiado, para cualquier usuario con sesión). Solo lleva AVISOS del servidor al cliente:
 // las jugadas van siempre por la API REST, con su validación y sus errores.
 //
 // Este módulo:
@@ -26,6 +28,7 @@ const CIERRE_REINICIO = 1012; // código WebSocket «el servidor se reinicia»: 
 function crearTiempoReal({ logger = loggerSilencioso, intervaloPingMs = 30000 } = {}) {
   const wss = new WebSocketServer({ noServer: true, maxPayload: 1024 });
   const seguidores = new Map(); // idPartida -> Set<WebSocket>
+  const vestibulo = new Set(); // conexiones que miran la lista de partidas abiertas (MJ-14)
   let servicios = null;
   let temporizador = null;
 
@@ -62,6 +65,15 @@ function crearTiempoReal({ logger = loggerSilencioso, intervaloPingMs = 30000 } 
     ws.send(JSON.stringify({ tipo: 'conectado', partida: idPartida }));
   }
 
+  function seguirVestibulo(ws) {
+    vestibulo.add(ws);
+    ws.vivo = true;
+    ws.on('pong', () => { ws.vivo = true; });
+    ws.on('close', () => { vestibulo.delete(ws); });
+    ws.on('message', () => {});
+    ws.send(JSON.stringify({ tipo: 'conectado', vestibulo: true }));
+  }
+
   async function alPedirConexion(req, socket, cabeza) {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname !== RUTA) return rechazar(socket, 404);
@@ -69,6 +81,10 @@ function crearTiempoReal({ logger = loggerSilencioso, intervaloPingMs = 30000 } 
     try {
       const idSolicitante = await servicios.servicioSesiones.resolver(leerCookie(req, NOMBRE_COOKIE));
       if (!idSolicitante) return rechazar(socket, 401);
+      if (url.searchParams.has('vestibulo')) {
+        wss.handleUpgrade(req, socket, cabeza, (ws) => seguirVestibulo(ws));
+        return undefined;
+      }
       const idPartida = url.searchParams.get('partida');
       await servicios.servicioPartidas.puedeSeguir(idSolicitante, idPartida);
       wss.handleUpgrade(req, socket, cabeza, (ws) => seguir(ws, idPartida));
@@ -97,6 +113,14 @@ function crearTiempoReal({ logger = loggerSilencioso, intervaloPingMs = 30000 } 
     avisar(idPartida, evento) {
       const mensaje = JSON.stringify(evento);
       for (const ws of seguidores.get(idPartida) ?? []) {
+        if (ws.readyState === WebSocket.OPEN) ws.send(mensaje);
+      }
+    },
+
+    // MJ-14: aviso a todos los que miran la lista de partidas abiertas.
+    avisarVestibulo(evento) {
+      const mensaje = JSON.stringify(evento);
+      for (const ws of vestibulo) {
         if (ws.readyState === WebSocket.OPEN) ws.send(mensaje);
       }
     },

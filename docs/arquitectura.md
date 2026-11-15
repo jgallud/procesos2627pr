@@ -82,6 +82,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | POST | `/api/partidas` | con sesión | 201 partida nueva contra la máquina (200 si ya tenía una en curso); con `{modo: 'jugadores'}`, partida abierta para otro jugador (RF-22) |
 | GET | `/api/partidas/actual` | con sesión | 200 partida en curso, o `null` |
 | GET (WebSocket) | `/api/tiempo-real?partida=id` | quien juega la partida | conexión de avisos; 401 sin sesión, 403 si no juega o desde otro origen, 404 si la partida no existe (RF-24) |
+| GET (WebSocket) | `/api/tiempo-real?vestibulo` | con sesión | avisos de que la lista de partidas abiertas ha cambiado (MJ-14) |
 | GET | `/api/partidas/abiertas` | con sesión | 200 partidas entre jugadores esperando rival, de otros usuarios (RF-22) |
 | POST | `/api/partidas/:id/union` | con sesión | 200 vista; 409 si es propia o ya tiene dos jugadores (RF-22) |
 | POST | `/api/partidas/:id/cancelacion` | quien creó la partida | 204; 409 si alguien ya se ha unido (RF-22) |

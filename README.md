@@ -186,6 +186,7 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 | `POST` | `/api/partidas` | con sesión | `201` partida contra la máquina (`200` si ya había una en curso); `{modo: 'jugadores'}`: partida abierta para otro jugador |
 | `GET` | `/api/partidas/actual` | con sesión | `200` partida en curso o `null` |
 | `GET` (WebSocket) | `/api/tiempo-real?partida=id` | quien juega la partida | avisos en tiempo real (RF-24) |
+| `GET` (WebSocket) | `/api/tiempo-real?vestibulo` | con sesión | avisos de cambios en las partidas abiertas (MJ-14) |
 | `GET` | `/api/partidas/abiertas` | con sesión | `200` partidas abiertas de otros jugadores (RF-22) |
 | `POST` | `/api/partidas/:id/union` | con sesión | `200` vista de la partida (RF-22) |
 | `POST` | `/api/partidas/:id/cancelacion` | quien creó la partida | `204` (RF-22) |

@@ -259,3 +259,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** sin `BREVO_API_KEY` el enlace se escribe en el log, como el de confirmación. No hay límite de peticiones: alguien podría pedir muchos enlaces para el mismo email (cada uno invalida el anterior, así que no da acceso, pero puede llenar el buzón); queda como mejora posible.
 - **Estado:** vigente. Evidencia: `test/logic/restablecimiento.test.js`, `test/api/restablecimiento.test.js`.
 
+### D-40 Vestíbulo en tiempo real
+- **Qué:** la lista de partidas abiertas se actualiza sola (MJ-14) con el mismo WebSocket de [D-37](#d-37-websocket-con-la-librería-ws): quien la está viendo abre una conexión «de vestíbulo» (`/api/tiempo-real?vestibulo`, con la cookie de sesión) y el servicio de partidas avisa por el avisador (`avisarVestibulo`) cada vez que la lista cambia: partida abierta creada, llena, cancelada o anulada. El aviso solo dice `{ tipo: 'abiertas' }`; el cliente vuelve a pedir la lista por REST, como hace con la partida ([D-23](#d-23-websocket-solo-para-avisos-y-avisador-inyectado)). El cliente tiene una sola conexión a la vez: la de su partida o, sin partida, la del vestíbulo.
+- **Alternativas consideradas:** consultar la lista cada pocos segundos (más sencillo, pero con peticiones constantes aunque no cambie nada y un retraso de hasta el intervalo); enviar en el aviso la lista o la partida nueva (ahorra una petición, pero duplicaría en el WebSocket lo que ya da la API).
+- **Por qué:** TODO(alumno): ¿por qué avisos por WebSocket y no consulta periódica? (pista: reutiliza la infraestructura del Hito 7 y con una sola instancia, [D-24](#d-24-una-sola-instancia-de-cloud-run-con-websocket), el aviso llega a todos).
+- **Consecuencias:** mientras un usuario tiene abierto el panel sin partida, mantiene una conexión abierta, sin tráfico si no pasa nada. El botón «Actualizar» se mantiene por si se corta la conexión.
+- **Estado:** vigente. Evidencia: `test/api/tiempoReal.test.js` («vestíbulo»).
+
