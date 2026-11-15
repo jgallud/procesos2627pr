@@ -1,4 +1,4 @@
-// CAPA API — endpoints REST de las partidas de Hundir la Flota (Hito 5).
+// CAPA API — endpoints REST de las partidas de Hundir la Flota (Hitos 5 y 6).
 //
 // Solo traduce HTTP <-> llamadas al servicio de partidas: lee parámetros,
 // llama al servicio y devuelve JSON. No contiene reglas del juego (están en
@@ -8,6 +8,8 @@
 //
 //   POST   /api/partidas                       crear contra la máquina  -> 201 (200 si ya había una en curso)
 //   GET    /api/partidas/actual                partida en curso         -> 200 vista | null
+//   GET    /api/partidas/historial[?usuario=]  partidas terminadas      -> 200 [resumen] (RF-18)
+//   GET    /api/partidas/estadisticas[?usuario=] estadísticas           -> 200 {jugadas, …} (RF-19)
 //   GET    /api/partidas/:id                   vista de la partida      -> 200
 //   POST   /api/partidas/:id/barcos            colocar un barco         -> 200 vista
 //   DELETE /api/partidas/:id/barcos/:barco     retirar un barco         -> 200 vista
@@ -30,6 +32,16 @@ function crearRouterPartidas({ servicioPartidas }) {
   // Antes que '/:id', para que «actual» no se tome como un identificador.
   router.get('/actual', async (req, res) => {
     res.json(await servicioPartidas.partidaEnCurso(req.idSolicitante));
+  });
+
+  // ?usuario=<id>: solo el administrador puede pedir las de otro usuario
+  // (lo comprueba el servicio).
+  router.get('/historial', async (req, res) => {
+    res.json(await servicioPartidas.historial(req.idSolicitante, req.query.usuario));
+  });
+
+  router.get('/estadisticas', async (req, res) => {
+    res.json(await servicioPartidas.estadisticas(req.idSolicitante, req.query.usuario));
   });
 
   router.get('/:id', async (req, res) => {

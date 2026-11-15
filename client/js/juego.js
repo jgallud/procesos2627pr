@@ -50,7 +50,10 @@ async function jugar(accion) {
 }
 
 function actualizar(vista) {
+  const acabaDeTerminar = vista?.estado === 'terminada' && partida?.estado !== 'terminada' && partida?.id === vista.id;
   partida = vista;
+  // Aviso para el historial (historial.js): hay una partida terminada más.
+  if (acabaDeTerminar) document.dispatchEvent(new CustomEvent('partida:terminada'));
   if (partida && !partida.propio.barcosPendientes.includes(barcoElegido)) {
     [barcoElegido = null] = partida.propio.barcosPendientes;
   }

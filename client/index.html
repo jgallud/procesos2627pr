@@ -131,6 +131,24 @@
         </div>
       </div>
 
+      <!-- Historial y estadísticas (Hito 6): lo gestiona js/historial.js -->
+      <div id="seccion-historial" class="tarjeta" hidden>
+        <div class="titulo-seccion">
+          <h2 id="historial-titulo">Mis partidas</h2>
+          <button id="boton-historial-propio" type="button" class="boton-secundario" hidden>Ver mis partidas</button>
+        </div>
+        <dl id="estadisticas" class="estadisticas"></dl>
+        <p id="historial-vacio" class="secundario" hidden>Todavía no hay partidas terminadas.</p>
+        <div class="tabla-desplazable">
+          <table id="tabla-historial" hidden>
+            <thead>
+              <tr><th>Fecha</th><th>Rival</th><th>Resultado</th><th>Disparos</th><th>Acierto</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="seccion-admin" class="tarjeta" hidden>
         <div class="titulo-seccion">
           <h2>Usuarios <span id="total-usuarios" class="secundario"></span></h2>

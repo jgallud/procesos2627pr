@@ -6,7 +6,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { arrancar, cookieDe } = require('../ayuda/servidor');
-const { montar, CLAVE } = require('../ayuda/montaje');
+const { montar, CLAVE, CLAVE_ADMIN } = require('../ayuda/montaje');
 const { azarFijo } = require('../logic/motor/ayuda');
 
 describe('API /api/partidas', () => {
@@ -143,6 +143,48 @@ describe('API /api/partidas', () => {
       assert.equal(r.datos.resultado, 'derrota');
       assert.equal(r.datos.rival.flota.length, 5);
       assert.equal((await pedir('GET', '/api/partidas/actual', cookieAna)).datos, null);
+    });
+  });
+
+  describe('GET /api/partidas/historial y /estadisticas (RF-18, RF-19)', () => {
+    async function abandonada() {
+      const vista = await partidaEnJuego();
+      await pedir('POST', `/api/partidas/${vista.id}/abandono`, cookieAna);
+      return vista.id;
+    }
+
+    it('devuelve las partidas terminadas del usuario y sus estadísticas', async () => {
+      const id = await abandonada();
+      const historial = await pedir('GET', '/api/partidas/historial', cookieAna);
+      assert.equal(historial.estado, 200);
+      assert.deepEqual(historial.datos.map((h) => h.id), [id]);
+      assert.equal(historial.datos[0].resultado, 'derrota');
+      assert.equal(historial.datos[0].oponente, 'maquina');
+
+      const estadisticas = await pedir('GET', '/api/partidas/estadisticas', cookieAna);
+      assert.equal(estadisticas.estado, 200);
+      assert.equal(estadisticas.datos.jugadas, 1);
+      assert.equal(estadisticas.datos.perdidas, 1);
+      assert.equal((await pedir('GET', '/api/partidas/historial', cookieLuis)).datos.length, 0);
+    });
+
+    it('401 sin sesión y 403 si un usuario pide las de otro', async () => {
+      const ana = (await pedir('GET', '/api/sesion', cookieAna)).datos;
+      assert.equal((await pedir('GET', '/api/partidas/historial')).estado, 401);
+      assert.equal((await pedir('GET', '/api/partidas/estadisticas')).estado, 401);
+      assert.equal((await pedir('GET', `/api/partidas/historial?usuario=${ana.id}`, cookieLuis)).estado, 403);
+    });
+
+    it('el administrador consulta las de cualquier usuario', async () => {
+      await abandonada();
+      await ctx.servicioUsuarios.asegurarAdministrador({ email: 'admin@ejemplo.com', contrasena: CLAVE_ADMIN });
+      const login = await servidor.peticion('POST', '/api/sesion', { cuerpo: { email: 'admin@ejemplo.com', contrasena: CLAVE_ADMIN } });
+      const cookieAdmin = cookieDe(login.cookies);
+      const ana = (await pedir('GET', '/api/sesion', cookieAna)).datos;
+      const r = await pedir('GET', `/api/partidas/estadisticas?usuario=${encodeURIComponent(ana.id)}`, cookieAdmin);
+      assert.equal(r.estado, 200);
+      assert.equal(r.datos.jugadas, 1);
+      assert.equal((await pedir('GET', '/api/partidas/historial?usuario=no-existe', cookieAdmin)).estado, 404);
     });
   });
 });

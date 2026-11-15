@@ -86,6 +86,12 @@ export const colocarFlotaAleatoria = (id) => peticion('POST', `${rutaPartida(id)
 export const disparar = (id, casilla) => peticion('POST', `${rutaPartida(id)}/disparos`, { casilla });
 export const abandonarPartida = (id) => peticion('POST', `${rutaPartida(id)}/abandono`);
 
+// Historial y estadísticas (Hito 6, RF-18 y RF-19). Sin usuario, las propias;
+// con usuario, las de otro (solo el administrador: lo comprueba el servidor).
+const conUsuario = (ruta, idUsuario) => (idUsuario ? `${ruta}?usuario=${encodeURIComponent(idUsuario)}` : ruta);
+export const historialPartidas = (idUsuario) => peticion('GET', conUsuario('/partidas/historial', idUsuario));
+export const estadisticasPartidas = (idUsuario) => peticion('GET', conUsuario('/partidas/estadisticas', idUsuario));
+
 // --- Usuarios ---------------------------------------------------------------
 export const listarUsuarios = () => peticion('GET', '/usuarios');
 export const estaActivo = (id) => peticion('GET', `/usuarios/${encodeURIComponent(id)}/activo`);
