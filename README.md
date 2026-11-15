@@ -184,6 +184,7 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 | `GET` | `/api/partidas/actual` | con sesión | `200` partida en curso o `null` |
 | `GET` | `/api/partidas/historial[?usuario=id]` | con sesión (otro usuario: administrador) | `200` partidas terminadas (RF-18) |
 | `GET` | `/api/partidas/estadisticas[?usuario=id]` | con sesión (otro usuario: administrador) | `200` estadísticas (RF-19) |
+| `GET` | `/api/partidas/clasificacion` | con sesión | `200` clasificación de jugadores (RF-20) |
 | `GET` | `/api/partidas/:id` | quien juega la partida | `200` vista de la partida |
 | `POST` | `/api/partidas/:id/barcos` | quien juega la partida | `200` vista (`{barco, casilla, orientacion}`) |
 | `DELETE` | `/api/partidas/:id/barcos/:barco` | quien juega la partida | `200` vista |
