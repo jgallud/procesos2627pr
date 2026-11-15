@@ -127,7 +127,7 @@ export async function mostrarHistorialDe(usuario) {
   usuarioConsultado = { id: usuario.id, email: usuario.email };
   $('#seccion-historial').hidden = false;
   await cargar();
-  $('#seccion-historial').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 export function ocultarHistorial() {
