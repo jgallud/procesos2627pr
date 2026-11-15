@@ -41,6 +41,13 @@ async function jugar(accion) {
     const respuesta = await accion();
     return respuesta;
   } catch (error) {
+    // RF-21: si el administrador ha anulado la partida, se cierra aquí
+    // también y se puede empezar otra.
+    if (error?.codigo === 'PARTIDA_ANULADA') {
+      actualizar(null);
+      ui.avisar('El administrador ha anulado esta partida. Puedes empezar otra.', 'error');
+      return null;
+    }
     ui.mostrarError(error);
     return null;
   } finally {

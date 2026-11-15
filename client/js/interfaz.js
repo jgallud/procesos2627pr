@@ -12,6 +12,7 @@ import { prepararJuego, mostrarJuego, ocultarJuego } from './juego.js';
 import {
   prepararHistorial, mostrarHistorial, mostrarHistorialDe, ocultarHistorial,
 } from './historial.js';
+import { prepararAdminPartidas, mostrarAdminPartidas, ocultarAdminPartidas } from './adminPartidas.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -119,6 +120,7 @@ async function alRegistrarse(evento) {
 function ocultarSecciones() {
   ocultarJuego();
   ocultarHistorial();
+  ocultarAdminPartidas();
 }
 
 async function entrarEnPanel(usuario) {
@@ -130,7 +132,8 @@ async function entrarEnPanel(usuario) {
   $('#seccion-admin').hidden = !esAdmin;
   mostrarVista('panel');
   await Promise.all([mostrarJuego(), mostrarHistorial()]);
-  if (esAdmin) await cargarUsuarios();
+  if (esAdmin) await Promise.all([cargarUsuarios(), mostrarAdminPartidas()]);
+  else ocultarAdminPartidas();
 }
 
 async function alCerrarSesion() {
@@ -327,6 +330,7 @@ async function iniciar() {
   enlazarEventos();
   prepararJuego({ avisar, mostrarError });
   prepararHistorial({ mostrarError });
+  prepararAdminPartidas({ avisar, mostrarError });
   elegirPestana('entrar');
   comprobarServidor();
   mostrarAccesoExterno();
