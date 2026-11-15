@@ -8,7 +8,7 @@
 // este devuelve, que nunca incluye la flota del rival hasta el final (RNF-10).
 
 import * as api from './api.js';
-import { seguirPartida, dejarDeSeguir } from './tiempoReal.js';
+import { seguirPartida, seguirVestibulo, dejarDeSeguir } from './tiempoReal.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -32,6 +32,7 @@ let barcoElegido = null; // barco que se va a colocar
 let orientacion = 'horizontal';
 let ocupado = false; // evita enviar dos jugadas a la vez
 let ui = { avisar: () => {}, mostrarError: () => {} };
+let seccionVisible = false; // entre mostrarJuego y ocultarJuego (con sesión)
 
 // --- Peticiones ---------------------------------------------------------------
 
@@ -126,8 +127,14 @@ async function actualizarPartida() {
 // --- Tiempo real (RF-24 a RF-26) ----------------------------------------------
 
 // Se siguen los avisos mientras haya una partida entre jugadores sin terminar.
+// Sin partida, se ve la lista de partidas abiertas y se siguen sus cambios
+// (MJ-14). Contra la máquina no hace falta tiempo real.
 function sincronizarTiempoReal() {
-  const seguir = partida && partida.oponente === 'usuario' && partida.estado !== 'terminada' && !partida.anulada;
+  if (!partida) {
+    if (seccionVisible) seguirVestibulo();
+    return;
+  }
+  const seguir = partida.oponente === 'usuario' && partida.estado !== 'terminada' && !partida.anulada;
   if (seguir) seguirPartida(partida.id);
   else dejarDeSeguir();
 }
@@ -135,6 +142,10 @@ function sincronizarTiempoReal() {
 const miIndice = () => (partida.soyCreador ? 0 : 1);
 
 async function alRecibirAviso({ detail: aviso }) {
+  if (aviso.tipo === 'abiertas') { // MJ-14: alguien ha creado, llenado o cancelado una partida
+    if (!partida) cargarAbiertas();
+    return;
+  }
   if (!partida || aviso.partida !== partida.id) return;
   if (aviso.jugador === miIndice()) return; // mi propia jugada: ya la tengo
   await actualizarPartida();
@@ -146,10 +157,11 @@ async function alRecibirAviso({ detail: aviso }) {
 }
 
 function alCambiarConexion({ detail: { estado } }) {
-  const indicador = $('#juego-conexion');
-  indicador.hidden = estado === 'desconectado';
-  indicador.textContent = estado === 'conectado' ? 'En directo' : 'Reconectando…';
-  indicador.className = `etiqueta conexion-${estado}`;
+  for (const indicador of [$('#juego-conexion'), $('#abiertas-conexion')]) {
+    indicador.hidden = estado === 'desconectado';
+    indicador.textContent = estado === 'conectado' ? 'En directo' : 'Reconectando…';
+    indicador.className = `etiqueta conexion-${estado}`;
+  }
 }
 
 function pintarAbiertas(abiertas) {
@@ -399,7 +411,7 @@ export function prepararJuego({ avisar, mostrarError }) {
   $('#boton-actualizar-partida').addEventListener('click', actualizarPartida);
   $('#boton-cancelar-partida').addEventListener('click', cancelar);
   document.addEventListener('tiempo-real:aviso', alRecibirAviso);
-  document.addEventListener('tiempo-real:reconectado', actualizarPartida);
+  document.addEventListener('tiempo-real:reconectado', () => (partida ? actualizarPartida() : cargarAbiertas()));
   document.addEventListener('tiempo-real:estado', alCambiarConexion);
   $('#boton-abandonar').addEventListener('click', abandonar);
   $('#boton-colocacion-automatica').addEventListener('click', colocarAutomatica);
@@ -411,6 +423,7 @@ export function prepararJuego({ avisar, mostrarError }) {
 
 // Al entrar en el panel: retoma la partida en curso, si la hay.
 export async function mostrarJuego() {
+  seccionVisible = true;
   $('#seccion-juego').hidden = false;
   try {
     actualizar(await api.partidaActual());
@@ -420,6 +433,7 @@ export async function mostrarJuego() {
 }
 
 export function ocultarJuego() {
+  seccionVisible = false;
   dejarDeSeguir();
   partida = null;
   barcoElegido = null;
