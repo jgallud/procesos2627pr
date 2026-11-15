@@ -222,3 +222,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** dos jugadores pueden aparecer con el mismo nombre. La fila de quien consulta se marca con `esSolicitante`, que decide el servidor.
 - **Estado:** vigente. Evidencia: `test/logic/estadisticas.test.js`.
 
+### D-35 Partida anulada sin ganador
+- **Qué:** anular una partida (RF-21) la marca con `anulada: true`, `anuladaEn` y `anuladaPor`, y la saca de las partidas en curso; el estado del juego se guarda tal cual, sin ganador. Solo se pueden anular partidas en curso: una terminada ya tiene resultado y sigue contando. Una jugada sobre una partida anulada se rechaza con el código propio `PARTIDA_ANULADA` (409), para que la interfaz del jugador pueda cerrarla y ofrecer otra.
+- **Alternativas consideradas:** borrar la partida (no queda rastro de qué se anuló ni de quién lo hizo); terminarla como abandono del jugador (contaría como derrota, y RF-21 pide que no cuente).
+- **Por qué:** TODO(alumno): ¿por qué marcarla en vez de borrarla?
+- **Consecuencias:** las estadísticas ya excluían las partidas anuladas desde RF-19 ([D-33](#d-33-historial-y-estadísticas-calculados-al-consultar)), así que no hubo que tocarlas. El administrador ve quién juega cada partida por su email, que ya podía ver en la lista de usuarios.
+- **Estado:** vigente. Evidencia: `test/logic/partidaService.test.js`.
+
