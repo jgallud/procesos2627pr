@@ -4,7 +4,8 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
-| 2026-11-15 | Partidas entre jugadores: crear, unirse, cancelar y turnos (RF-22 y RF-23) | rama `feature/hito7-partidas-entre-jugadores`, [D-36](decisiones.md#d-36-partidas-entre-jugadores-en-el-mismo-servicio) |
+| 2026-11-15 | Etiqueta `hito-6`: Hito 6 cerrado (RF-17 a RF-21 hechos) | `0d0731f`, [Sprint 2](sprint-2.md#hundir-la-flota) |
+| 2026-11-15 | PR #29 integrado: gestión de partidas del administrador (RF-21) | [D-35](decisiones.md#d-35-partida-anulada-sin-ganador) |
 | 2026-11-15 | Gestión de partidas del administrador: ver las partidas en curso y anular una (RF-21). Con ella están hechos todos los requisitos del Hito 6 | rama `feature/hito6-gestion-partidas`, [D-35](decisiones.md#d-35-partida-anulada-sin-ganador) |
 | 2026-11-15 | PR #28 integrado: clasificación (RF-20) | [D-34](decisiones.md#d-34-clasificación-sin-emails-y-solo-con-partidas) |
 | 2026-11-15 | Clasificación de jugadores (RF-20). Se corrige una prueba del historial que fallaba a veces porque dos partidas terminaban en el mismo milisegundo | rama `feature/hito6-clasificacion`, [D-34](decisiones.md#d-34-clasificación-sin-emails-y-solo-con-partidas) |
