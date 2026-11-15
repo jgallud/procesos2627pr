@@ -290,5 +290,17 @@
       </div>
     </section>
   </main>
+
+  <!-- MJ-16: ventana de confirmación propia, en lugar de window.confirm (js/dialogo.js) -->
+  <dialog id="dialogo-confirmar" class="dialogo" aria-labelledby="dialogo-titulo">
+    <form method="dialog">
+      <h2 id="dialogo-titulo"></h2>
+      <p id="dialogo-mensaje" class="secundario"></p>
+      <div class="acciones dialogo-acciones">
+        <button id="dialogo-cancelar" type="submit" value="cancelar" class="boton-secundario">Cancelar</button>
+        <button id="dialogo-aceptar" type="submit" value="aceptar" class="boton-principal">Aceptar</button>
+      </div>
+    </form>
+  </dialog>
 </body>
 </html>

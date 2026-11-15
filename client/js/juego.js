@@ -9,6 +9,7 @@
 
 import * as api from './api.js';
 import { seguirPartida, seguirVestibulo, dejarDeSeguir } from './tiempoReal.js';
+import { confirmar } from './dialogo.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -104,7 +105,12 @@ async function unirseA(abierta) {
 }
 
 async function cancelar() {
-  if (!window.confirm('¿Cancelar la partida? Nadie se ha unido todavía, así que no contará como derrota.')) return;
+  const seguro = await confirmar({
+    titulo: '¿Cancelar la partida?',
+    mensaje: 'Nadie se ha unido todavía, así que no contará como derrota.',
+    aceptar: 'Cancelar partida', cancelar: 'Seguir esperando', peligro: true,
+  });
+  if (!seguro) return;
   const hecho = await jugar(async () => { await api.cancelarPartida(partida.id); return true; });
   if (hecho) { actualizar(null); ui.avisar('Partida cancelada.', 'info'); }
 }
@@ -242,7 +248,12 @@ async function dispararA(casilla) {
 }
 
 async function abandonar() {
-  if (!window.confirm('¿Seguro que quieres abandonar? La partida contará como derrota.')) return;
+  const seguro = await confirmar({
+    titulo: '¿Abandonar la partida?',
+    mensaje: `Contará como derrota y ${nombreDelRival()} ganará la partida.`,
+    aceptar: 'Abandonar', cancelar: 'Seguir jugando', peligro: true,
+  });
+  if (!seguro) return;
   const vista = await jugar(() => api.abandonarPartida(partida.id));
   if (!vista) return;
   // MJ-15: quien abandona vuelve a la pantalla principal (no tiene sentido
