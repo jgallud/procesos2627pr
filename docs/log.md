@@ -4,6 +4,7 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-15 | MJ-15: quien abandona vuelve a la pantalla principal, en la misma rama que MJ-14 | rama `feature/mj14-lista-en-directo`, [Mejoras](requisitos.md#mejoras-del-sprint-2) |
 | 2026-11-15 | MJ-14: la lista de partidas abiertas se actualiza sola por WebSocket | rama `feature/mj14-lista-en-directo`, [D-40](decisiones.md#d-40-vestíbulo-en-tiempo-real) |
 | 2026-11-15 | PR #39 integrado: MJ-11, MJ-12 y MJ-13 juntas, porque la rama de MJ-13 salía de las otras dos | [D-39](decisiones.md#d-39-recuperar-la-contraseña-con-un-enlace-de-un-solo-uso) |
 | 2026-11-15 | MJ-13: «Cerrar sesión» dentro de «Mi cuenta» | rama `feature/mj13-cerrar-sesion-en-cuenta`, [Mejoras](requisitos.md#mejoras-del-sprint-2) |

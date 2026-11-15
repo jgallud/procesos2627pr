@@ -225,7 +225,12 @@ async function dispararA(casilla) {
 async function abandonar() {
   if (!window.confirm('¿Seguro que quieres abandonar? La partida contará como derrota.')) return;
   const vista = await jugar(() => api.abandonarPartida(partida.id));
-  if (vista) { actualizar(vista); ui.avisar('Has abandonado la partida.', 'info'); }
+  if (!vista) return;
+  // MJ-15: quien abandona vuelve a la pantalla principal (no tiene sentido
+  // quedarse mirando los tableros). El rival sí ve el final de la partida.
+  document.dispatchEvent(new CustomEvent('partida:terminada')); // para el historial
+  actualizar(null);
+  ui.avisar('Has abandonado la partida: cuenta como derrota.', 'info');
 }
 
 // --- Textos ---------------------------------------------------------------------
