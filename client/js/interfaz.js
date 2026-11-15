@@ -228,9 +228,6 @@ function ocultarSecciones() {
 
 async function entrarEnPanel(usuario) {
   usuarioActual = usuario;
-  $('#perfil-nombre').textContent = usuario.nombre || usuario.email;
-  $('#perfil-email').textContent = usuario.email;
-  $('#perfil-rol').textContent = usuario.rol;
   $('#menu-cuenta-nombre').textContent = usuario.nombre || usuario.email.split('@')[0];
   // Mi cuenta (MJ-01)
   $('#cuenta-nombre').textContent = usuario.nombre || '—';

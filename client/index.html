@@ -113,16 +113,7 @@
 
     <!-- Panel del usuario con sesión -->
     <section id="vista-panel" hidden>
-      <div class="tarjeta perfil">
-        <div>
-          <h1 id="perfil-nombre"></h1>
-          <p class="secundario"><span id="perfil-email"></span> · <span id="perfil-rol" class="etiqueta"></span></p>
-        </div>
-        <div class="acciones">
-          <button id="boton-salir" type="button" class="boton-secundario">Cerrar sesión</button>
-        </div>
-      </div>
-
+      <!-- MJ-13: el nombre, el rol y «Cerrar sesión» están en «Mi cuenta» -->
       <!-- Sección «Jugar» del menú (MJ-05) -->
       <div data-panel="jugar">
       <!-- Hundir la Flota (Hito 5): lo gestiona js/juego.js -->
@@ -243,7 +234,10 @@
       <!-- Sección «Mi cuenta» del menú (MJ-01): datos de la cuenta y eliminarla -->
       <div data-panel="cuenta" hidden>
         <div class="tarjeta">
-          <h2>Mi cuenta</h2>
+          <div class="titulo-seccion">
+            <h2>Mi cuenta</h2>
+            <button id="boton-salir" type="button" class="boton-secundario">Cerrar sesión</button>
+          </div>
           <dl class="datos-cuenta">
             <dt>Nombre</dt><dd id="cuenta-nombre"></dd>
             <dt>Email</dt><dd id="cuenta-email"></dd>

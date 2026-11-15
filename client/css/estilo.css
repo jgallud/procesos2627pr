@@ -116,7 +116,6 @@ button:disabled { opacity: 0.6; cursor: progress; }
 .boton-peligro:hover:not(:disabled) { background: var(--error-fondo); }
 
 /* Panel */
-.perfil { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 .acciones { display: flex; gap: 8px; flex-wrap: wrap; }
 .etiqueta { background: var(--info-fondo); padding: 1px 8px; border-radius: 999px; font-size: 0.85rem; }
 .titulo-seccion { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
