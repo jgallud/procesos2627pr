@@ -252,3 +252,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** el historial muestra la dificultad de cada partida contra la máquina. Las estadísticas y la clasificación no la distinguen: una victoria cuenta igual en cualquier nivel.
 - **Estado:** vigente. Evidencia: `test/logic/jugadorMaquina.test.js`.
 
+### D-39 Recuperar la contraseña con un enlace de un solo uso
+- **Qué:** para recuperar la contraseña (MJ-12) se envía por correo un enlace con un token aleatorio de 256 bits (`<id>.<secreto>`, como el de confirmación de [D-11](#d-11-notificador-de-confirmación-desacoplado)) con el que el usuario elige la contraseña nueva. Se guarda solo el SHA-256 del secreto y su caducidad (una hora); el token vale una vez y pedir otro invalida el anterior. Pedir el enlace responde siempre lo mismo (202), exista o no la cuenta. Al cambiar la contraseña se cierran todas las sesiones del usuario.
+- **Alternativas consideradas:** generar una contraseña nueva y enviarla por correo (más sencillo para el usuario, pero la contraseña queda escrita en su buzón, cualquiera que pida el cambio puede dejar a otro sin acceso y obliga a cambiarla después); preguntas de seguridad (débiles y más datos personales que guardar).
+- **Por qué:** TODO(alumno): ¿por qué un enlace y no una contraseña nueva por correo?
+- **Consecuencias:** sin `BREVO_API_KEY` el enlace se escribe en el log, como el de confirmación. No hay límite de peticiones: alguien podría pedir muchos enlaces para el mismo email (cada uno invalida el anterior, así que no da acceso, pero puede llenar el buzón); queda como mejora posible.
+- **Estado:** vigente. Evidencia: `test/logic/restablecimiento.test.js`, `test/api/restablecimiento.test.js`.
+
