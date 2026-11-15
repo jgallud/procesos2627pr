@@ -38,7 +38,7 @@ Tres hitos, un PBI de Donetonic por hito. Cada hito se reparte en varios pull re
 | 5 | Partida contra la máquina | RF-11 a RF-16, RNF-09, RNF-10, RNF-11 | **cerrado**: motor (#17), jugador máquina (#19), servicio y API (#20) e interfaz (#21); comprobado en la URL pública el 2026-11-11; etiqueta `hito-5` (`40016f2`) |
 | 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | **cerrado**: partidas en MongoDB (#23), MJ-04 y MJ-02 (#26), historial y estadísticas (#27), clasificación (#28) y gestión de partidas del administrador (#29); etiqueta `hito-6` (`0d0731f`) |
 | 7 | Partida entre jugadores en tiempo real | RF-22 a RF-26, RNF-12 | **cerrado**: crear, unirse y turnos (#31), avisos por WebSocket con `ws`, reconexión y aviso de abandono (#32); reconexión tras un despliegue comprobada en la URL pública el 2026-11-15; etiqueta `hito-7` (`3e783f8`). RF-26 queda parcial: no se implementa el tiempo máximo de turno, que es opcional |
-| — | Mejoras del Sprint 2 | MJ-01 a MJ-16 (y RF-19, ya en el Hito 6) | hechas: MJ-02 y MJ-04 (#26), MJ-05 a MJ-09 (#33), MJ-01 (#35), MJ-03 (#36), MJ-10 (#37), MJ-11 a MJ-13 (#39), MJ-14 (#40); MJ-15 y MJ-16 en `feature/mj15-mj16-abandono-y-dialogos` |
+| — | Mejoras del Sprint 2 | MJ-01 a MJ-17 (y RF-19, ya en el Hito 6) | hechas: MJ-02 y MJ-04 (#26), MJ-05 a MJ-09 (#33), MJ-01 (#35), MJ-03 (#36), MJ-10 (#37), MJ-11 a MJ-13 (#39), MJ-14 (#40); MJ-15 y MJ-16 en `feature/mj15-mj16-abandono-y-dialogos`; MJ-17 en `feature/mj17-version` |
 
 Cada hito se cierra como en el Sprint 1: CI en verde, aplicación desplegada funcionando, requisitos actualizados con su evidencia y etiqueta (`hito-5`, `hito-6`, `hito-7`).
 
