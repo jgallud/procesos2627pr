@@ -19,10 +19,13 @@
       <nav id="menu" class="menu" aria-label="Secciones" hidden>
         <a href="#jugar" data-menu="jugar">Jugar</a>
         <a href="#estadisticas" data-menu="estadisticas">Estadísticas</a>
-        <a href="#cuenta" data-menu="cuenta">Mi cuenta</a>
         <a href="#administracion" data-menu="administracion" hidden>Administración</a>
       </nav>
-      <span class="estado">Servidor: <span id="estado-servidor">comprobando…</span></span>
+      <!-- MJ-11: a la derecha, «Mi cuenta» con el nombre del usuario (antes
+           estaba aquí el estado del servidor) -->
+      <a id="menu-cuenta" class="menu-cuenta" href="#cuenta" data-menu="cuenta" hidden>
+        <span class="secundario">Mi cuenta</span> <strong id="menu-cuenta-nombre"></strong>
+      </a>
     </div>
   </header>
 

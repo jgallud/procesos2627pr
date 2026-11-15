@@ -4,6 +4,8 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-15 | MJ-11: «Mi cuenta» a la derecha de la cabecera, en lugar del estado del servidor | rama `feature/mj11-cabecera`, [Mejoras](requisitos.md#mejoras-del-sprint-2) |
+| 2026-11-15 | PR #37 integrado: MJ-10, comprobado en el navegador | [Mejoras](requisitos.md#mejoras-del-sprint-2) |
 | 2026-11-15 | MJ-10: cambiar de sección del menú sin salto lateral (hueco de la barra de desplazamiento reservado) | rama `feature/mj10-sin-salto-lateral`, [Mejoras](requisitos.md#mejoras-del-sprint-2) |
 | 2026-11-15 | PR #34, #35 y #36 integrados: cierre del Hito 7, MJ-01 (Mi cuenta) y MJ-03 (dificultad de la máquina) | [D-38](decisiones.md#d-38-dificultad-de-la-máquina) |
 | 2026-11-15 | MJ-03: dificultad de la máquina (fácil, normal y difícil) | rama `feature/mj03-dificultad`, [D-38](decisiones.md#d-38-dificultad-de-la-máquina) |
