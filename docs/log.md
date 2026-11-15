@@ -4,6 +4,8 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-15 | Mejoras de interfaz MJ-05 a MJ-09 (menú con Estadísticas, marca que lleva a Jugar, avisos flotantes, botones iguales y aviso de fin de partida como los de disparos), juntas en un PR porque tocan los mismos archivos de la interfaz, como MJ-02 y MJ-04 en el #26 | rama `feature/mejoras-interfaz`, [Mejoras](requisitos.md#mejoras-del-sprint-2) |
+| 2026-11-15 | PR #32 integrado: tiempo real por WebSocket (RF-24 a RF-26). Etiqueta `hito-7` | `3e783f8`, [D-37](decisiones.md#d-37-websocket-con-la-librería-ws) |
 | 2026-11-15 | Avisos en tiempo real por WebSocket, reconexión y aviso de abandono (RF-24, RF-25, RF-26); dependencia nueva `ws` | rama `feature/hito7-tiempo-real`, [D-37](decisiones.md#d-37-websocket-con-la-librería-ws) |
 | 2026-11-15 | PR #31 integrado: partidas entre jugadores (RF-22 y RF-23) | [D-36](decisiones.md#d-36-partidas-entre-jugadores-en-el-mismo-servicio) |
 | 2026-11-15 | Etiqueta `hito-6`: Hito 6 cerrado (RF-17 a RF-21 hechos) | `0d0731f`, [Sprint 2](sprint-2.md#hundir-la-flota) |

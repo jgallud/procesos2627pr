@@ -12,13 +12,25 @@
 <body>
   <header class="cabecera">
     <div class="contenedor cabecera-contenido">
-      <span class="marca">Procesos 26-27</span>
+      <!-- MJ-06: la marca lleva a la pantalla principal (Jugar) -->
+      <a class="marca" href="#jugar">Procesos 26-27</a>
+      <!-- MJ-05: menú del panel; solo con sesión. La sección de administración
+           solo se muestra al administrador (el rol lo comprueba el servidor). -->
+      <nav id="menu" class="menu" aria-label="Secciones" hidden>
+        <a href="#jugar" data-menu="jugar">Jugar</a>
+        <a href="#estadisticas" data-menu="estadisticas">Estadísticas</a>
+        <a href="#administracion" data-menu="administracion" hidden>Administración</a>
+      </nav>
       <span class="estado">Servidor: <span id="estado-servidor">comprobando…</span></span>
     </div>
   </header>
 
   <main class="contenedor">
-    <p id="aviso" class="aviso" role="status" aria-live="polite" hidden></p>
+    <!-- MJ-07: los avisos flotan sobre la página y no desplazan nada -->
+    <div id="aviso" class="aviso" role="status" aria-live="polite" hidden>
+      <span id="aviso-texto"></span>
+      <button id="aviso-cerrar" type="button" class="aviso-cerrar" aria-label="Cerrar aviso">×</button>
+    </div>
 
     <!-- Mientras se comprueba si ya hay una sesión abierta -->
     <section id="vista-cargando" class="tarjeta">
@@ -83,6 +95,8 @@
         </div>
       </div>
 
+      <!-- Sección «Jugar» del menú (MJ-05) -->
+      <div data-panel="jugar">
       <!-- Hundir la Flota (Hito 5): lo gestiona js/juego.js -->
       <div id="seccion-juego" class="tarjeta juego" hidden>
         <div class="titulo-seccion">
@@ -93,7 +107,7 @@
           <p class="secundario">Coloca tus cinco barcos y hunde la flota rival antes de que hundan la tuya. Juega contra la máquina o contra otro jugador.</p>
           <div class="acciones">
             <button id="boton-nueva-partida" type="button" class="boton-principal">Nueva partida contra la máquina</button>
-            <button id="boton-partida-jugadores" type="button" class="boton-secundario">Crear partida contra otro jugador</button>
+            <button id="boton-partida-jugadores" type="button" class="boton-principal">Crear partida contra otro jugador</button>
           </div>
 
           <!-- Partidas abiertas por otros jugadores (Hito 7, RF-22) -->
@@ -149,6 +163,10 @@
         </div>
       </div>
 
+      </div>
+
+      <!-- Sección «Estadísticas» del menú (MJ-05) -->
+      <div data-panel="estadisticas" hidden>
       <!-- Historial y estadísticas (Hito 6): lo gestiona js/historial.js -->
       <div id="seccion-historial" class="tarjeta" hidden>
         <div class="titulo-seccion">
@@ -184,6 +202,10 @@
         </div>
       </div>
 
+      </div>
+
+      <!-- Sección «Administración» del menú, solo administrador (MJ-05) -->
+      <div data-panel="administracion" hidden>
       <!-- Partidas en curso, solo administrador (Hito 6, RF-21): js/adminPartidas.js -->
       <div id="seccion-admin-partidas" class="tarjeta" hidden>
         <div class="titulo-seccion">
@@ -215,6 +237,7 @@
             <tbody></tbody>
           </table>
         </div>
+      </div>
       </div>
     </section>
   </main>

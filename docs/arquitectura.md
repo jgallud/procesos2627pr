@@ -57,6 +57,8 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | Comunicación | `client/js/tiempoReal.js` | Único módulo con WebSocket: conecta, se reconecta y entrega los avisos a la interfaz como eventos; no envía jugadas (RF-24, RF-25) |
 | Comunicación | `client/js/api.js` | Único módulo que usa `fetch`; expone funciones y la clase `ErrorApi` |
 
+**Menú (MJ-05).** `interfaz.js` muestra una sola sección del panel cada vez (Jugar, Estadísticas o Administración), según el fragmento de la URL; los módulos de cada sección (`juego.js`, `historial.js`, `adminPartidas.js`) no cambian.
+
 **Frontera.** `interfaz.js` y `juego.js` solo hacen `import * as api from './api.js'` (y `interfaz.js` importa de `juego.js` las funciones para mostrarlo u ocultarlo). `interfaz.js` y no contiene ningún `fetch` ni URL de la API. Incluso la dirección del botón «Entrar con Google» la da `api.urlInicioOAuth('google')`.
 
 ## Endpoints

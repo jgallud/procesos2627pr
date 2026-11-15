@@ -30,13 +30,59 @@ function mostrarVista(nombre) {
   for (const [clave, elemento] of Object.entries(vistas)) {
     elemento.hidden = clave !== nombre;
   }
+  $('#menu').hidden = nombre !== 'panel'; // el menú solo tiene sentido con sesión (MJ-05)
 }
+
+// MJ-07: el aviso flota sobre la página (no desplaza nada). Los informativos
+// se ocultan solos; los de error se quedan hasta cerrarlos o hasta el
+// siguiente aviso, para que dé tiempo a leerlos.
+const DURACION_AVISO_MS = 6000;
+let temporizadorAviso = null;
 
 function avisar(texto, tipo = 'info') {
   const aviso = $('#aviso');
-  aviso.textContent = texto;
+  clearTimeout(temporizadorAviso);
+  $('#aviso-texto').textContent = texto;
   aviso.className = `aviso aviso-${tipo}`;
+  aviso.setAttribute('role', tipo === 'error' ? 'alert' : 'status');
   aviso.hidden = !texto;
+  if (texto && tipo !== 'error') temporizadorAviso = setTimeout(() => { aviso.hidden = true; }, DURACION_AVISO_MS);
+}
+
+// --- Menú del panel (MJ-05 y MJ-06) ---------------------------------------
+// Cada opción del menú muestra una sección del panel. La sección va en la URL
+// (#jugar, #estadisticas, #administracion): así funcionan el botón «atrás»,
+// recargar la página y el enlace de la marca, que lleva a #jugar.
+
+const SECCIONES = ['jugar', 'estadisticas', 'administracion'];
+
+function seccionPedida() {
+  const nombre = window.location.hash.slice(1);
+  const permitida = SECCIONES.includes(nombre) && (nombre !== 'administracion' || usuarioActual?.rol === 'administrador');
+  return permitida ? nombre : 'jugar';
+}
+
+// Muestra una sección. Con `recargar`, vuelve a pedir sus datos al servidor
+// (las estadísticas y la clasificación pueden haber cambiado por otros jugadores).
+async function mostrarSeccion(nombre, { recargar = true } = {}) {
+  for (const panel of document.querySelectorAll('[data-panel]')) panel.hidden = panel.dataset.panel !== nombre;
+  for (const enlace of document.querySelectorAll('[data-menu]')) {
+    if (enlace.dataset.menu === nombre) enlace.setAttribute('aria-current', 'page');
+    else enlace.removeAttribute('aria-current');
+  }
+  if (!recargar) return;
+  if (nombre === 'estadisticas') await mostrarHistorial();
+  if (nombre === 'administracion') await Promise.all([cargarUsuarios(), mostrarAdminPartidas()]);
+}
+
+// Lleva a una sección cambiando la URL sin disparar hashchange.
+function irA(nombre, opciones) {
+  if (window.location.hash !== `#${nombre}`) window.history.pushState(null, '', `#${nombre}`);
+  return mostrarSeccion(nombre, opciones);
+}
+
+function alCambiarHash() {
+  if (usuarioActual) mostrarSeccion(seccionPedida());
 }
 
 const limpiarAviso = () => avisar('');
@@ -130,7 +176,9 @@ async function entrarEnPanel(usuario) {
   $('#perfil-rol').textContent = usuario.rol;
   const esAdmin = usuario.rol === 'administrador';
   $('#seccion-admin').hidden = !esAdmin;
+  $('[data-menu="administracion"]').hidden = !esAdmin;
   mostrarVista('panel');
+  mostrarSeccion(seccionPedida(), { recargar: false });
   await Promise.all([mostrarJuego(), mostrarHistorial()]);
   if (esAdmin) await Promise.all([cargarUsuarios(), mostrarAdminPartidas()]);
   else ocultarAdminPartidas();
@@ -209,7 +257,10 @@ function pintarUsuarios(usuarios) {
         mostrarError(error);
       }
     }));
-    acciones.append(crearBoton('Partidas', 'boton-secundario', () => mostrarHistorialDe(u)));
+    acciones.append(crearBoton('Partidas', 'boton-secundario', async () => {
+      await irA('estadisticas', { recargar: false });
+      await mostrarHistorialDe(u);
+    }));
     if (u.estado !== 'eliminado') {
       acciones.append(crearBoton('Eliminar', 'boton-peligro', () => eliminarDesdeAdmin(u)));
     }
@@ -316,6 +367,8 @@ async function comprobarServidor() {
 }
 
 function enlazarEventos() {
+  $('#aviso-cerrar').addEventListener('click', () => { clearTimeout(temporizadorAviso); $('#aviso').hidden = true; });
+  window.addEventListener('hashchange', alCambiarHash);
   for (const pestana of document.querySelectorAll('[data-pestana]')) {
     pestana.addEventListener('click', () => { limpiarAviso(); elegirPestana(pestana.dataset.pestana); });
   }
