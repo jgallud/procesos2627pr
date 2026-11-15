@@ -206,6 +206,25 @@ describe('Servicio de usuarios', () => {
     });
   });
 
+  describe('listarJugadores (RF-20)', () => {
+    it('devuelve solo los usuarios activos, con un nombre para mostrar y sin email', async () => {
+      const ana = await crearUsuarioActivo('ana@ejemplo.com');
+      await registrar('pendiente@ejemplo.com');
+      const luis = await crearUsuarioActivo('luis@ejemplo.com');
+      await servicio.eliminarUsuario(luis.id, luis.id);
+      const sinNombre = await servicio.registrarUsuario({ email: 'eva@ejemplo.com', contrasena: CLAVE });
+      await servicio.confirmarCuenta(notificador.tokens.get(sinNombre.email));
+
+      const jugadores = await servicio.listarJugadores(ana.id);
+      assert.deepEqual(jugadores.map((j) => j.nombre).sort(), ['Administrador', 'ana', 'eva']);
+      assert.ok(jugadores.every((j) => j.id && !('email' in j)));
+    });
+
+    it('sin sesión se rechaza por no autenticado', async () => {
+      await assert.rejects(servicio.listarJugadores(undefined), rechazaCon(CODIGOS.NO_AUTENTICADO));
+    });
+  });
+
   describe('estaActivo', () => {
     it('un usuario pendiente de confirmar no está activo', async () => {
       const u = await registrar('ana@ejemplo.com');

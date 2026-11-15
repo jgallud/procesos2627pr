@@ -72,4 +72,22 @@ function estadisticasDe(historial) {
   };
 }
 
-module.exports = { cuenta, resumenDe, historialDe, estadisticasDe, porcentaje };
+// RF-20: clasificación. Recibe las partidas terminadas y los jugadores que
+// pueden aparecer ({ id, nombre }: solo los activos, lo decide el servicio de
+// usuarios). Aparecen los que tienen al menos una partida que cuente,
+// ordenados por victorias y, a igualdad, por porcentaje de acierto (sin
+// disparos, al final); después por menos partidas jugadas y por nombre, para
+// que el orden sea siempre el mismo.
+function clasificacionDe(partidas, jugadores) {
+  const filas = jugadores
+    .map(({ id, nombre }) => ({ id, nombre, ...estadisticasDe(historialDe(partidas, id)) }))
+    .filter((fila) => fila.jugadas > 0);
+  const acierto = (fila) => fila.porcentajeAcierto ?? -1;
+  filas.sort((a, b) => b.ganadas - a.ganadas
+    || acierto(b) - acierto(a)
+    || a.jugadas - b.jugadas
+    || a.nombre.localeCompare(b.nombre, 'es'));
+  return filas.map((fila, i) => ({ posicion: i + 1, ...fila }));
+}
+
+module.exports = { cuenta, resumenDe, historialDe, estadisticasDe, clasificacionDe, porcentaje };
