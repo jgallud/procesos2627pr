@@ -93,6 +93,10 @@ export const historialPartidas = (idUsuario) => peticion('GET', conUsuario('/par
 export const estadisticasPartidas = (idUsuario) => peticion('GET', conUsuario('/partidas/estadisticas', idUsuario));
 export const clasificacion = () => peticion('GET', '/partidas/clasificacion');
 
+// Gestión de partidas, solo administrador (Hito 6, RF-21).
+export const partidasEnCurso = () => peticion('GET', '/partidas/admin/en-curso');
+export const anularPartida = (id) => peticion('POST', `${rutaPartida(id)}/anulacion`);
+
 // --- Usuarios ---------------------------------------------------------------
 export const listarUsuarios = () => peticion('GET', '/usuarios');
 export const estaActivo = (id) => peticion('GET', `/usuarios/${encodeURIComponent(id)}/activo`);

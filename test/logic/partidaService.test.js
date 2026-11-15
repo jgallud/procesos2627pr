@@ -272,4 +272,58 @@ describe('Servicio de partidas contra la máquina', () => {
       await assert.rejects(servicio.clasificacion(undefined), rechazaCon(CODIGOS.NO_AUTENTICADO));
     });
   });
+
+  describe('gestión de partidas del administrador (RF-21)', () => {
+    let admin;
+    beforeEach(async () => {
+      admin = await usuarios.asegurarAdministrador({ email: 'admin@ejemplo.com', contrasena: 'clave-del-admin' });
+    });
+
+    it('el administrador ve las partidas en curso de todos, sin las flotas', async () => {
+      const deAna = await partidaEnJuego(ana.id);
+      const deLuis = (await servicio.crearContraMaquina(luis.id)).partida;
+      const terminada = await partidaEnJuego(admin.id);
+      await servicio.abandonar(admin.id, terminada.id);
+
+      const lista = await servicio.listarEnCurso(admin.id);
+      assert.deepEqual(lista.map((p) => p.id).sort(), [deAna.id, deLuis.id].sort());
+      const fila = lista.find((p) => p.id === deAna.id);
+      assert.deepEqual(fila.jugadores, ['ana@ejemplo.com', 'maquina']);
+      assert.equal(fila.estado, 'en_juego');
+      assert.ok(!JSON.stringify(lista).includes('flota'));
+    });
+
+    it('un usuario normal no puede ver ni anular partidas de otros', async () => {
+      const deAna = await partidaEnJuego(ana.id);
+      await assert.rejects(servicio.listarEnCurso(luis.id), rechazaCon(CODIGOS.PROHIBIDO));
+      await assert.rejects(servicio.anular(luis.id, deAna.id), rechazaCon(CODIGOS.PROHIBIDO));
+      await assert.rejects(servicio.anular(ana.id, deAna.id), rechazaCon(CODIGOS.PROHIBIDO));
+    });
+
+    it('una partida anulada deja de estar en curso y no admite más jugadas', async () => {
+      const deAna = await partidaEnJuego(ana.id);
+      await servicio.anular(admin.id, deAna.id);
+      assert.equal(await servicio.partidaEnCurso(ana.id), null);
+      assert.equal((await servicio.obtener(ana.id, deAna.id)).anulada, true);
+      await assert.rejects(servicio.disparar(ana.id, deAna.id, 'A1'), rechazaCon(CODIGOS.PARTIDA_ANULADA));
+      await assert.rejects(servicio.abandonar(ana.id, deAna.id), rechazaCon(CODIGOS.PARTIDA_ANULADA));
+      assert.deepEqual(await servicio.listarEnCurso(admin.id), []);
+      assert.equal((await servicio.crearContraMaquina(ana.id)).nueva, true, 'puede empezar otra');
+    });
+
+    it('una partida anulada no cuenta en el historial ni en las estadísticas', async () => {
+      const deAna = await partidaEnJuego(ana.id);
+      await servicio.anular(admin.id, deAna.id);
+      assert.deepEqual(await servicio.historial(ana.id), []);
+      assert.equal((await servicio.estadisticas(ana.id)).jugadas, 0);
+    });
+
+    it('solo se anulan partidas que existen y siguen en curso', async () => {
+      const deAna = await partidaEnJuego(ana.id);
+      await servicio.abandonar(ana.id, deAna.id);
+      await assert.rejects(servicio.anular(admin.id, deAna.id), rechazaCon(CODIGOS.ESTADO_INVALIDO));
+      await assert.rejects(servicio.anular(admin.id, 'no-existe'), rechazaCon(CODIGOS.PARTIDA_NO_ENCONTRADA));
+      assert.equal((await servicio.historial(ana.id)).length, 1, 'la partida terminada sigue contando');
+    });
+  });
 });

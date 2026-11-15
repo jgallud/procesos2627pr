@@ -65,6 +65,15 @@ function probarContratoPartidas(nombre, { crear, limpiar = async () => {} }) {
       assert.equal(await repo.buscarEnCursoDe('u1'), null);
     });
 
+    it('lista todas las partidas en curso, de la más reciente a la más antigua', async () => {
+      assert.deepEqual(await repo.listarEnCurso(), []);
+      const vieja = await repo.crear(datos('u1', '2026-11-01T10:00:00.000Z'));
+      const nueva = await repo.crear(datos('u2', '2026-11-02T10:00:00.000Z'));
+      const terminada = await repo.crear(datos('u3', '2026-11-03T10:00:00.000Z'));
+      await repo.actualizar(terminada.id, { enCurso: false });
+      assert.deepEqual((await repo.listarEnCurso()).map((p) => p.id), [nueva.id, vieja.id]);
+    });
+
     it('lista las partidas terminadas, de la más reciente a la más antigua', async () => {
       assert.deepEqual(await repo.listarTerminadas({ idUsuario: 'u1' }), []);
       const terminada = (idUsuario, actualizadaEn) => datos(idUsuario, '2026-11-01T10:00:00.000Z', { enCurso: false, actualizadaEn });

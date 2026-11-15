@@ -31,6 +31,8 @@ async function prepararIndices(db) {
     partidas.createIndex({ jugadores: 1, enCurso: 1, creadaEn: -1 }, { name: 'en_curso_por_jugador' }),
     // Historial y estadísticas de un jugador: sus partidas terminadas, las más recientes primero (RF-18, RF-19).
     partidas.createIndex({ jugadores: 1, enCurso: 1, actualizadaEn: -1 }, { name: 'terminadas_por_jugador' }),
+    // Partidas en curso de todos los jugadores, para el administrador (RF-21).
+    partidas.createIndex({ enCurso: 1, creadaEn: -1 }, { name: 'en_curso' }),
   ]);
 }
 

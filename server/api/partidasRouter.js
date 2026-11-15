@@ -11,6 +11,8 @@
 //   GET    /api/partidas/historial[?usuario=]  partidas terminadas      -> 200 [resumen] (RF-18)
 //   GET    /api/partidas/estadisticas[?usuario=] estadísticas           -> 200 {jugadas, …} (RF-19)
 //   GET    /api/partidas/clasificacion         clasificación            -> 200 [fila] (RF-20)
+//   GET    /api/partidas/admin/en-curso        partidas en curso (admin) -> 200 [partida] (RF-21)
+//   POST   /api/partidas/:id/anulacion         anular (admin)           -> 204 (RF-21)
 //   GET    /api/partidas/:id                   vista de la partida      -> 200
 //   POST   /api/partidas/:id/barcos            colocar un barco         -> 200 vista
 //   DELETE /api/partidas/:id/barcos/:barco     retirar un barco         -> 200 vista
@@ -47,6 +49,16 @@ function crearRouterPartidas({ servicioPartidas }) {
 
   router.get('/clasificacion', async (req, res) => {
     res.json(await servicioPartidas.clasificacion(req.idSolicitante));
+  });
+
+  // RF-21: el rol de administrador lo comprueba el servicio.
+  router.get('/admin/en-curso', async (req, res) => {
+    res.json(await servicioPartidas.listarEnCurso(req.idSolicitante));
+  });
+
+  router.post('/:id/anulacion', async (req, res) => {
+    await servicioPartidas.anular(req.idSolicitante, req.params.id);
+    res.status(204).end();
   });
 
   router.get('/:id', async (req, res) => {

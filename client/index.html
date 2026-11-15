@@ -166,6 +166,24 @@
         </div>
       </div>
 
+      <!-- Partidas en curso, solo administrador (Hito 6, RF-21): js/adminPartidas.js -->
+      <div id="seccion-admin-partidas" class="tarjeta" hidden>
+        <div class="titulo-seccion">
+          <h2>Partidas en curso <span id="total-partidas" class="secundario"></span></h2>
+          <button id="boton-recargar-partidas" type="button" class="boton-secundario">Actualizar</button>
+        </div>
+        <p class="secundario">Anular una partida la cierra sin ganador: no admite más jugadas y no cuenta en el historial ni en las estadísticas.</p>
+        <p id="admin-partidas-vacio" class="secundario" hidden>No hay partidas en curso.</p>
+        <div class="tabla-desplazable">
+          <table id="tabla-admin-partidas" hidden>
+            <thead>
+              <tr><th>Jugadores</th><th>Estado</th><th>Disparos</th><th>Creada</th><th>Última jugada</th><th>Acciones</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="seccion-admin" class="tarjeta" hidden>
         <div class="titulo-seccion">
           <h2>Usuarios <span id="total-usuarios" class="secundario"></span></h2>

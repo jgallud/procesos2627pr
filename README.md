@@ -117,7 +117,7 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 |-----------|-----------|---------|
 | `usuarios` | `{ _id, email, nombre, rol, estado, origen, creadoEn, eliminadoEn?, hashContrasena?, hashTokenConfirmacion? }` | `email` único |
 | `sesiones` | `{ _id, idUsuario, creadaEn, expiraEn, caducidad }` | `idUsuario`; TTL sobre `caducidad` |
-| `partidas` | `{ _id, modo, jugadores, enCurso, creadaEn, actualizadaEn, terminadaEn?, juego }` | `jugadores` + `enCurso` + `creadaEn` (partida en curso de un jugador); `jugadores` + `enCurso` + `actualizadaEn` (historial y estadísticas) |
+| `partidas` | `{ _id, modo, jugadores, enCurso, creadaEn, actualizadaEn, terminadaEn?, anulada?, anuladaEn?, anuladaPor?, juego }` | `jugadores` + `enCurso` + `creadaEn` (partida en curso de un jugador); `jugadores` + `enCurso` + `actualizadaEn` (historial y estadísticas); `enCurso` + `creadaEn` (partidas en curso, administrador) |
 
 - El `_id` de cada usuario es un UUID generado por el repositorio; fuera de la
   capa de datos solo existe como `id`, igual que con la implementación en memoria.
@@ -185,6 +185,8 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 | `GET` | `/api/partidas/historial[?usuario=id]` | con sesión (otro usuario: administrador) | `200` partidas terminadas (RF-18) |
 | `GET` | `/api/partidas/estadisticas[?usuario=id]` | con sesión (otro usuario: administrador) | `200` estadísticas (RF-19) |
 | `GET` | `/api/partidas/clasificacion` | con sesión | `200` clasificación de jugadores (RF-20) |
+| `GET` | `/api/partidas/admin/en-curso` | administrador | `200` partidas en curso de todos (RF-21) |
+| `POST` | `/api/partidas/:id/anulacion` | administrador | `204` partida anulada (RF-21) |
 | `GET` | `/api/partidas/:id` | quien juega la partida | `200` vista de la partida |
 | `POST` | `/api/partidas/:id/barcos` | quien juega la partida | `200` vista (`{barco, casilla, orientacion}`) |
 | `DELETE` | `/api/partidas/:id/barcos/:barco` | quien juega la partida | `200` vista |

@@ -4,6 +4,8 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-15 | Gestión de partidas del administrador: ver las partidas en curso y anular una (RF-21). Con ella están hechos todos los requisitos del Hito 6 | rama `feature/hito6-gestion-partidas`, [D-35](decisiones.md#d-35-partida-anulada-sin-ganador) |
+| 2026-11-15 | PR #28 integrado: clasificación (RF-20) | [D-34](decisiones.md#d-34-clasificación-sin-emails-y-solo-con-partidas) |
 | 2026-11-15 | Clasificación de jugadores (RF-20). Se corrige una prueba del historial que fallaba a veces porque dos partidas terminaban en el mismo milisegundo | rama `feature/hito6-clasificacion`, [D-34](decisiones.md#d-34-clasificación-sin-emails-y-solo-con-partidas) |
 | 2026-11-15 | PR #27 integrado: historial y estadísticas (RF-18 y RF-19) | [D-33](decisiones.md#d-33-historial-y-estadísticas-calculados-al-consultar) |
 | 2026-11-15 | Historial y estadísticas del jugador (RF-18 y RF-19) | rama `feature/hito6-historial-estadisticas`, [D-33](decisiones.md#d-33-historial-y-estadísticas-calculados-al-consultar) |

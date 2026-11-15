@@ -50,6 +50,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | Presentación | `client/js/interfaz.js` | DOM, formularios, vistas y mensajes |
 | Presentación | `client/js/juego.js` | Partida de Hundir la Flota: tableros, colocación, disparos y fin de partida ([D-30](decisiones.md#d-30-interfaz-del-juego-en-un-módulo-de-presentación-propio)) |
 | Presentación | `client/js/historial.js` | Historial, estadísticas y clasificación; el administrador ve las de otro usuario desde la tabla de usuarios. Solo da formato: los números los calcula el servidor |
+| Presentación | `client/js/adminPartidas.js` | Partidas en curso de todos los jugadores y botón «Anular», solo para el administrador (RF-21) |
 | Comunicación | `client/js/api.js` | Único módulo que usa `fetch`; expone funciones y la clase `ErrorApi` |
 
 **Frontera.** `interfaz.js` y `juego.js` solo hacen `import * as api from './api.js'` (y `interfaz.js` importa de `juego.js` las funciones para mostrarlo u ocultarlo). `interfaz.js` y no contiene ningún `fetch` ni URL de la API. Incluso la dirección del botón «Entrar con Google» la da `api.urlInicioOAuth('google')`.
@@ -73,6 +74,8 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | POST | `/api/partidas` | con sesión | 201 partida nueva contra la máquina (200 si ya tenía una en curso) |
 | GET | `/api/partidas/actual` | con sesión | 200 partida en curso, o `null` |
 | GET | `/api/partidas/historial[?usuario=id]` | con sesión (otro usuario: administrador) | 200 partidas terminadas, la más reciente primero (RF-18) |
+| GET | `/api/partidas/admin/en-curso` | administrador | 200 partidas en curso de todos los jugadores, sin flotas (RF-21) |
+| POST | `/api/partidas/:id/anulacion` | administrador | 204 partida anulada; 409 si no está en curso (RF-21) |
 | GET | `/api/partidas/clasificacion` | con sesión | 200 `[{posicion, id, nombre, ganadas, jugadas, …, esSolicitante}]` (RF-20) |
 | GET | `/api/partidas/estadisticas[?usuario=id]` | con sesión (otro usuario: administrador) | 200 `{jugadas, ganadas, perdidas, porcentajeVictorias, disparos, aciertos, porcentajeAcierto}` (RF-19) |
 | GET | `/api/partidas/:id` | quien juega la partida | 200 vista de la partida |

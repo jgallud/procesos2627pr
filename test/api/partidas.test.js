@@ -199,4 +199,35 @@ describe('API /api/partidas', () => {
       assert.equal((await pedir('GET', '/api/partidas/clasificacion')).estado, 401);
     });
   });
+
+  describe('gestión de partidas del administrador (RF-21)', () => {
+    async function conSesionAdmin() {
+      await ctx.servicioUsuarios.asegurarAdministrador({ email: 'admin@ejemplo.com', contrasena: CLAVE_ADMIN });
+      const login = await servidor.peticion('POST', '/api/sesion', { cuerpo: { email: 'admin@ejemplo.com', contrasena: CLAVE_ADMIN } });
+      return cookieDe(login.cookies);
+    }
+
+    it('el administrador lista las partidas en curso y anula una; el jugador recibe 409 al seguir', async () => {
+      const cookieAdmin = await conSesionAdmin();
+      const vista = await partidaEnJuego();
+      const lista = await pedir('GET', '/api/partidas/admin/en-curso', cookieAdmin);
+      assert.equal(lista.estado, 200);
+      assert.deepEqual(lista.datos.map((p) => p.id), [vista.id]);
+
+      assert.equal((await pedir('POST', `/api/partidas/${vista.id}/anulacion`, cookieAdmin)).estado, 204);
+      const disparo = await pedir('POST', `/api/partidas/${vista.id}/disparos`, cookieAna, { casilla: 'A1' });
+      assert.equal(disparo.estado, 409);
+      assert.equal(disparo.datos.codigo, 'PARTIDA_ANULADA');
+      assert.equal((await pedir('GET', '/api/partidas/actual', cookieAna)).datos, null);
+      assert.equal((await pedir('POST', `/api/partidas/${vista.id}/anulacion`, cookieAdmin)).estado, 409);
+      assert.equal((await pedir('POST', '/api/partidas/no-existe/anulacion', cookieAdmin)).estado, 404);
+    });
+
+    it('403 para un usuario normal y 401 sin sesión', async () => {
+      const vista = await partidaEnJuego();
+      assert.equal((await pedir('GET', '/api/partidas/admin/en-curso', cookieLuis)).estado, 403);
+      assert.equal((await pedir('POST', `/api/partidas/${vista.id}/anulacion`, cookieAna)).estado, 403);
+      assert.equal((await pedir('GET', '/api/partidas/admin/en-curso')).estado, 401);
+    });
+  });
 });
