@@ -51,8 +51,10 @@ body {
 .menu a { padding: 6px 12px; border-radius: 6px; color: var(--texto-suave); text-decoration: none; font-weight: 600; }
 .menu a:hover { color: var(--texto); background: var(--fondo); }
 .menu a[aria-current="page"] { color: var(--acento); background: var(--exito-fondo); }
-.estado { font-size: 0.85rem; color: var(--texto-suave); }
-.estado span { font-weight: 600; }
+.menu-cuenta { padding: 6px 12px; border-radius: 6px; color: var(--texto); text-decoration: none; }
+.menu-cuenta .secundario { margin: 0; font-size: 0.85rem; }
+.menu-cuenta:hover { background: var(--fondo); }
+.menu-cuenta[aria-current="page"] { background: var(--exito-fondo); }
 
 /* Tarjetas */
 .tarjeta {

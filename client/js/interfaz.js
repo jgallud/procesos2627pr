@@ -31,6 +31,7 @@ function mostrarVista(nombre) {
     elemento.hidden = clave !== nombre;
   }
   $('#menu').hidden = nombre !== 'panel'; // el menú solo tiene sentido con sesión (MJ-05)
+  $('#menu-cuenta').hidden = nombre !== 'panel';
 }
 
 // MJ-07: el aviso flota sobre la página (no desplaza nada). Los informativos
@@ -174,6 +175,7 @@ async function entrarEnPanel(usuario) {
   $('#perfil-nombre').textContent = usuario.nombre || usuario.email;
   $('#perfil-email').textContent = usuario.email;
   $('#perfil-rol').textContent = usuario.rol;
+  $('#menu-cuenta-nombre').textContent = usuario.nombre || usuario.email.split('@')[0];
   // Mi cuenta (MJ-01)
   $('#cuenta-nombre').textContent = usuario.nombre || '—';
   $('#cuenta-email').textContent = usuario.email;
@@ -362,13 +364,13 @@ async function recuperarSesion() {
   }
 }
 
+// MJ-11: el estado del servidor ya no ocupa la cabecera; solo se avisa si no
+// responde, que es cuando le sirve al usuario saberlo.
 async function comprobarServidor() {
-  const indicador = $('#estado-servidor');
   try {
-    const { estado } = await api.salud();
-    indicador.textContent = estado;
+    await api.salud();
   } catch {
-    indicador.textContent = 'sin conexión';
+    avisar('No se puede conectar con el servidor. Comprueba tu conexión y recarga la página.', 'error');
   }
 }
 
