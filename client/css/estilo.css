@@ -216,3 +216,10 @@ tr.fila-propia td { background: var(--exito-fondo); font-weight: 600; }
 #juego-entre-jugadores { align-items: center; }
 .conexion-conectado { background: var(--exito-fondo); color: var(--acento-oscuro); }
 .conexion-reconectando { background: var(--error-fondo); color: var(--peligro); }
+
+/* Mi cuenta (MJ-01) */
+.datos-cuenta { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 16px 0 0; }
+.datos-cuenta dt { color: var(--texto-suave); }
+.datos-cuenta dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.zona-peligro { border-color: var(--peligro); }
+.zona-peligro .boton-peligro { margin-top: 16px; }
