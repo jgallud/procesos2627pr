@@ -57,6 +57,7 @@ function crearServicioPartidas({
       modo: partida.modo,
       oponente: partida.modo === MODOS.MAQUINA ? 'maquina' : null,
       creadaEn: partida.creadaEn,
+      anulada: Boolean(partida.anulada),
       ...motor.vistaPara(partida.juego, jugador),
     };
   }
@@ -72,6 +73,27 @@ function crearServicioPartidas({
       throw new ErrorDominio(CODIGOS.PROHIBIDO, 'No juegas en esta partida');
     }
     return { partida, jugador };
+  }
+
+  // Para jugar: además, una partida anulada por el administrador ya no
+  // admite jugadas, aunque su juego se quedara a medias (RF-21).
+  async function cargarParaJugar(idSolicitante, idPartida) {
+    const cargada = await cargar(idSolicitante, idPartida);
+    if (cargada.partida.anulada) {
+      throw new ErrorDominio(CODIGOS.PARTIDA_ANULADA, 'El administrador ha anulado esta partida');
+    }
+    return cargada;
+  }
+
+  // RF-21: la gestión de partidas es solo para el administrador. Como en el
+  // Sprint 1, el rol se comprueba aquí, en el servidor.
+  async function exigirAdministrador(idSolicitante) {
+    const usuario = await solicitante(idSolicitante);
+    if (usuario.rol !== ROLES.ADMINISTRADOR) {
+      logger.warn('Gestión de partidas denegada: se requiere administrador', { solicitante: usuario.id });
+      throw new ErrorDominio(CODIGOS.PROHIBIDO, 'Solo un administrador puede gestionar las partidas');
+    }
+    return usuario;
   }
 
   // Guarda el nuevo estado del juego. Si la partida termina, deja de estar
@@ -99,7 +121,7 @@ function crearServicioPartidas({
   // Aplica una jugada que solo cambia el juego (colocar, retirar, abandonar)
   // y devuelve la vista del jugador.
   async function jugada(idSolicitante, idPartida, aplicar) {
-    const { partida, jugador } = await cargar(idSolicitante, idPartida);
+    const { partida, jugador } = await cargarParaJugar(idSolicitante, idPartida);
     const juego = aplicar(partida.juego, jugador);
     return vista(await guardar(partida, juego), jugador);
   }
@@ -162,7 +184,7 @@ function crearServicioPartidas({
     // (tras un agua), la máquina juega hasta fallar o ganar. Devuelve
     // { disparo, disparosRival, partida }.
     async disparar(idSolicitante, idPartida, casilla) {
-      const { partida, jugador } = await cargar(idSolicitante, idPartida);
+      const { partida, jugador } = await cargarParaJugar(idSolicitante, idPartida);
       const resultado = motor.disparar(partida.juego, jugador, casilla);
       let juego = resultado.partida;
       let disparosRival = [];
@@ -198,6 +220,41 @@ function crearServicioPartidas({
     async estadisticas(idSolicitante, idUsuario) {
       const id = await usuarioConsultado(idSolicitante, idUsuario);
       return estadisticasDe(historialDe(await repositorio.listarTerminadas({ idUsuario: id }), id));
+    },
+
+    // RF-21: partidas en curso de todos los jugadores, para el administrador.
+    // No incluye las flotas: para gestionar una partida basta con saber
+    // quién juega, en qué estado está y cuándo se jugó por última vez.
+    async listarEnCurso(idSolicitante) {
+      await exigirAdministrador(idSolicitante);
+      const emails = new Map((await servicioUsuarios.listarUsuarios(idSolicitante)).map((u) => [u.id, u.email]));
+      const partidas = await repositorio.listarEnCurso();
+      return partidas.map((p) => ({
+        id: p.id,
+        modo: p.modo,
+        jugadores: p.jugadores.map((id) => (id === null ? 'maquina' : emails.get(id) ?? id)),
+        estado: p.juego.estado,
+        disparos: p.juego.jugadores.reduce((total, j) => total + (j.disparosRecibidos?.length ?? 0), 0),
+        creadaEn: p.creadaEn,
+        actualizadaEn: p.actualizadaEn,
+      }));
+    },
+
+    // RF-21: anula una partida en curso (por ejemplo, una abandonada sin
+    // terminar). Deja de estar en curso, no admite más jugadas y no cuenta
+    // en el historial ni en las estadísticas. El juego se guarda tal cual.
+    async anular(idSolicitante, idPartida) {
+      const admin = await exigirAdministrador(idSolicitante);
+      const partida = idPartida ? await repositorio.buscarPorId(idPartida) : null;
+      if (!partida) throw new ErrorDominio(CODIGOS.PARTIDA_NO_ENCONTRADA, 'La partida no existe');
+      if (!partida.enCurso) {
+        throw new ErrorDominio(CODIGOS.ESTADO_INVALIDO, 'Solo se pueden anular partidas en curso');
+      }
+      const ahora = reloj().toISOString();
+      await repositorio.actualizar(partida.id, {
+        enCurso: false, anulada: true, anuladaEn: ahora, anuladaPor: admin.id, actualizadaEn: ahora,
+      });
+      logger.info('Partida anulada', { partida: partida.id, por: admin.id });
     },
 
     // RF-20: clasificación de los jugadores activos con alguna partida
