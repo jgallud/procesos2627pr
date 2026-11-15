@@ -215,3 +215,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** cada consulta lee todas las partidas terminadas del jugador; con el volumen previsto es suficiente, y el índice `terminadas_por_jugador` evita recorrer la colección entera. RF-20 (clasificación) podrá reutilizar las mismas funciones.
 - **Estado:** vigente. Evidencia: `test/logic/estadisticas.test.js`.
 
+### D-34 Clasificación sin emails y solo con partidas
+- **Qué:** la clasificación la puede ver cualquier usuario con sesión, así que de cada jugador solo muestra un nombre: el que dio al registrarse o, si no dio ninguno, la parte del email antes de la arroba. Solo aparecen usuarios activos (lo decide `listarJugadores` en el servicio de usuarios) con al menos una partida terminada y no anulada. Orden: victorias; a igualdad, % de acierto (un jugador sin disparos va detrás de cualquier porcentaje, también del 0 %); después, menos partidas jugadas y nombre, para que el orden no cambie entre consultas.
+- **Alternativas consideradas:** mostrar el email (identifica a cada jugador sin ambigüedad, pero lo enseña a todos los usuarios); incluir también a los jugadores sin partidas (una lista larga de ceros).
+- **Por qué:** TODO(alumno): ¿por qué no mostrar el email y por qué estos desempates?
+- **Consecuencias:** dos jugadores pueden aparecer con el mismo nombre. La fila de quien consulta se marca con `esSolicitante`, que decide el servidor.
+- **Estado:** vigente. Evidencia: `test/logic/estadisticas.test.js`.
+

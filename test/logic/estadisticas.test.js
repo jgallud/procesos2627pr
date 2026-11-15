@@ -4,7 +4,9 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { cuenta, resumenDe, historialDe, estadisticasDe } = require('../../server/logic/estadisticas');
+const {
+  cuenta, resumenDe, historialDe, estadisticasDe, clasificacionDe,
+} = require('../../server/logic/estadisticas');
 
 const disparos = (...resultados) => resultados.map((resultado, i) => ({ casilla: `A${i + 1}`, resultado }));
 
@@ -97,5 +99,52 @@ describe('Historial y estadísticas', () => {
     const vacias = estadisticasDe([]);
     assert.equal(vacias.porcentajeVictorias, null);
     assert.equal(vacias.porcentajeAcierto, null);
+  });
+});
+
+describe('Clasificación (RF-20)', () => {
+  // Partida terminada de `usuario` contra la máquina.
+  const de = (usuario, opciones) => ({ ...partida(opciones), jugadores: [usuario, null] });
+  const jugadores = [
+    { id: 'ana', nombre: 'Ana' }, { id: 'luis', nombre: 'Luis' }, { id: 'eva', nombre: 'Eva' }, { id: 'sin', nombre: 'Sin partidas' },
+  ];
+
+  it('ordena por victorias y, a igualdad, por porcentaje de acierto', () => {
+    const partidas = [
+      de('ana', { id: 'a1', deAna: disparos('tocado', 'agua') }), // gana, 50 %
+      de('luis', { id: 'l1', deAna: disparos('tocado', 'tocado', 'tocado', 'agua') }), // gana
+      de('luis', { id: 'l2', ganador: 1, deAna: disparos('tocado', 'agua') }), // pierde: 4 de 6, 66,7 %
+      de('eva', { id: 'e1' }), // gana, sin disparos
+      de('eva', { id: 'e2' }), // gana
+    ];
+    const tabla = clasificacionDe(partidas, jugadores);
+    assert.deepEqual(tabla.map((f) => [f.posicion, f.id, f.ganadas, f.porcentajeAcierto]), [
+      [1, 'eva', 2, null],
+      [2, 'luis', 1, 66.7],
+      [3, 'ana', 1, 50],
+    ]);
+  });
+
+  it('a igualdad de victorias y acierto, va antes quien ha jugado menos partidas', () => {
+    const partidas = [
+      de('ana', { id: 'a1', deAna: disparos('tocado') }),
+      de('luis', { id: 'l1', deAna: disparos('tocado') }),
+      de('luis', { id: 'l2', ganador: 1, motivoFin: 'abandono' }),
+    ];
+    assert.deepEqual(clasificacionDe(partidas, jugadores).map((f) => f.id), ['ana', 'luis']);
+  });
+
+  it('sin disparos el acierto va después de cualquier porcentaje, también del 0 %', () => {
+    const partidas = [de('ana', { id: 'a1' }), de('luis', { id: 'l1', deAna: disparos('agua') })];
+    assert.deepEqual(clasificacionDe(partidas, jugadores).map((f) => f.id), ['luis', 'ana']);
+  });
+
+  it('no aparecen jugadores sin partidas, ni quien no está en la lista de jugadores, ni partidas anuladas', () => {
+    const partidas = [
+      de('ana', { id: 'a1' }),
+      de('eliminado', { id: 'x1' }), // no está en la lista: eliminado o pendiente
+      de('luis', { id: 'l1', anulada: true }),
+    ];
+    assert.deepEqual(clasificacionDe(partidas, jugadores).map((f) => f.id), ['ana']);
   });
 });

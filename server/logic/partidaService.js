@@ -16,7 +16,7 @@
 
 const motor = require('./motor');
 const jugadorMaquina = require('./jugadorMaquina');
-const { historialDe, estadisticasDe } = require('./estadisticas');
+const { historialDe, estadisticasDe, clasificacionDe } = require('./estadisticas');
 const { ROLES } = require('./usuarioService');
 const { ErrorDominio, CODIGOS } = require('./errores');
 const { loggerSilencioso } = require('../logger');
@@ -198,6 +198,15 @@ function crearServicioPartidas({
     async estadisticas(idSolicitante, idUsuario) {
       const id = await usuarioConsultado(idSolicitante, idUsuario);
       return estadisticasDe(historialDe(await repositorio.listarTerminadas({ idUsuario: id }), id));
+    },
+
+    // RF-20: clasificación de los jugadores activos con alguna partida
+    // terminada. Marca la fila de quien la consulta (`esSolicitante`).
+    async clasificacion(idSolicitante) {
+      const usuario = await solicitante(idSolicitante);
+      const jugadores = await servicioUsuarios.listarJugadores(idSolicitante);
+      const filas = clasificacionDe(await repositorio.listarTerminadas(), jugadores);
+      return filas.map((fila) => ({ ...fila, esSolicitante: fila.id === usuario.id }));
     },
   };
 }

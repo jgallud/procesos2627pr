@@ -283,6 +283,19 @@ function crearServicioUsuarios({
         .map(vistaPublica);
     },
 
+    // RF-20: jugadores que pueden aparecer en la clasificación: solo los
+    // activos (ni pendientes de confirmar ni eliminados). Lo puede pedir
+    // cualquier usuario con sesión, así que no se devuelve el email completo,
+    // solo un nombre para mostrar: el nombre, o la parte del email antes de
+    // la arroba si no tiene (D-34).
+    async listarJugadores(idSolicitante) {
+      await obtenerSolicitante(idSolicitante);
+      const usuarios = await repositorio.listar();
+      return usuarios
+        .filter((u) => u.estado === ESTADOS.ACTIVO)
+        .map((u) => ({ id: u.id, nombre: u.nombre || u.email.split('@')[0] }));
+    },
+
     // ¿Está activo el usuario? (cuenta confirmada y no eliminada). Solo administrador.
     async estaActivo(idSolicitante, idUsuario) {
       await exigirAdministrador(idSolicitante);

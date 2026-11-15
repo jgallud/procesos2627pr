@@ -187,4 +187,16 @@ describe('API /api/partidas', () => {
       assert.equal((await pedir('GET', '/api/partidas/historial?usuario=no-existe', cookieAdmin)).estado, 404);
     });
   });
+
+  describe('GET /api/partidas/clasificacion (RF-20)', () => {
+    it('200 con los jugadores que tienen partidas, sin emails; 401 sin sesión', async () => {
+      const vista = await partidaEnJuego();
+      await pedir('POST', `/api/partidas/${vista.id}/abandono`, cookieAna);
+      const r = await pedir('GET', '/api/partidas/clasificacion', cookieLuis);
+      assert.equal(r.estado, 200);
+      assert.deepEqual(r.datos.map((f) => [f.posicion, f.nombre, f.jugadas, f.esSolicitante]), [[1, 'ana', 1, false]]);
+      assert.ok(!JSON.stringify(r.datos).includes('@'));
+      assert.equal((await pedir('GET', '/api/partidas/clasificacion')).estado, 401);
+    });
+  });
 });
