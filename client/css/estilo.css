@@ -194,3 +194,6 @@ tr.fila-propia td { background: var(--exito-fondo); font-weight: 600; }
 .lista-abiertas { list-style: none; margin: 0; padding: 0; }
 .lista-abiertas li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--borde); }
 #juego-entre-jugadores { margin-bottom: 12px; }
+#juego-entre-jugadores { align-items: center; }
+.conexion-conectado { background: var(--exito-fondo); color: var(--acento-oscuro); }
+.conexion-reconectando { background: var(--error-fondo); color: var(--peligro); }
