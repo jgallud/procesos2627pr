@@ -76,7 +76,7 @@ export const urlInicioOAuth = (proveedor) => `/api/oauth/${encodeURIComponent(pr
 // Todas devuelven la vista de la partida para este jugador: el servidor decide
 // el resultado de cada jugada y nunca envía la flota del rival hasta el final.
 const rutaPartida = (id) => `/partidas/${encodeURIComponent(id)}`;
-export const crearPartidaContraMaquina = () => peticion('POST', '/partidas');
+export const crearPartidaContraMaquina = (dificultad) => peticion('POST', '/partidas', dificultad ? { dificultad } : undefined);
 // Partidas entre jugadores (Hito 7, RF-22).
 export const crearPartidaAbierta = () => peticion('POST', '/partidas', { modo: 'jugadores' });
 export const partidasAbiertas = () => peticion('GET', '/partidas/abiertas');

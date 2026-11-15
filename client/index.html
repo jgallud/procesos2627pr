@@ -106,6 +106,14 @@
         <div id="juego-sin-partida">
           <p class="secundario">Coloca tus cinco barcos y hunde la flota rival antes de que hundan la tuya. Juega contra la máquina o contra otro jugador.</p>
           <div class="acciones">
+            <!-- MJ-03: dificultad de la máquina; la aplica el servidor -->
+            <label class="dificultad">Dificultad
+              <select id="dificultad">
+                <option value="facil">Fácil</option>
+                <option value="normal" selected>Normal</option>
+                <option value="dificil">Difícil</option>
+              </select>
+            </label>
             <button id="boton-nueva-partida" type="button" class="boton-principal">Nueva partida contra la máquina</button>
             <button id="boton-partida-jugadores" type="button" class="boton-principal">Crear partida contra otro jugador</button>
           </div>
