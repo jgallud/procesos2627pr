@@ -241,3 +241,15 @@ tr.fila-propia td { background: var(--exito-fondo); font-weight: 600; }
 button.enlace { background: none; border: 0; padding: 0; justify-self: start; color: var(--acento); font: inherit; font-size: 0.92rem; cursor: pointer; text-decoration: underline; }
 button.enlace:hover { color: var(--acento-oscuro); }
 .oculto-fuera-de-entrar { display: none !important; }
+
+/* Ventana de confirmación (MJ-16) */
+.dialogo {
+  width: min(440px, calc(100% - 32px)); border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: 24px; background: var(--superficie); color: var(--texto); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+.dialogo::backdrop { background: rgba(31, 35, 40, 0.45); }
+.dialogo h2 { font-size: 1.15rem; }
+.dialogo .secundario { margin-top: 8px; }
+.dialogo-acciones { justify-content: flex-end; margin-top: 20px; }
+.boton-peligro-lleno { background: var(--peligro); color: #fff; border: 1px solid var(--peligro); font-weight: 600; }
+.boton-peligro-lleno:hover:not(:disabled) { filter: brightness(0.9); }

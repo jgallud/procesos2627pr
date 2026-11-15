@@ -9,6 +9,7 @@
 
 import * as api from './api.js';
 import { seguirPartida, seguirVestibulo, dejarDeSeguir } from './tiempoReal.js';
+import { confirmar } from './dialogo.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -104,7 +105,12 @@ async function unirseA(abierta) {
 }
 
 async function cancelar() {
-  if (!window.confirm('¿Cancelar la partida? Nadie se ha unido todavía, así que no contará como derrota.')) return;
+  const seguro = await confirmar({
+    titulo: '¿Cancelar la partida?',
+    mensaje: 'Nadie se ha unido todavía, así que no contará como derrota.',
+    aceptar: 'Cancelar partida', cancelar: 'Seguir esperando', peligro: true,
+  });
+  if (!seguro) return;
   const hecho = await jugar(async () => { await api.cancelarPartida(partida.id); return true; });
   if (hecho) { actualizar(null); ui.avisar('Partida cancelada.', 'info'); }
 }
@@ -121,7 +127,22 @@ async function actualizarPartida() {
     ui.avisar('El administrador ha anulado esta partida. Puedes empezar otra.', 'error');
     return;
   }
+  // MJ-15: el rival abandonó mientras esta conexión estaba caída.
+  const rivalAbandono = vista.estado === 'terminada' && vista.motivoFin === 'abandono' && vista.resultado === 'victoria';
+  if (rivalAbandono && partida?.estado !== 'terminada') {
+    volverAlInicioPorAbandono();
+    return;
+  }
   actualizar(vista);
+}
+
+// MJ-15: si el rival abandona, se avisa de la victoria y se vuelve a la
+// pantalla principal, igual que hace quien abandona.
+function volverAlInicioPorAbandono() {
+  const rival = NombreDelRival();
+  document.dispatchEvent(new CustomEvent('partida:terminada')); // para el historial
+  actualizar(null);
+  ui.avisar(`${rival} ha abandonado la partida: ¡has ganado!`, 'info');
 }
 
 // --- Tiempo real (RF-24 a RF-26) ----------------------------------------------
@@ -148,12 +169,16 @@ async function alRecibirAviso({ detail: aviso }) {
   }
   if (!partida || aviso.partida !== partida.id) return;
   if (aviso.jugador === miIndice()) return; // mi propia jugada: ya la tengo
+  if (aviso.tipo === 'abandono') {
+    volverAlInicioPorAbandono();
+    return;
+  }
   await actualizarPartida();
   if (!partida) return;
   if (aviso.tipo === 'rival-unido') ui.avisar(`${partida.nombreRival} se ha unido a la partida.`, 'info');
   else if (aviso.tipo === 'flota-colocada') ui.avisar(`${NombreDelRival()} ha colocado su flota.`, 'info');
   else if (aviso.tipo === 'disparo') ui.avisar(`${NombreDelRival()} ha disparado a ${describirDisparo(aviso.disparo)}.`, 'info');
-  else if (aviso.tipo === 'fin' || aviso.tipo === 'abandono') ui.avisar(textoFinal(), 'info');
+  else if (aviso.tipo === 'fin') ui.avisar(textoFinal(), 'info');
 }
 
 function alCambiarConexion({ detail: { estado } }) {
@@ -223,9 +248,19 @@ async function dispararA(casilla) {
 }
 
 async function abandonar() {
-  if (!window.confirm('¿Seguro que quieres abandonar? La partida contará como derrota.')) return;
+  const seguro = await confirmar({
+    titulo: '¿Abandonar la partida?',
+    mensaje: `Contará como derrota y ${nombreDelRival()} ganará la partida.`,
+    aceptar: 'Abandonar', cancelar: 'Seguir jugando', peligro: true,
+  });
+  if (!seguro) return;
   const vista = await jugar(() => api.abandonarPartida(partida.id));
-  if (vista) { actualizar(vista); ui.avisar('Has abandonado la partida.', 'info'); }
+  if (!vista) return;
+  // MJ-15: quien abandona vuelve a la pantalla principal (no tiene sentido
+  // quedarse mirando los tableros). El rival sí ve el final de la partida.
+  document.dispatchEvent(new CustomEvent('partida:terminada')); // para el historial
+  actualizar(null);
+  ui.avisar('Has abandonado la partida: cuenta como derrota.', 'info');
 }
 
 // --- Textos ---------------------------------------------------------------------

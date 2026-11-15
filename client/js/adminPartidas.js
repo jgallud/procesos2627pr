@@ -7,6 +7,7 @@
 // través de api.js.
 
 import * as api from './api.js';
+import { confirmar } from './dialogo.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -58,7 +59,12 @@ async function cargar() {
 
 async function anular(partida) {
   const quien = partida.jugadores.map(nombreJugador).join(' contra ');
-  if (!window.confirm(`¿Anular la partida ${quien}? No cuenta en las estadísticas y no se puede deshacer.`)) return;
+  const seguro = await confirmar({
+    titulo: '¿Anular la partida?',
+    mensaje: `${quien}. No contará en las estadísticas y no se puede deshacer.`,
+    aceptar: 'Anular', peligro: true,
+  });
+  if (!seguro) return;
   try {
     await api.anularPartida(partida.id);
     ui.avisar('Partida anulada.', 'info');

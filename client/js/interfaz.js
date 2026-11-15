@@ -8,6 +8,7 @@
 // las aplica el servidor en cada petición.
 
 import * as api from './api.js';
+import { confirmar } from './dialogo.js';
 import { prepararJuego, mostrarJuego, ocultarJuego } from './juego.js';
 import {
   prepararHistorial, mostrarHistorial, mostrarHistorialDe, ocultarHistorial,
@@ -262,7 +263,12 @@ async function alCerrarSesion() {
 }
 
 async function alEliminarMiCuenta() {
-  if (!window.confirm('¿Seguro que quieres eliminar tu cuenta? No podrás volver a iniciar sesión.')) return;
+  const seguro = await confirmar({
+    titulo: '¿Eliminar tu cuenta?',
+    mensaje: 'No podrás volver a iniciar sesión con ella. No se puede deshacer.',
+    aceptar: 'Eliminar mi cuenta', peligro: true,
+  });
+  if (!seguro) return;
   limpiarAviso();
   try {
     await api.eliminarUsuario(usuarioActual.id);
@@ -342,9 +348,9 @@ async function cargarUsuarios() {
 async function eliminarDesdeAdmin(usuario) {
   const propio = usuario.id === usuarioActual.id;
   const pregunta = propio
-    ? 'Vas a eliminar tu propia cuenta de administrador y se cerrará tu sesión. ¿Continuar?'
-    : `¿Eliminar la cuenta de ${usuario.email}?`;
-  if (!window.confirm(pregunta)) return;
+    ? 'Es tu propia cuenta de administrador: se cerrará tu sesión.'
+    : `${usuario.email} no podrá volver a iniciar sesión.`;
+  if (!(await confirmar({ titulo: '¿Eliminar la cuenta?', mensaje: pregunta, aceptar: 'Eliminar', peligro: true }))) return;
   limpiarAviso();
   try {
     await api.eliminarUsuario(usuario.id);
