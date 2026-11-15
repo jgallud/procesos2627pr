@@ -2,7 +2,7 @@
 type: Sprint
 title: Sprint 2
 description: Objetivo del Sprint 2, requisitos que pasan del Sprint 1 y plan de Hundir la Flota por hitos.
-timestamp: 2026-11-11
+timestamp: 2026-11-15
 ---
 
 # Sprint 2
@@ -36,7 +36,7 @@ Tres hitos, un PBI de Donetonic por hito. Cada hito se reparte en varios pull re
 | Hito | PBI (Donetonic) | Requisitos | Estado |
 |------|-----------------|------------|--------|
 | 5 | Partida contra la máquina | RF-11 a RF-16, RNF-09, RNF-10, RNF-11 | **cerrado**: motor (#17), jugador máquina (#19), servicio y API (#20) e interfaz (#21); comprobado en la URL pública el 2026-11-11; etiqueta `hito-5` (`40016f2`) |
-| 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | en curso: partidas en MongoDB (#23, RF-17 comprobado en producción), MJ-04 (barco hundido entero) historial y estadísticas (RF-18 y RF-19, #27), clasificación (RF-20, #28) y gestión de partidas del administrador (RF-21). Falta comprobarlo en producción y etiquetar `hito-6` |
+| 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | **cerrado**: partidas en MongoDB (#23), MJ-04 y MJ-02 (#26), historial y estadísticas (#27), clasificación (#28) y gestión de partidas del administrador (#29); etiqueta `hito-6` (`0d0731f`) |
 | 7 | Partida entre jugadores en tiempo real | RF-22 a RF-26, RNF-12 | pendiente |
 | — | Mejoras del Sprint 2 | MJ-01 a MJ-04 (y RF-19, ya en el Hito 6) | en curso: MJ-02 y MJ-04 hechas; niveles de MJ-03 aceptados |
 
