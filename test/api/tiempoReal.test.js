@@ -136,6 +136,46 @@ describe('Tiempo real: /api/tiempo-real', () => {
     assert.deepEqual(ws.avisos, []);
   });
 
+  describe('vestíbulo: lista de partidas abiertas (MJ-14)', () => {
+    function conectarVestibulo(cookie) {
+      return new Promise((resolve) => {
+        const ws = new WebSocket(`ws://${base}/api/tiempo-real?vestibulo`, { headers: cookie ? { Cookie: cookie } : {} });
+        abiertos.push(ws);
+        ws.avisos = [];
+        ws.on('unexpected-response', (req, res) => resolve({ rechazo: res.statusCode }));
+        ws.on('error', () => {});
+        ws.on('message', (datos) => {
+          const aviso = JSON.parse(datos);
+          if (aviso.tipo === 'conectado') resolve({ ws });
+          else ws.avisos.push(aviso);
+        });
+      });
+    }
+
+    it('sin sesión se rechaza con 401', async () => {
+      assert.deepEqual(await conectarVestibulo(), { rechazo: 401 });
+    });
+
+    it('avisa al instante cuando alguien crea una partida abierta y cuando otro se une', async () => {
+      const { ws } = await conectarVestibulo(cookies.eva);
+      const id = await partidaConDosJugadores();
+      assert.deepEqual(await esperarAvisos(ws, 1), [{ tipo: 'abiertas' }]);
+      await pedir('POST', `/api/partidas/${id}/union`, cookies.luis);
+      assert.equal((await esperarAvisos(ws, 2)).length, 2);
+      // Con el aviso, la lista se pide por REST: la partida ya no está abierta.
+      assert.deepEqual((await pedir('GET', '/api/partidas/abiertas', cookies.eva)).datos, []);
+    });
+
+    it('los avisos de una partida no llegan al vestíbulo', async () => {
+      const id = await partidaConDosJugadores();
+      await pedir('POST', `/api/partidas/${id}/union`, cookies.luis);
+      const { ws } = await conectarVestibulo(cookies.eva);
+      await pedir('POST', `/api/partidas/${id}/flota-aleatoria`, cookies.ana);
+      await new Promise((r) => { setTimeout(r, 50); });
+      assert.deepEqual(ws.avisos, []);
+    });
+  });
+
   it('RF-25: al parar el servidor, las conexiones se cierran con el código de reinicio', async () => {
     const id = await partidaConDosJugadores();
     const { ws } = await conectar(id, { cookie: cookies.ana });

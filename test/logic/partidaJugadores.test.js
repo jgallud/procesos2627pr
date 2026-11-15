@@ -23,6 +23,7 @@ describe('Servicio de partidas entre jugadores (RF-22, RF-23)', () => {
   let luis;
   let eva;
   let avisos; // avisos enviados por el servicio: [idPartida, evento]
+  let avisosVestibulo; // MJ-14: avisos de que la lista de abiertas ha cambiado
   const tokens = new Map();
 
   async function usuarioActivo(email) {
@@ -59,7 +60,11 @@ describe('Servicio de partidas entre jugadores (RF-22, RF-23)', () => {
     let segundos = 0;
     const reloj = () => new Date(Date.UTC(2026, 10, 15) + 1000 * segundos++);
     avisos = [];
-    const avisador = { avisar: (idPartida, evento) => avisos.push([idPartida, evento]) };
+    avisosVestibulo = [];
+    const avisador = {
+      avisar: (idPartida, evento) => avisos.push([idPartida, evento]),
+      avisarVestibulo: (evento) => avisosVestibulo.push(evento),
+    };
     servicio = crearServicioPartidas({ repositorio, servicioUsuarios: usuarios, azar: azarFijo(3), reloj, avisador });
     ana = await usuarioActivo('ana@ejemplo.com');
     luis = await usuarioActivo('luis@ejemplo.com');
@@ -269,6 +274,26 @@ describe('Servicio de partidas entre jugadores (RF-22, RF-23)', () => {
       const { partida } = await roto.crearAbierta(ana.id);
       const vista = await roto.unirse(luis.id, partida.id);
       assert.equal(vista.nombreRival, 'ana');
+    });
+
+    it('MJ-14: avisa al vestíbulo cuando cambia la lista de partidas abiertas, y solo entonces', async () => {
+      const { partida } = await servicio.crearAbierta(ana.id);
+      await servicio.crearAbierta(ana.id); // devuelve la misma: no cambia nada
+      assert.equal(avisosVestibulo.length, 1);
+      await servicio.unirse(luis.id, partida.id);
+      assert.equal(avisosVestibulo.length, 2);
+      await servicio.colocarFlotaAleatoria(ana.id, partida.id); // jugar no cambia la lista
+      await servicio.crearContraMaquina(eva.id); // contra la máquina tampoco
+      assert.equal(avisosVestibulo.length, 2);
+
+      const otro = await usuarioActivo('otro@ejemplo.com');
+      const segunda = (await servicio.crearAbierta(otro.id)).partida;
+      await servicio.cancelar(otro.id, segunda.id);
+      const admin = await usuarios.asegurarAdministrador({ email: 'admin@ejemplo.com', contrasena: 'clave-del-admin' });
+      const tercera = (await servicio.crearAbierta(otro.id)).partida;
+      await servicio.anular(admin.id, tercera.id);
+      assert.equal(avisosVestibulo.length, 6);
+      assert.ok(avisosVestibulo.every((e) => JSON.stringify(e) === '{"tipo":"abiertas"}'), 'el aviso no lleva ningún dato');
     });
 
     it('solo los dos jugadores pueden seguir la partida', async () => {

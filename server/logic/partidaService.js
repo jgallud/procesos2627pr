@@ -40,7 +40,10 @@ const AVISOS = Object.freeze({
   CANCELADA: 'cancelada',
   ANULADA: 'anulada',
 });
-const avisadorNulo = Object.freeze({ avisar() {} });
+// MJ-14: además, avisarVestibulo(evento) avisa a quien está viendo la lista
+// de partidas abiertas de que ha cambiado (sin decir cómo: la pide por REST).
+const avisadorNulo = Object.freeze({ avisar() {}, avisarVestibulo() {} });
+const AVISO_ABIERTAS = Object.freeze({ tipo: 'abiertas' });
 const JUGADOR_MAQUINA = 1;
 // MJ-03: dificultad de la máquina. Las partidas creadas antes de MJ-03 no la
 // guardan y siguen jugando con la estrategia de entonces (difícil).
@@ -150,6 +153,16 @@ function crearServicioPartidas({
     }
   }
 
+  // MJ-14: la lista de partidas abiertas ha cambiado (una nueva, una que se
+  // llena, se cancela o se anula). Como avisar, un fallo no deshace nada.
+  function avisarVestibulo() {
+    try {
+      avisador.avisarVestibulo?.(AVISO_ABIERTAS);
+    } catch (err) {
+      logger.error('No se pudo avisar del cambio en las partidas abiertas', { error: err.message });
+    }
+  }
+
   // Qué aviso corresponde a un cambio de juego hecho por `jugador`.
   function eventoDe(antes, despues, jugador, disparo) {
     if (despues.estado === motor.ESTADOS.TERMINADA && antes.estado !== motor.ESTADOS.TERMINADA) {
@@ -244,6 +257,7 @@ function crearServicioPartidas({
         juego: motor.crearPartida(),
       });
       logger.info('Partida creada', { partida: partida.id, modo: partida.modo, jugador: usuario.id });
+      avisarVestibulo();
       return { partida: await vista(partida, 0), nueva: true };
     },
 
@@ -283,6 +297,7 @@ function crearServicioPartidas({
       }
       logger.info('Jugador unido a la partida', { partida: partida.id, jugador: usuario.id });
       avisar(ocupada, { tipo: AVISOS.RIVAL_UNIDO, jugador: 1 });
+      avisarVestibulo();
       return vista(ocupada, 1);
     },
 
@@ -300,6 +315,7 @@ function crearServicioPartidas({
       await repositorio.actualizar(partida.id, { enCurso: false, cancelada: true, actualizadaEn: ahora });
       logger.info('Partida cancelada', { partida: partida.id, por: partida.jugadores[0] });
       avisar(partida, { tipo: AVISOS.CANCELADA, jugador: 0 });
+      avisarVestibulo();
     },
 
     // Partida en curso del usuario, para retomarla al cargar la página.
@@ -425,6 +441,7 @@ function crearServicioPartidas({
       });
       logger.info('Partida anulada', { partida: partida.id, por: admin.id });
       avisar(partida, { tipo: AVISOS.ANULADA });
+      if (partida.modo === MODOS.JUGADORES && partida.jugadores[1] === null) avisarVestibulo();
     },
 
     // RF-20: clasificación de los jugadores activos con alguna partida
