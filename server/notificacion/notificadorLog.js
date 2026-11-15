@@ -7,6 +7,7 @@
 // crea en server/index.js.
 //
 // Contrato:  enviarConfirmacion({ email, nombre, token }) -> Promise<void>
+//            enviarRestablecimiento({ email, nombre, token }) -> Promise<void>  (MJ-12)
 
 function crearNotificadorLog({ logger, urlBase }) {
   const base = String(urlBase || '').replace(/\/+$/, '');
@@ -14,6 +15,10 @@ function crearNotificadorLog({ logger, urlBase }) {
     async enviarConfirmacion({ email, token }) {
       const enlace = `${base}/?confirmar=${encodeURIComponent(token)}`;
       logger.info('Enlace de confirmación de cuenta (pendiente de envío por correo)', { email, enlace });
+    },
+    async enviarRestablecimiento({ email, token }) {
+      const enlace = `${base}/?restablecer=${encodeURIComponent(token)}`;
+      logger.info('Enlace para restablecer la contraseña (pendiente de envío por correo)', { email, enlace });
     },
   };
 }

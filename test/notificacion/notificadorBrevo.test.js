@@ -50,6 +50,20 @@ describe('Notificador por correo con Brevo', () => {
     assert.ok(cuerpo.htmlContent.includes('https://app.ejemplo.com/?confirmar=id.sec%2Freto'));
   });
 
+  it('envía el correo para restablecer la contraseña con su enlace (MJ-12)', async () => {
+    const { fetch, llamadas } = crearFetchDoble();
+    await crear({ fetch }).enviarRestablecimiento({ email: 'ana@ejemplo.com', nombre: 'Ana', token: 'id.sec/reto' });
+    const { cuerpo } = llamadas[0];
+    assert.deepEqual(cuerpo.to, [{ email: 'ana@ejemplo.com', name: 'Ana' }]);
+    assert.match(cuerpo.subject, /Cambia tu contraseña/);
+    assert.ok(cuerpo.htmlContent.includes('https://app.ejemplo.com/?restablecer=id.sec%2Freto'));
+  });
+
+  it('si Brevo rechaza el correo para restablecer, se lanza un error', async () => {
+    const { fetch } = crearFetchDoble({ ok: false, status: 401, text: async () => 'clave no válida' });
+    await assert.rejects(crear({ fetch }).enviarRestablecimiento({ email: 'ana@ejemplo.com', token: 't' }), /cambio de contraseña/);
+  });
+
   it('sin nombre, el destinatario va solo con el email', async () => {
     const { fetch, llamadas } = crearFetchDoble();
     await crear({ fetch }).enviarConfirmacion({ email: 'ana@ejemplo.com', token: 't' });

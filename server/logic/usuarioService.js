@@ -36,7 +36,10 @@ const LONGITUD_MINIMA_CONTRASENA = 8;
 const LONGITUD_MAXIMA_CONTRASENA = 128;
 
 // Notificador por defecto: no hace nada (útil en pruebas que no lo necesitan).
-const notificadorNulo = Object.freeze({ async enviarConfirmacion() {} });
+const notificadorNulo = Object.freeze({ async enviarConfirmacion() {}, async enviarRestablecimiento() {} });
+
+// MJ-12: el enlace para restablecer la contraseña caduca a la hora.
+const VALIDEZ_RESTABLECIMIENTO_MS = 60 * 60 * 1000;
 
 function normalizarEmail(email) {
   if (typeof email !== 'string') {
@@ -203,6 +206,53 @@ function crearServicioUsuarios({
 
       const actualizado = await repositorio.actualizar(id, { estado: ESTADOS.ACTIVO, hashTokenConfirmacion: null });
       logger.info('Cuenta confirmada', { id });
+      return vistaPublica(actualizado);
+    },
+
+    // MJ-12: pide restablecer la contraseña. Si el email es de una cuenta
+    // local activa, genera un token de un solo uso que caduca en una hora (se
+    // guarda solo su SHA-256, como el de confirmación) y envía el enlace por el
+    // notificador. Si no, no hace nada. Responde igual en los dos casos, para
+    // que no sirva para averiguar qué emails están registrados (D-39).
+    async solicitarRestablecimiento({ email } = {}) {
+      const emailNormalizado = normalizarEmail(email);
+      const usuario = await repositorio.buscarPorEmail(emailNormalizado);
+      if (!usuario || usuario.estado !== ESTADOS.ACTIVO || usuario.origen === 'oauth' || !usuario.hashContrasena) {
+        logger.info('Restablecimiento de contraseña pedido para una cuenta que no puede usarlo', { email: emailNormalizado });
+        return;
+      }
+      const { token, hash } = generarTokenConfirmacion(usuario.id);
+      const caduca = new Date(reloj().getTime() + VALIDEZ_RESTABLECIMIENTO_MS).toISOString();
+      await repositorio.actualizar(usuario.id, { hashTokenRestablecimiento: hash, restablecimientoCaducaEn: caduca });
+      await notificador.enviarRestablecimiento({ email: usuario.email, nombre: usuario.nombre, token });
+      logger.info('Enlace para restablecer la contraseña enviado', { id: usuario.id });
+    },
+
+    // MJ-12: fija una contraseña nueva con el token del enlace. El token vale
+    // una sola vez y solo durante una hora. La capa API cierra después todas
+    // las sesiones abiertas del usuario.
+    async restablecerContrasena({ token, contrasena } = {}) {
+      const invalido = () => new ErrorDominio(CODIGOS.TOKEN_INVALIDO, 'El enlace para cambiar la contraseña no es válido, ya se usó o ha caducado: pide otro');
+      if (typeof token !== 'string') throw invalido();
+      validarContrasena(contrasena);
+
+      const separador = token.indexOf('.');
+      const id = separador > 0 ? token.slice(0, separador) : '';
+      const secreto = separador > 0 ? token.slice(separador + 1) : '';
+      const usuario = id && secreto ? await repositorio.buscarPorId(id) : null;
+      const vigente = usuario?.restablecimientoCaducaEn && reloj().toISOString() < usuario.restablecimientoCaducaEn;
+      if (!usuario || usuario.estado !== ESTADOS.ACTIVO || !vigente
+        || !mismoHash(sha256(secreto), usuario.hashTokenRestablecimiento)) {
+        logger.warn('Restablecimiento de contraseña rechazado', { id: id || undefined });
+        throw invalido();
+      }
+
+      const actualizado = await repositorio.actualizar(id, {
+        hashContrasena: await contrasenas.hashear(contrasena),
+        hashTokenRestablecimiento: null,
+        restablecimientoCaducaEn: null,
+      });
+      logger.info('Contraseña restablecida', { id });
       return vistaPublica(actualizado);
     },
 
