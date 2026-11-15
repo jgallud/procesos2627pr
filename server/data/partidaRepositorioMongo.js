@@ -59,6 +59,12 @@ function crearRepositorioPartidasMongo({ db }) {
         .toArray();
       return aPartida(partida);
     },
+
+    async listarTerminadas({ idUsuario } = {}) {
+      const filtro = idUsuario === undefined ? { enCurso: false } : { enCurso: false, jugadores: idUsuario };
+      const documentos = await partidas.find(filtro).sort({ actualizadaEn: -1 }).toArray();
+      return documentos.map(aPartida);
+    },
   };
 }
 

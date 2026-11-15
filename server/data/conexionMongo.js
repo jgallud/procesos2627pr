@@ -29,6 +29,8 @@ async function prepararIndices(db) {
     sesiones.createIndex({ caducidad: 1 }, { expireAfterSeconds: 0, name: 'caducidad_ttl' }),
     // Partida en curso de un jugador (al entrar, para retomarla), la más reciente primero.
     partidas.createIndex({ jugadores: 1, enCurso: 1, creadaEn: -1 }, { name: 'en_curso_por_jugador' }),
+    // Historial y estadísticas de un jugador: sus partidas terminadas, las más recientes primero (RF-18, RF-19).
+    partidas.createIndex({ jugadores: 1, enCurso: 1, actualizadaEn: -1 }, { name: 'terminadas_por_jugador' }),
   ]);
 }
 
