@@ -7,6 +7,10 @@
 // del rival mientras dura la partida (RNF-10).
 //
 //   POST   /api/partidas                       crear contra la máquina  -> 201 (200 si ya había una en curso)
+//                                              {modo:'jugadores'}: crear abierta (RF-22) -> 201 (200 si ya tenía una abierta)
+//   GET    /api/partidas/abiertas              partidas a las que unirse -> 200 [{id, creador, creadaEn}] (RF-22)
+//   POST   /api/partidas/:id/union             unirse a una abierta     -> 200 vista (RF-22)
+//   POST   /api/partidas/:id/cancelacion       cancelar la propia abierta -> 204 (RF-22)
 //   GET    /api/partidas/actual                partida en curso         -> 200 vista | null
 //   GET    /api/partidas/historial[?usuario=]  partidas terminadas      -> 200 [resumen] (RF-18)
 //   GET    /api/partidas/estadisticas[?usuario=] estadísticas           -> 200 {jugadas, …} (RF-19)
@@ -28,8 +32,15 @@ function crearRouterPartidas({ servicioPartidas }) {
   const router = express.Router();
 
   router.post('/', async (req, res) => {
-    const { partida, nueva } = await servicioPartidas.crearContraMaquina(req.idSolicitante);
+    const entreJugadores = req.body?.modo === 'jugadores';
+    const { partida, nueva } = entreJugadores
+      ? await servicioPartidas.crearAbierta(req.idSolicitante)
+      : await servicioPartidas.crearContraMaquina(req.idSolicitante);
     res.status(nueva ? 201 : 200).json(partida);
+  });
+
+  router.get('/abiertas', async (req, res) => {
+    res.json(await servicioPartidas.listarAbiertas(req.idSolicitante));
   });
 
   // Antes que '/:id', para que «actual» no se tome como un identificador.
@@ -54,6 +65,15 @@ function crearRouterPartidas({ servicioPartidas }) {
   // RF-21: el rol de administrador lo comprueba el servicio.
   router.get('/admin/en-curso', async (req, res) => {
     res.json(await servicioPartidas.listarEnCurso(req.idSolicitante));
+  });
+
+  router.post('/:id/union', async (req, res) => {
+    res.json(await servicioPartidas.unirse(req.idSolicitante, req.params.id));
+  });
+
+  router.post('/:id/cancelacion', async (req, res) => {
+    await servicioPartidas.cancelar(req.idSolicitante, req.params.id);
+    res.status(204).end();
   });
 
   router.post('/:id/anulacion', async (req, res) => {

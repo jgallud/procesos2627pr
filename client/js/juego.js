@@ -1,4 +1,5 @@
-// FRONTEND — CAPA DE PRESENTACIÓN: partida de Hundir la Flota (Hito 5, RF-16).
+// FRONTEND — CAPA DE PRESENTACIÓN: partida de Hundir la Flota (Hito 5, RF-16;
+// Hito 7, partidas entre jugadores: RF-22 y RF-23).
 //
 // Dibuja los dos tableros, recoge los clics y muestra el estado de la partida.
 // Como interfaz.js, solo habla con el servidor a través de api.js (aquí no hay
@@ -76,6 +77,67 @@ async function nuevaPartida() {
   }
 }
 
+// --- Partidas entre jugadores (RF-22) -----------------------------------------
+
+async function crearPartidaAbierta() {
+  ui.avisar('');
+  const vista = await jugar(() => api.crearPartidaAbierta());
+  if (vista) {
+    actualizar(vista);
+    ui.avisar('Partida creada. Cuando alguien se una, aparecerá su nombre; mientras, coloca tu flota.', 'info');
+  }
+}
+
+async function unirseA(abierta) {
+  ui.avisar('');
+  const vista = await jugar(() => api.unirseAPartida(abierta.id));
+  if (vista) {
+    actualizar(vista);
+    ui.avisar(`Te has unido a la partida de ${vista.nombreRival}. Coloca tu flota.`, 'info');
+  } else {
+    cargarAbiertas(); // quizá otro jugador se unió antes
+  }
+}
+
+async function cancelar() {
+  if (!window.confirm('¿Cancelar la partida? Nadie se ha unido todavía, así que no contará como derrota.')) return;
+  const hecho = await jugar(async () => { await api.cancelarPartida(partida.id); return true; });
+  if (hecho) { actualizar(null); ui.avisar('Partida cancelada.', 'info'); }
+}
+
+// Hasta los avisos en tiempo real (RF-24), las jugadas del rival se ven al pedir
+// de nuevo la partida.
+async function actualizarPartida() {
+  if (!partida) return;
+  const vista = await jugar(() => api.obtenerPartida(partida.id));
+  if (vista) actualizar(vista);
+}
+
+function pintarAbiertas(abiertas) {
+  const lista = $('#lista-abiertas');
+  lista.replaceChildren(...abiertas.map((abierta) => {
+    const elemento = document.createElement('li');
+    const texto = document.createElement('span');
+    texto.textContent = `Partida de ${abierta.creador}`;
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'boton-principal';
+    boton.textContent = 'Unirse';
+    boton.addEventListener('click', () => unirseA(abierta));
+    elemento.append(texto, boton);
+    return elemento;
+  }));
+  $('#abiertas-vacio').hidden = abiertas.length > 0;
+}
+
+async function cargarAbiertas() {
+  try {
+    pintarAbiertas(await api.partidasAbiertas());
+  } catch (error) {
+    ui.mostrarError(error);
+  }
+}
+
 async function colocarEn(casilla) {
   const barcoEnCasilla = partida.propio.flota.find((b) => b.casillas.includes(casilla));
   if (barcoEnCasilla) {
@@ -94,7 +156,9 @@ async function colocarAutomatica() {
 }
 
 function avisarSiEmpieza() {
-  if (partida.estado === 'en_juego') ui.avisar('¡Empieza la partida! Dispara en el tablero de la máquina.', 'info');
+  if (partida.estado === 'en_juego') {
+    ui.avisar(partida.esMiTurno ? `¡Empieza la partida! Dispara en el tablero de ${nombreDelRival()}.` : `¡Empieza la partida! Empieza ${nombreDelRival()}.`, 'info');
+  }
   else ui.avisar('');
 }
 
@@ -119,6 +183,10 @@ function describirDisparo({ casilla, resultado, barco }) {
     : `${casilla}: ${TEXTO_RESULTADO[resultado] ?? resultado}`;
 }
 
+// «la máquina», o el nombre del otro jugador.
+const nombreDelRival = () => (partida.oponente === 'maquina' ? 'la máquina' : partida.nombreRival ?? 'tu rival');
+const NombreDelRival = () => { const r = nombreDelRival(); return r[0].toUpperCase() + r.slice(1); };
+
 function describirTurno({ disparo, disparosRival }) {
   const partes = [`Tu disparo a ${describirDisparo(disparo)}.`];
   if (disparosRival.length) {
@@ -129,9 +197,13 @@ function describirTurno({ disparo, disparosRival }) {
 }
 
 function textoFinal() {
-  if (partida.resultado === 'victoria') return '¡Has ganado! Has hundido toda la flota de la máquina.';
+  if (partida.resultado === 'victoria') {
+    return partida.motivoFin === 'abandono'
+      ? `¡Has ganado! ${NombreDelRival()} ha abandonado la partida.`
+      : `¡Has ganado! Has hundido toda la flota de ${nombreDelRival()}.`;
+  }
   if (partida.motivoFin === 'abandono') return 'Has abandonado: la partida cuenta como derrota.';
-  return 'Has perdido: la máquina ha hundido toda tu flota.';
+  return `Has perdido: ${nombreDelRival()} ha hundido toda tu flota.`;
 }
 
 const resultadoComoTipo = () => (partida.resultado === 'victoria' ? 'exito' : 'error');
@@ -139,9 +211,13 @@ const resultadoComoTipo = () => (partida.resultado === 'victoria' ? 'exito' : 'e
 function textoEstado() {
   if (partida.estado === 'colocando') {
     const quedan = partida.propio.barcosPendientes.length;
-    return `Coloca tu flota: te ${quedan === 1 ? 'queda 1 barco' : `quedan ${quedan} barcos`}.`;
+    const espera = partida.esperandoRival ? 'Esperando a que alguien se una. ' : '';
+    if (quedan === 0) return `${espera || `Esperando a que ${nombreDelRival()} coloque su flota…`}`.trim();
+    return `${espera}Coloca tu flota: te ${quedan === 1 ? 'queda 1 barco' : `quedan ${quedan} barcos`}.`;
   }
-  if (partida.estado === 'en_juego') return partida.esMiTurno ? 'Tu turno: dispara en el tablero de la máquina.' : 'Turno de la máquina…';
+  if (partida.estado === 'en_juego') {
+    return partida.esMiTurno ? `Tu turno: dispara en el tablero de ${nombreDelRival()}.` : `Turno de ${nombreDelRival()}…`;
+  }
   return textoFinal();
 }
 
@@ -230,7 +306,10 @@ function pintar() {
   const hayPartida = Boolean(partida);
   $('#juego-sin-partida').hidden = hayPartida;
   $('#juego-partida').hidden = !hayPartida;
-  if (!hayPartida) return;
+  if (!hayPartida) {
+    cargarAbiertas();
+    return;
+  }
 
   const { estado, esMiTurno, propio, rival } = partida;
   const colocando = estado === 'colocando';
@@ -241,8 +320,13 @@ function pintar() {
   estadoEl.textContent = textoEstado();
   estadoEl.className = `juego-estado${terminada ? ` juego-${partida.resultado}` : ''}`;
   $('#juego-colocacion').hidden = !colocando;
-  $('#boton-abandonar').hidden = terminada;
+  const entreJugadores = partida.oponente === 'usuario';
+  $('#juego-entre-jugadores').hidden = !entreJugadores || terminada;
+  $('#boton-cancelar-partida').hidden = !partida.esperandoRival;
+  $('#boton-abandonar').hidden = terminada || Boolean(partida.esperandoRival);
   $('#boton-otra-partida').hidden = !terminada;
+  const tituloRival = partida.oponente === 'maquina' ? 'Flota de la máquina' : `Flota de ${partida.nombreRival ?? 'tu rival'}`;
+  $('#titulo-tablero-rival').textContent = tituloRival;
   if (colocando) pintarColocacion();
 
   pintarTablero($('#tablero-propio'), {
@@ -253,7 +337,7 @@ function pintar() {
       : null,
   });
   pintarTablero($('#tablero-rival'), {
-    nombre: 'Flota de la máquina',
+    nombre: tituloRival,
     clases: clasesDeCasillas(terminada ? rival.flota : [], rival.disparos, 'barco-revelado', rival.barcosHundidos),
     alPulsar: enJuego && esMiTurno
       ? { puede: (casilla, lista) => !lista.some((c) => c in TEXTO_RESULTADO), accion: dispararA }
@@ -266,7 +350,12 @@ function pintar() {
 export function prepararJuego({ avisar, mostrarError }) {
   ui = { avisar, mostrarError };
   $('#boton-nueva-partida').addEventListener('click', nuevaPartida);
-  $('#boton-otra-partida').addEventListener('click', nuevaPartida);
+  // Al terminar, se vuelve a la pantalla para elegir contra quién jugar.
+  $('#boton-otra-partida').addEventListener('click', () => { actualizar(null); ui.avisar(''); });
+  $('#boton-partida-jugadores').addEventListener('click', crearPartidaAbierta);
+  $('#boton-recargar-abiertas').addEventListener('click', cargarAbiertas);
+  $('#boton-actualizar-partida').addEventListener('click', actualizarPartida);
+  $('#boton-cancelar-partida').addEventListener('click', cancelar);
   $('#boton-abandonar').addEventListener('click', abandonar);
   $('#boton-colocacion-automatica').addEventListener('click', colocarAutomatica);
   $('#juego-orientacion').addEventListener('click', () => {
