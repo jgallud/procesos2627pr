@@ -121,7 +121,22 @@ async function actualizarPartida() {
     ui.avisar('El administrador ha anulado esta partida. Puedes empezar otra.', 'error');
     return;
   }
+  // MJ-15: el rival abandonó mientras esta conexión estaba caída.
+  const rivalAbandono = vista.estado === 'terminada' && vista.motivoFin === 'abandono' && vista.resultado === 'victoria';
+  if (rivalAbandono && partida?.estado !== 'terminada') {
+    volverAlInicioPorAbandono();
+    return;
+  }
   actualizar(vista);
+}
+
+// MJ-15: si el rival abandona, se avisa de la victoria y se vuelve a la
+// pantalla principal, igual que hace quien abandona.
+function volverAlInicioPorAbandono() {
+  const rival = NombreDelRival();
+  document.dispatchEvent(new CustomEvent('partida:terminada')); // para el historial
+  actualizar(null);
+  ui.avisar(`${rival} ha abandonado la partida: ¡has ganado!`, 'info');
 }
 
 // --- Tiempo real (RF-24 a RF-26) ----------------------------------------------
@@ -148,12 +163,16 @@ async function alRecibirAviso({ detail: aviso }) {
   }
   if (!partida || aviso.partida !== partida.id) return;
   if (aviso.jugador === miIndice()) return; // mi propia jugada: ya la tengo
+  if (aviso.tipo === 'abandono') {
+    volverAlInicioPorAbandono();
+    return;
+  }
   await actualizarPartida();
   if (!partida) return;
   if (aviso.tipo === 'rival-unido') ui.avisar(`${partida.nombreRival} se ha unido a la partida.`, 'info');
   else if (aviso.tipo === 'flota-colocada') ui.avisar(`${NombreDelRival()} ha colocado su flota.`, 'info');
   else if (aviso.tipo === 'disparo') ui.avisar(`${NombreDelRival()} ha disparado a ${describirDisparo(aviso.disparo)}.`, 'info');
-  else if (aviso.tipo === 'fin' || aviso.tipo === 'abandono') ui.avisar(textoFinal(), 'info');
+  else if (aviso.tipo === 'fin') ui.avisar(textoFinal(), 'info');
 }
 
 function alCambiarConexion({ detail: { estado } }) {
