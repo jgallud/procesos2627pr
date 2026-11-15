@@ -186,3 +186,4 @@ td.celda-acciones button + button { margin-left: 6px; }
 .estadisticas dd { margin: 2px 0 0; font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .resultado-victoria { color: var(--acento); font-weight: 600; }
 .resultado-derrota { color: var(--peligro); }
+tr.fila-propia td { background: var(--exito-fondo); font-weight: 600; }

@@ -91,6 +91,7 @@ export const abandonarPartida = (id) => peticion('POST', `${rutaPartida(id)}/aba
 const conUsuario = (ruta, idUsuario) => (idUsuario ? `${ruta}?usuario=${encodeURIComponent(idUsuario)}` : ruta);
 export const historialPartidas = (idUsuario) => peticion('GET', conUsuario('/partidas/historial', idUsuario));
 export const estadisticasPartidas = (idUsuario) => peticion('GET', conUsuario('/partidas/estadisticas', idUsuario));
+export const clasificacion = () => peticion('GET', '/partidas/clasificacion');
 
 // --- Usuarios ---------------------------------------------------------------
 export const listarUsuarios = () => peticion('GET', '/usuarios');

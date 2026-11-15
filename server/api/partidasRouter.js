@@ -10,6 +10,7 @@
 //   GET    /api/partidas/actual                partida en curso         -> 200 vista | null
 //   GET    /api/partidas/historial[?usuario=]  partidas terminadas      -> 200 [resumen] (RF-18)
 //   GET    /api/partidas/estadisticas[?usuario=] estadísticas           -> 200 {jugadas, …} (RF-19)
+//   GET    /api/partidas/clasificacion         clasificación            -> 200 [fila] (RF-20)
 //   GET    /api/partidas/:id                   vista de la partida      -> 200
 //   POST   /api/partidas/:id/barcos            colocar un barco         -> 200 vista
 //   DELETE /api/partidas/:id/barcos/:barco     retirar un barco         -> 200 vista
@@ -42,6 +43,10 @@ function crearRouterPartidas({ servicioPartidas }) {
 
   router.get('/estadisticas', async (req, res) => {
     res.json(await servicioPartidas.estadisticas(req.idSolicitante, req.query.usuario));
+  });
+
+  router.get('/clasificacion', async (req, res) => {
+    res.json(await servicioPartidas.clasificacion(req.idSolicitante));
   });
 
   router.get('/:id', async (req, res) => {

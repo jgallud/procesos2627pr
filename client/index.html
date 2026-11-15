@@ -149,6 +149,23 @@
         </div>
       </div>
 
+      <!-- Clasificación (Hito 6, RF-20): la gestiona js/historial.js -->
+      <div id="seccion-clasificacion" class="tarjeta" hidden>
+        <div class="titulo-seccion">
+          <h2>Clasificación</h2>
+        </div>
+        <p class="secundario">Por victorias y, a igualdad, por porcentaje de acierto. Solo aparecen jugadores con alguna partida terminada.</p>
+        <p id="clasificacion-vacia" class="secundario" hidden>Todavía nadie ha terminado una partida.</p>
+        <div class="tabla-desplazable">
+          <table id="tabla-clasificacion" hidden>
+            <thead>
+              <tr><th>#</th><th>Jugador</th><th>Ganadas</th><th>Jugadas</th><th>Victorias</th><th>Acierto</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="seccion-admin" class="tarjeta" hidden>
         <div class="titulo-seccion">
           <h2>Usuarios <span id="total-usuarios" class="secundario"></span></h2>

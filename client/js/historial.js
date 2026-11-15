@@ -1,4 +1,5 @@
-// FRONTEND — CAPA DE PRESENTACIÓN: historial y estadísticas (Hito 6, RF-18 y RF-19).
+// FRONTEND — CAPA DE PRESENTACIÓN: historial, estadísticas y clasificación
+// (Hito 6, RF-18, RF-19 y RF-20).
 //
 // Muestra las partidas terminadas y las estadísticas que calcula el servidor:
 // aquí no se cuenta ni se calcula nada, solo se da formato. Habla con el
@@ -66,6 +67,32 @@ function pintarHistorial(partidas) {
   $('#historial-vacio').hidden = partidas.length > 0;
 }
 
+// RF-20: la fila del propio jugador se resalta (esSolicitante lo decide el servidor).
+function pintarClasificacion(filas) {
+  const cuerpo = $('#tabla-clasificacion tbody');
+  cuerpo.replaceChildren(...filas.map((f) => {
+    const fila = document.createElement('tr');
+    if (f.esSolicitante) fila.className = 'fila-propia';
+    for (const texto of [f.posicion, f.esSolicitante ? `${f.nombre} (tú)` : f.nombre, f.ganadas, f.jugadas,
+      pct(f.porcentajeVictorias), pct(f.porcentajeAcierto)]) {
+      const td = document.createElement('td');
+      td.textContent = String(texto);
+      fila.append(td);
+    }
+    return fila;
+  }));
+  $('#tabla-clasificacion').hidden = filas.length === 0;
+  $('#clasificacion-vacia').hidden = filas.length > 0;
+}
+
+async function cargarClasificacion() {
+  try {
+    pintarClasificacion(await api.clasificacion());
+  } catch (error) {
+    ui.mostrarError(error);
+  }
+}
+
 async function cargar() {
   const id = usuarioConsultado?.id;
   $('#historial-titulo').textContent = usuarioConsultado ? `Partidas de ${usuarioConsultado.email}` : 'Mis partidas';
@@ -81,14 +108,18 @@ async function cargar() {
 
 export function prepararHistorial({ mostrarError }) {
   ui = { mostrarError };
-  document.addEventListener('partida:terminada', () => { if (!usuarioConsultado) cargar(); });
+  document.addEventListener('partida:terminada', () => {
+    if (!usuarioConsultado) cargar();
+    cargarClasificacion();
+  });
   $('#boton-historial-propio').addEventListener('click', () => { usuarioConsultado = null; cargar(); });
 }
 
 export async function mostrarHistorial() {
   usuarioConsultado = null;
   $('#seccion-historial').hidden = false;
-  await cargar();
+  $('#seccion-clasificacion').hidden = false;
+  await Promise.all([cargar(), cargarClasificacion()]);
 }
 
 // Administrador: partidas de otro usuario (RF-18).
@@ -102,4 +133,5 @@ export async function mostrarHistorialDe(usuario) {
 export function ocultarHistorial() {
   usuarioConsultado = null;
   $('#seccion-historial').hidden = true;
+  $('#seccion-clasificacion').hidden = true;
 }
