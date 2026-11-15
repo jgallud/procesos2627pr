@@ -187,3 +187,10 @@ td.celda-acciones button + button { margin-left: 6px; }
 .resultado-victoria { color: var(--acento); font-weight: 600; }
 .resultado-derrota { color: var(--peligro); }
 tr.fila-propia td { background: var(--exito-fondo); font-weight: 600; }
+
+/* Partidas entre jugadores (Hito 7) */
+.partidas-abiertas { margin-top: 20px; }
+.partidas-abiertas h3 { margin: 0; font-size: 1rem; }
+.lista-abiertas { list-style: none; margin: 0; padding: 0; }
+.lista-abiertas li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--borde); }
+#juego-entre-jugadores { margin-bottom: 12px; }

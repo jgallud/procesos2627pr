@@ -77,6 +77,11 @@ export const urlInicioOAuth = (proveedor) => `/api/oauth/${encodeURIComponent(pr
 // el resultado de cada jugada y nunca envía la flota del rival hasta el final.
 const rutaPartida = (id) => `/partidas/${encodeURIComponent(id)}`;
 export const crearPartidaContraMaquina = () => peticion('POST', '/partidas');
+// Partidas entre jugadores (Hito 7, RF-22).
+export const crearPartidaAbierta = () => peticion('POST', '/partidas', { modo: 'jugadores' });
+export const partidasAbiertas = () => peticion('GET', '/partidas/abiertas');
+export const unirseAPartida = (id) => peticion('POST', `${rutaPartida(id)}/union`);
+export const cancelarPartida = (id) => peticion('POST', `${rutaPartida(id)}/cancelacion`);
 export const partidaActual = () => peticion('GET', '/partidas/actual');
 export const obtenerPartida = (id) => peticion('GET', rutaPartida(id));
 export const colocarBarco = (id, { barco, casilla, orientacion }) =>

@@ -230,4 +230,35 @@ describe('API /api/partidas', () => {
       assert.equal((await pedir('GET', '/api/partidas/admin/en-curso')).estado, 401);
     });
   });
+
+  describe('partidas entre jugadores (RF-22, RF-23)', () => {
+    it('crear abierta, listarla, unirse y jugar por turnos', async () => {
+      const creada = await pedir('POST', '/api/partidas', cookieAna, { modo: 'jugadores' });
+      assert.equal(creada.estado, 201);
+      assert.equal(creada.datos.esperandoRival, true);
+
+      const abiertas = await pedir('GET', '/api/partidas/abiertas', cookieLuis);
+      assert.equal(abiertas.estado, 200);
+      assert.deepEqual(abiertas.datos.map((p) => [p.id, p.creador]), [[creada.datos.id, 'ana']]);
+
+      const union = await pedir('POST', `/api/partidas/${creada.datos.id}/union`, cookieLuis);
+      assert.equal(union.estado, 200);
+      assert.equal(union.datos.nombreRival, 'ana');
+
+      await pedir('POST', `/api/partidas/${creada.datos.id}/flota-aleatoria`, cookieAna);
+      const lista = await pedir('POST', `/api/partidas/${creada.datos.id}/flota-aleatoria`, cookieLuis);
+      assert.equal(lista.datos.estado, 'en_juego');
+      const fueraDeTurno = await pedir('POST', `/api/partidas/${creada.datos.id}/disparos`, cookieLuis, { casilla: 'A1' });
+      assert.equal(fueraDeTurno.estado, 409);
+    });
+
+    it('409 al unirse a la propia partida y 204 al cancelarla; 404 si no existe', async () => {
+      const creada = await pedir('POST', '/api/partidas', cookieAna, { modo: 'jugadores' });
+      assert.equal((await pedir('POST', `/api/partidas/${creada.datos.id}/union`, cookieAna)).estado, 409);
+      assert.equal((await pedir('POST', `/api/partidas/${creada.datos.id}/cancelacion`, cookieLuis)).estado, 403);
+      assert.equal((await pedir('POST', `/api/partidas/${creada.datos.id}/cancelacion`, cookieAna)).estado, 204);
+      assert.equal((await pedir('POST', '/api/partidas/no-existe/union', cookieLuis)).estado, 404);
+      assert.equal((await pedir('GET', '/api/partidas/abiertas')).estado, 401);
+    });
+  });
 });

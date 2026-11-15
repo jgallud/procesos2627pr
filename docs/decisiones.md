@@ -229,3 +229,12 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** las estadísticas ya excluían las partidas anuladas desde RF-19 ([D-33](#d-33-historial-y-estadísticas-calculados-al-consultar)), así que no hubo que tocarlas. El administrador ve quién juega cada partida por su email, que ya podía ver en la lista de usuarios.
 - **Estado:** vigente. Evidencia: `test/logic/partidaService.test.js`.
 
+## Sprint 2 · Hito 7
+
+### D-36 Partidas entre jugadores en el mismo servicio
+- **Qué:** las partidas entre jugadores son un segundo modo (`modo: 'jugadores'`) del mismo servicio, el mismo repositorio y las mismas rutas que las partidas contra la máquina; el motor no cambia. El creador es el jugador 0 y empieza; quien se une ocupa la plaza del jugador 1, que hasta entonces está vacía (`null`). Un usuario solo puede tener una partida en curso, de cualquier modo. Unirse ocupa la plaza con una sola operación del repositorio (`ocuparPlaza`; en MongoDB, un `findOneAndUpdate` que exige la plaza libre), para que de dos uniones simultáneas solo una lo consiga. Mientras nadie se haya unido no se puede abandonar (no hay a quién dar la victoria): se cancela, y una partida cancelada no cuenta en el historial.
+- **Alternativas consideradas:** un servicio y una colección aparte para las partidas entre jugadores (separa más, pero duplica la carga, el guardado, la vista y las pruebas); comprobar la plaza y luego guardar en dos pasos (más sencillo, pero dos usuarios podrían unirse a la vez).
+- **Por qué:** TODO(alumno): ¿por qué un modo más del mismo servicio? (pista: la especificación dice que en el Hito 7 «el motor no cambia: solo cambia quién hace el otro turno»).
+- **Consecuencias:** el jugador ve el nombre del rival, nunca su email ([D-34](#d-34-clasificación-sin-emails-y-solo-con-partidas)). Hasta RF-24, las jugadas del rival se ven al pulsar «Actualizar partida».
+- **Estado:** vigente. Evidencia: `test/logic/partidaJugadores.test.js`; prueba de contrato «de dos uniones simultáneas solo una ocupa la plaza».
+

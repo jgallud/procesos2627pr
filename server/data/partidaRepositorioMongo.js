@@ -60,6 +60,19 @@ function crearRepositorioPartidasMongo({ db }) {
       return aPartida(partida);
     },
 
+    // Una sola operación de MongoDB: el filtro y el cambio se aplican de forma
+    // atómica, así que de dos uniones simultáneas solo una encuentra la plaza libre.
+    async ocuparPlaza(id, idUsuario, cambios = {}) {
+      if (typeof id !== 'string' || !id) return null;
+      const { id: _id1, _id: _id2, jugadores: _j, ...resto } = cambios;
+      const actualizada = await partidas.findOneAndUpdate(
+        { _id: id, enCurso: true, 'jugadores.1': null },
+        { $set: { ...resto, 'jugadores.1': idUsuario } },
+        { returnDocument: 'after' },
+      );
+      return aPartida(actualizada);
+    },
+
     async listarEnCurso() {
       const documentos = await partidas.find({ enCurso: true }).sort({ creadaEn: -1 }).toArray();
       return documentos.map(aPartida);

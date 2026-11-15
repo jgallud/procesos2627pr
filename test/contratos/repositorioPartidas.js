@@ -65,6 +65,26 @@ function probarContratoPartidas(nombre, { crear, limpiar = async () => {} }) {
       assert.equal(await repo.buscarEnCursoDe('u1'), null);
     });
 
+    it('ocupa la segunda plaza solo si está libre y la partida sigue en curso', async () => {
+      const abierta = await repo.crear(datos('u1', '2026-11-01T10:00:00.000Z', { modo: 'jugadores' }));
+      const ocupada = await repo.ocuparPlaza(abierta.id, 'u2', { actualizadaEn: '2026-11-01T11:00:00.000Z' });
+      assert.deepEqual(ocupada.jugadores, ['u1', 'u2']);
+      assert.equal(ocupada.actualizadaEn, '2026-11-01T11:00:00.000Z');
+      assert.deepEqual(await repo.buscarPorId(abierta.id), ocupada);
+      assert.equal(await repo.ocuparPlaza(abierta.id, 'u3'), null, 'ya no quedan plazas');
+      assert.deepEqual((await repo.buscarPorId(abierta.id)).jugadores, ['u1', 'u2']);
+
+      const cerrada = await repo.crear(datos('u1', '2026-11-02T10:00:00.000Z', { enCurso: false }));
+      assert.equal(await repo.ocuparPlaza(cerrada.id, 'u2'), null);
+      assert.equal(await repo.ocuparPlaza('no-existe', 'u2'), null);
+    });
+
+    it('de dos uniones simultáneas solo una ocupa la plaza', async () => {
+      const abierta = await repo.crear(datos('u1', '2026-11-01T10:00:00.000Z', { modo: 'jugadores' }));
+      const resultados = await Promise.all([repo.ocuparPlaza(abierta.id, 'u2'), repo.ocuparPlaza(abierta.id, 'u3')]);
+      assert.equal(resultados.filter(Boolean).length, 1);
+    });
+
     it('lista todas las partidas en curso, de la más reciente a la más antigua', async () => {
       assert.deepEqual(await repo.listarEnCurso(), []);
       const vieja = await repo.crear(datos('u1', '2026-11-01T10:00:00.000Z'));

@@ -90,12 +90,29 @@
         </div>
 
         <div id="juego-sin-partida">
-          <p class="secundario">Juega contra la máquina: coloca tus cinco barcos y hunde los suyos antes de que ella hunda los tuyos.</p>
-          <button id="boton-nueva-partida" type="button" class="boton-principal">Nueva partida contra la máquina</button>
+          <p class="secundario">Coloca tus cinco barcos y hunde la flota rival antes de que hundan la tuya. Juega contra la máquina o contra otro jugador.</p>
+          <div class="acciones">
+            <button id="boton-nueva-partida" type="button" class="boton-principal">Nueva partida contra la máquina</button>
+            <button id="boton-partida-jugadores" type="button" class="boton-secundario">Crear partida contra otro jugador</button>
+          </div>
+
+          <!-- Partidas abiertas por otros jugadores (Hito 7, RF-22) -->
+          <div class="titulo-seccion partidas-abiertas">
+            <h3>Partidas abiertas</h3>
+            <button id="boton-recargar-abiertas" type="button" class="boton-secundario">Actualizar</button>
+          </div>
+          <p id="abiertas-vacio" class="secundario" hidden>Nadie está esperando rival ahora mismo.</p>
+          <ul id="lista-abiertas" class="lista-abiertas"></ul>
         </div>
 
         <div id="juego-partida" hidden>
           <p id="juego-estado" class="juego-estado" role="status" aria-live="polite"></p>
+
+          <!-- Partida entre jugadores (Hito 7): esperar rival y ver las jugadas del otro -->
+          <div id="juego-entre-jugadores" class="acciones" hidden>
+            <button id="boton-actualizar-partida" type="button" class="boton-secundario">Actualizar partida</button>
+            <button id="boton-cancelar-partida" type="button" class="boton-peligro" hidden>Cancelar partida</button>
+          </div>
 
           <div id="juego-colocacion" class="juego-colocacion" hidden>
             <p class="secundario">Elige un barco y pulsa en tu tablero la casilla donde empieza. Pulsa un barco ya colocado para quitarlo.</p>
@@ -112,7 +129,7 @@
               <div id="tablero-propio" class="tablero" role="grid"></div>
             </figure>
             <figure class="tablero-con-titulo">
-              <figcaption>Flota de la máquina</figcaption>
+              <figcaption id="titulo-tablero-rival">Flota de la máquina</figcaption>
               <div id="tablero-rival" class="tablero" role="grid"></div>
             </figure>
           </div>
