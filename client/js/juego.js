@@ -25,6 +25,7 @@ const NOMBRES_BARCOS = {
 };
 const nombreBarco = (barco) => (NOMBRES_BARCOS[barco] ?? barco).replace(/ \(\d\)$/, '');
 const TEXTO_RESULTADO = { agua: 'agua', tocado: 'tocado', hundido: 'hundido' };
+const NOMBRES_DIFICULTAD = { facil: 'fácil', normal: 'normal', dificil: 'difícil' };
 
 let partida = null; // última vista recibida del servidor
 let barcoElegido = null; // barco que se va a colocar
@@ -72,7 +73,7 @@ function actualizar(vista) {
 
 async function nuevaPartida() {
   ui.avisar('');
-  const vista = await jugar(() => api.crearPartidaContraMaquina());
+  const vista = await jugar(() => api.crearPartidaContraMaquina($('#dificultad').value));
   if (vista) {
     actualizar(vista);
     ui.avisar('Partida creada. La máquina ya ha colocado su flota: coloca la tuya.', 'info');
@@ -364,7 +365,9 @@ function pintar() {
   $('#boton-cancelar-partida').hidden = !partida.esperandoRival;
   $('#boton-abandonar').hidden = terminada || Boolean(partida.esperandoRival);
   $('#boton-otra-partida').hidden = !terminada;
-  const tituloRival = partida.oponente === 'maquina' ? 'Flota de la máquina' : `Flota de ${partida.nombreRival ?? 'tu rival'}`;
+  const tituloRival = partida.oponente === 'maquina'
+    ? `Flota de la máquina (${NOMBRES_DIFICULTAD[partida.dificultad] ?? partida.dificultad})`
+    : `Flota de ${partida.nombreRival ?? 'tu rival'}`;
   $('#titulo-tablero-rival').textContent = tituloRival;
   if (colocando) pintarColocacion();
 

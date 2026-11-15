@@ -13,11 +13,18 @@
 //     dos o más tocados alineados, sigue esa línea.
 //   - Descarte: como los barcos no se tocan (D-25), las casillas vecinas de
 //     un barco hundido y las diagonales de un tocado no pueden tener barco.
+//
+// Niveles de dificultad (MJ-03, D-38), elegidos al crear la partida:
+//   - fácil:   solo caza al azar (el mínimo de RF-14);
+//   - normal:  caza y remate;
+//   - difícil: caza, remate y descarte (la estrategia de D-28).
 
 const motor = require('./motor');
 
 const ORTOGONALES = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 const DIAGONALES = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+
+const NIVELES = Object.freeze({ FACIL: 'facil', NORMAL: 'normal', DIFICIL: 'dificil' });
 
 function aPos(casilla) {
   return { fila: motor.FILAS.indexOf(casilla[0]), columna: Number(casilla.slice(1)) - 1 };
@@ -97,14 +104,16 @@ function candidatasDeRemate(grupo) {
 }
 
 // RF-14: elige la casilla del siguiente disparo a partir de los disparos ya
-// hechos ([{ casilla, resultado, barco? }]). Nunca repite casilla.
-function elegirDisparo(disparos, azar = Math.random) {
+// hechos ([{ casilla, resultado, barco? }]) y del nivel. Nunca repite casilla.
+function elegirDisparo(disparos, azar = Math.random, nivel = NIVELES.DIFICIL) {
+  if (!Object.values(NIVELES).includes(nivel)) throw new Error(`Nivel de dificultad desconocido: ${nivel}`);
   const disparadas = new Set(disparos.map((d) => d.casilla));
   const libres = motor.todasLasCasillas().filter((c) => !disparadas.has(c));
   if (libres.length === 0) throw new Error('No quedan casillas a las que disparar');
+  if (nivel === NIVELES.FACIL) return elegirAlAzar(libres, azar);
 
   const grupos = barcosAcertados(disparos);
-  const descartadas = casillasDescartadas(grupos);
+  const descartadas = nivel === NIVELES.DIFICIL ? casillasDescartadas(grupos) : new Set();
   const util = (c) => c && !disparadas.has(c) && !descartadas.has(c);
 
   // Remate: primero los barcos tocados y no hundidos.
@@ -125,12 +134,12 @@ function elegirColocacion(azar = Math.random) {
 // Juega el turno completo de la máquina: dispara mientras acierte (quien
 // acierta repite, D-25) y la partida no termine. Devuelve la partida nueva y
 // los disparos hechos, en orden, para que el jugador los vea (RF-14).
-function jugarTurno(partida, jugador, azar = Math.random) {
+function jugarTurno(partida, jugador, azar = Math.random, nivel = NIVELES.DIFICIL) {
   let actual = partida;
   const hechos = [];
   do {
     const { rival } = motor.vistaPara(actual, jugador); // solo su tablero de disparos
-    const casilla = elegirDisparo(rival.disparos, azar);
+    const casilla = elegirDisparo(rival.disparos, azar, nivel);
     const { partida: nueva, disparo } = motor.disparar(actual, jugador, casilla);
     actual = nueva;
     hechos.push(disparo);
@@ -138,4 +147,4 @@ function jugarTurno(partida, jugador, azar = Math.random) {
   return { partida: actual, disparos: hechos };
 }
 
-module.exports = { elegirDisparo, elegirColocacion, jugarTurno };
+module.exports = { elegirDisparo, elegirColocacion, jugarTurno, NIVELES };

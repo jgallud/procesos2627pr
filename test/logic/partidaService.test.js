@@ -88,6 +88,22 @@ describe('Servicio de partidas contra la máquina', () => {
       assert.equal((await servicio.partidaEnCurso(ana.id)).id, primera.partida.id);
     });
 
+    it('guarda la dificultad elegida; por defecto, normal; rechaza una desconocida (MJ-03)', async () => {
+      const { partida } = await servicio.crearContraMaquina(ana.id, { dificultad: 'facil' });
+      assert.equal(partida.dificultad, 'facil');
+      assert.equal((await repositorio.buscarPorId(partida.id)).dificultad, 'facil');
+      assert.equal((await servicio.crearContraMaquina(luis.id)).partida.dificultad, 'normal');
+      const eva = await usuarioActivo('eva@ejemplo.com');
+      await assert.rejects(servicio.crearContraMaquina(eva.id, { dificultad: 'imposible' }), rechazaCon(CODIGOS.DATOS_INVALIDOS));
+    });
+
+    it('el historial muestra la dificultad de cada partida (MJ-03)', async () => {
+      const { partida } = await servicio.crearContraMaquina(ana.id, { dificultad: 'facil' });
+      await servicio.colocarFlotaAleatoria(ana.id, partida.id);
+      await servicio.abandonar(ana.id, partida.id);
+      assert.equal((await servicio.historial(ana.id))[0].dificultad, 'facil');
+    });
+
     it('sin sesión no se puede crear una partida', async () => {
       await assert.rejects(servicio.crearContraMaquina(undefined), rechazaCon(CODIGOS.NO_AUTENTICADO));
     });

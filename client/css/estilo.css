@@ -223,3 +223,7 @@ tr.fila-propia td { background: var(--exito-fondo); font-weight: 600; }
 .datos-cuenta dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .zona-peligro { border-color: var(--peligro); }
 .zona-peligro .boton-peligro { margin-top: 16px; }
+
+/* Dificultad de la máquina (MJ-03) */
+.dificultad { display: inline-flex; align-items: center; gap: 8px; color: var(--texto-suave); }
+.dificultad select { font: inherit; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; background: #fff; }

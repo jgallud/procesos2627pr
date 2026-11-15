@@ -18,6 +18,7 @@ let usuarioConsultado = null; // null: las propias; si no, { id, email } (admini
 
 const formatoFecha = new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeStyle: 'short' });
 const fecha = (iso) => (iso ? formatoFecha.format(new Date(iso)) : '—');
+const NOMBRES_DIFICULTAD = { facil: 'fácil', normal: 'normal', dificil: 'difícil' };
 const pct = (valor) => (valor === null || valor === undefined ? '—' : `${valor.toLocaleString('es-ES')} %`);
 
 function textoResultado({ resultado, motivoFin }) {
@@ -50,7 +51,7 @@ function pintarHistorial(partidas) {
     const fila = document.createElement('tr');
     const celdas = [
       fecha(p.fecha),
-      p.oponente === 'maquina' ? 'Máquina' : 'Otro jugador',
+      p.oponente === 'maquina' ? `Máquina (${NOMBRES_DIFICULTAD[p.dificultad] ?? p.dificultad})` : 'Otro jugador',
       textoResultado(p),
       String(p.disparos),
       pct(p.porcentajeAcierto),
