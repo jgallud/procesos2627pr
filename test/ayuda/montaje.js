@@ -13,13 +13,13 @@ const { crearRepositorioPartidasMemoria } = require('../../server/data/partidaRe
 const CLAVE = 'contrasena-segura';
 const CLAVE_ADMIN = 'clave-del-admin';
 
-function montar({ cookieSegura = false, proveedoresOAuth, azar } = {}) {
+function montar({ cookieSegura = false, proveedoresOAuth, azar, avisador } = {}) {
   const tokens = new Map();
   const notificador = { async enviarConfirmacion({ email, token }) { tokens.set(email, token); } };
   const servicioUsuarios = crearServicioUsuarios({ repositorio: crearRepositorioUsuariosMemoria(), notificador });
   const servicioSesiones = crearServicioSesiones({ repositorio: crearRepositorioSesionesMemoria() });
   const repositorioPartidas = crearRepositorioPartidasMemoria();
-  const servicioPartidas = crearServicioPartidas({ repositorio: repositorioPartidas, servicioUsuarios, azar });
+  const servicioPartidas = crearServicioPartidas({ repositorio: repositorioPartidas, servicioUsuarios, azar, avisador });
   const app = crearApp({ servicioUsuarios, servicioSesiones, servicioPartidas, proveedoresOAuth, cookieSegura });
 
   // Registra y confirma un usuario normal directamente en la capa lógica.

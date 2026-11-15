@@ -20,6 +20,7 @@ const { crearProveedorGoogle } = require('./oauth/proveedorGoogle');
 const { crearServicioUsuarios } = require('./logic/usuarioService');
 const { crearServicioSesiones } = require('./logic/sesionService');
 const { crearServicioPartidas } = require('./logic/partidaService');
+const { crearTiempoReal } = require('./api/tiempoReal');
 const { crearRepositorioPartidasMemoria } = require('./data/partidaRepositorioMemoria');
 const { crearRepositorioPartidasMongo } = require('./data/partidaRepositorioMongo');
 const { crearApp } = require('./app');
@@ -112,10 +113,14 @@ async function main() {
   const proveedoresOAuth = crearProveedoresOAuth(config, logger);
   // Las partidas se guardan donde el resto de datos: MongoDB en producción
   // (Hito 6, RF-17) o memoria en desarrollo y pruebas.
+  // Tiempo real (Hito 7): el módulo de la capa API es el avisador que recibe
+  // el servicio de partidas, igual que el notificador de correo (D-23).
+  const tiempoReal = crearTiempoReal({ logger });
   const servicioPartidas = crearServicioPartidas({
     repositorio: repositorios.partidas,
     servicioUsuarios,
     logger,
+    avisador: tiempoReal,
   });
 
   const app = crearApp({
@@ -124,6 +129,7 @@ async function main() {
   const servidor = app.listen(config.puerto, () => {
     logger.info('Servidor iniciado', { puerto: config.puerto, entorno: config.entorno });
   });
+  tiempoReal.conectar({ servidorHttp: servidor, servicioSesiones, servicioPartidas });
 
   // Parada ordenada: Cloud Run envía SIGTERM antes de apagar la instancia.
   // Se dejan de aceptar peticiones, se terminan las que están en curso y se
@@ -133,6 +139,7 @@ async function main() {
     if (parando) return;
     parando = true;
     logger.info('Parando el servidor', { senal });
+    await tiempoReal.cerrar(); // los clientes se reconectarán a la nueva instancia (RF-25)
     await new Promise((resolve) => servidor.close(resolve));
     await repositorios.cerrar();
     process.exit(0);

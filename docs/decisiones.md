@@ -238,3 +238,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** el jugador ve el nombre del rival, nunca su email ([D-34](#d-34-clasificación-sin-emails-y-solo-con-partidas)). Hasta RF-24, las jugadas del rival se ven al pulsar «Actualizar partida».
 - **Estado:** vigente. Evidencia: `test/logic/partidaJugadores.test.js`; prueba de contrato «de dos uniones simultáneas solo una ocupa la plaza».
 
+### D-37 WebSocket con la librería ws
+- **Qué:** el servidor WebSocket usa la librería `ws` (dependencia nueva), en modo `noServer` y enganchado al evento `upgrade` del servidor HTTP de Express, en la ruta `/api/tiempo-real`. En el navegador se usa el `WebSocket` nativo. Cada 30 s el servidor envía un ping y cierra las conexiones que no responden. Al parar (SIGTERM) cierra las conexiones con el código 1012 («el servidor se reinicia») antes de cerrar el servidor HTTP.
+- **Alternativas consideradas:** implementar el protocolo a mano, como el flujo OAuth ([D-19](#d-19-flujo-oauth-implementado-a-mano)) (sin dependencias, pero son tramas, máscaras, ping y cierre que habría que mantener y probar); Socket.IO (reconexión incluida, pero con su propio protocolo encima y cliente propio); Server-Sent Events (solo servidor → cliente, suficiente para avisos, pero la especificación pide WebSocket).
+- **Por qué:** TODO(alumno): ¿por qué `ws` y no a mano? (decidido el 2026-11-15: la especificación no pide implementar el protocolo y la librería es la más usada en Node).
+- **Consecuencias:** la reconexión la hace el cliente (`client/js/tiempoReal.js`). Las pruebas de integración usan el cliente de `ws` con la cookie de sesión.
+- **Estado:** vigente. Evidencia: `test/api/tiempoReal.test.js`.
+

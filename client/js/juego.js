@@ -8,6 +8,7 @@
 // este devuelve, que nunca incluye la flota del rival hasta el final (RNF-10).
 
 import * as api from './api.js';
+import { seguirPartida, dejarDeSeguir } from './tiempoReal.js';
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -65,6 +66,7 @@ function actualizar(vista) {
   if (partida && !partida.propio.barcosPendientes.includes(barcoElegido)) {
     [barcoElegido = null] = partida.propio.barcosPendientes;
   }
+  sincronizarTiempoReal();
   pintar();
 }
 
@@ -105,12 +107,48 @@ async function cancelar() {
   if (hecho) { actualizar(null); ui.avisar('Partida cancelada.', 'info'); }
 }
 
-// Hasta los avisos en tiempo real (RF-24), las jugadas del rival se ven al pedir
-// de nuevo la partida.
+// Pide de nuevo la partida al servidor: al recibir un aviso, al reconectar
+// (RF-25: el estado completo está en el servidor, no en la conexión) o con el
+// botón «Actualizar partida».
 async function actualizarPartida() {
   if (!partida) return;
   const vista = await jugar(() => api.obtenerPartida(partida.id));
-  if (vista) actualizar(vista);
+  if (!vista) return;
+  if (vista.anulada) {
+    actualizar(null);
+    ui.avisar('El administrador ha anulado esta partida. Puedes empezar otra.', 'error');
+    return;
+  }
+  actualizar(vista);
+}
+
+// --- Tiempo real (RF-24 a RF-26) ----------------------------------------------
+
+// Se siguen los avisos mientras haya una partida entre jugadores sin terminar.
+function sincronizarTiempoReal() {
+  const seguir = partida && partida.oponente === 'usuario' && partida.estado !== 'terminada' && !partida.anulada;
+  if (seguir) seguirPartida(partida.id);
+  else dejarDeSeguir();
+}
+
+const miIndice = () => (partida.soyCreador ? 0 : 1);
+
+async function alRecibirAviso({ detail: aviso }) {
+  if (!partida || aviso.partida !== partida.id) return;
+  if (aviso.jugador === miIndice()) return; // mi propia jugada: ya la tengo
+  await actualizarPartida();
+  if (!partida) return;
+  if (aviso.tipo === 'rival-unido') ui.avisar(`${partida.nombreRival} se ha unido a la partida.`, 'info');
+  else if (aviso.tipo === 'flota-colocada') ui.avisar(`${NombreDelRival()} ha colocado su flota.`, 'info');
+  else if (aviso.tipo === 'disparo') ui.avisar(`${NombreDelRival()} ha disparado a ${describirDisparo(aviso.disparo)}.`, 'info');
+  else if (aviso.tipo === 'fin' || aviso.tipo === 'abandono') ui.avisar(textoFinal(), resultadoComoTipo());
+}
+
+function alCambiarConexion({ detail: { estado } }) {
+  const indicador = $('#juego-conexion');
+  indicador.hidden = estado === 'desconectado';
+  indicador.textContent = estado === 'conectado' ? 'En directo' : 'Reconectando…';
+  indicador.className = `etiqueta conexion-${estado}`;
 }
 
 function pintarAbiertas(abiertas) {
@@ -356,6 +394,9 @@ export function prepararJuego({ avisar, mostrarError }) {
   $('#boton-recargar-abiertas').addEventListener('click', cargarAbiertas);
   $('#boton-actualizar-partida').addEventListener('click', actualizarPartida);
   $('#boton-cancelar-partida').addEventListener('click', cancelar);
+  document.addEventListener('tiempo-real:aviso', alRecibirAviso);
+  document.addEventListener('tiempo-real:reconectado', actualizarPartida);
+  document.addEventListener('tiempo-real:estado', alCambiarConexion);
   $('#boton-abandonar').addEventListener('click', abandonar);
   $('#boton-colocacion-automatica').addEventListener('click', colocarAutomatica);
   $('#juego-orientacion').addEventListener('click', () => {
@@ -375,6 +416,7 @@ export async function mostrarJuego() {
 }
 
 export function ocultarJuego() {
+  dejarDeSeguir();
   partida = null;
   barcoElegido = null;
   $('#seccion-juego').hidden = true;

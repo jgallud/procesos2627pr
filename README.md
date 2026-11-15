@@ -24,6 +24,7 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 | Brevo, API transaccional (Hito 4) | Envío del correo de confirmación de cuenta con una petición HTTP, sin SMTP (bloqueado en muchos servicios cloud) y con capa gratuita. Ver la decisión D-15 en [docs/decisiones.md](docs/decisiones.md). |
 | OAuth 2.0 con Google, implementado a mano (Hito 4) | Inicio de sesión externo sin librerías: dos rutas, un `state` contra CSRF y dos peticiones a Google; reutiliza las sesiones propias. Ver las decisiones D-17 a D-19 en [docs/decisiones.md](docs/decisiones.md). |
 | MongoDB Atlas + driver oficial `mongodb` (Hito 3) | Cluster M0 gratuito y permanente; el modelo de documentos encaja con los objetos de usuario en JavaScript. Se usa el driver oficial sin ODM (Mongoose): los repositorios ya definen el contrato y la validación está en la capa lógica, así que un esquema adicional duplicaría reglas. |
+| WebSocket con la librería `ws` (Hito 7) | Avisos en tiempo real de las partidas entre jugadores sobre el mismo servidor y origen, con la cookie de sesión. Ver la decisión D-37 en [docs/decisiones.md](docs/decisiones.md). |
 
 ## Arquitectura en capas
 
@@ -182,6 +183,7 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 | `GET` | `/api/oauth/google/retorno` | vuelta desde Google | `302` a `/` con sesión, o a `/?error_oauth=<código>` |
 | `POST` | `/api/partidas` | con sesión | `201` partida contra la máquina (`200` si ya había una en curso); `{modo: 'jugadores'}`: partida abierta para otro jugador |
 | `GET` | `/api/partidas/actual` | con sesión | `200` partida en curso o `null` |
+| `GET` (WebSocket) | `/api/tiempo-real?partida=id` | quien juega la partida | avisos en tiempo real (RF-24) |
 | `GET` | `/api/partidas/abiertas` | con sesión | `200` partidas abiertas de otros jugadores (RF-22) |
 | `POST` | `/api/partidas/:id/union` | con sesión | `200` vista de la partida (RF-22) |
 | `POST` | `/api/partidas/:id/cancelacion` | quien creó la partida | `204` (RF-22) |

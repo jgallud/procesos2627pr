@@ -37,9 +37,15 @@ La configuración se hace **una sola vez** desde la consola de Google Cloud.
 5. **Nombre del servicio:** `procesos2627pr`; **región:** `europe-west1`.
 6. **Autenticación:** *Permitir acceso público* (sin autenticación).
 7. **Facturación:** basada en solicitudes; **instancias mínimas:** 0;
-   **instancias máximas:** desde el Hito 3 puede ser más de 1, porque usuarios y
-   sesiones están en MongoDB y todas las instancias los comparten (con 2-3 basta;
-   el cluster M0 de Atlas admite unas 500 conexiones).
+   **instancias máximas:** **1** desde el Hito 7. Usuarios, sesiones y partidas
+   están en MongoDB y podrían repartirse entre instancias, pero las conexiones
+   WebSocket viven en la memoria de cada instancia: con dos, el aviso de una
+   jugada podría salir de una instancia distinta de la que tiene conectado al
+   rival ([D-24](decisiones.md#d-24-una-sola-instancia-de-cloud-run-con-websocket)).
+   **Tiempo de espera de la solicitud:** Cloud Run corta cualquier conexión,
+   también un WebSocket, al llegar a este límite (300 s por defecto, hasta
+   3600 s). El cliente se reconecta solo (RF-25); subirlo a 3600 s reduce las
+   reconexiones.
 8. *Contenedores → Variables y secretos*, añade:
 
    | Variable | Valor |
