@@ -13,6 +13,12 @@
 //                                   ese usuario si se indica, de la más
 //                                   reciente a la más antigua (por
 //                                   actualizadaEn) (RF-18 a RF-20)
+//   ocuparPlaza(id, idUsuario, cambios) -> si la partida está en curso y su
+//                                   segunda plaza libre (jugadores[1] null),
+//                                   pone ahí al usuario y aplica los cambios,
+//                                   todo de una vez; si no, null. Así dos
+//                                   usuarios que se unen a la vez no pueden
+//                                   ocupar los dos la misma plaza (RF-22)
 //   listarEnCurso()              -> todas las partidas en curso, de la más
 //                                   reciente a la más antigua (por creadaEn) (RF-21)
 //
@@ -63,6 +69,15 @@ function crearRepositorioPartidasMemoria() {
         if (!elegida || partida.creadaEn > elegida.creadaEn) elegida = partida;
       }
       return copiar(elegida);
+    },
+
+    async ocuparPlaza(id, idUsuario, cambios = {}) {
+      const actual = partidas.get(id);
+      if (!actual || !actual.enCurso || actual.jugadores[1] !== null) return null;
+      const { id: _ignorado, ...resto } = structuredClone(cambios);
+      const actualizada = { ...actual, ...resto, jugadores: [actual.jugadores[0], idUsuario] };
+      partidas.set(id, actualizada);
+      return copiar(actualizada);
     },
 
     async listarEnCurso() {
