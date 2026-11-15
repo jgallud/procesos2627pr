@@ -118,7 +118,7 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 |-----------|-----------|---------|
 | `usuarios` | `{ _id, email, nombre, rol, estado, origen, creadoEn, eliminadoEn?, hashContrasena?, hashTokenConfirmacion? }` | `email` único |
 | `sesiones` | `{ _id, idUsuario, creadaEn, expiraEn, caducidad }` | `idUsuario`; TTL sobre `caducidad` |
-| `partidas` | `{ _id, modo, jugadores, enCurso, creadaEn, actualizadaEn, terminadaEn?, anulada?, anuladaEn?, anuladaPor?, juego }` | `jugadores` + `enCurso` + `creadaEn` (partida en curso de un jugador); `jugadores` + `enCurso` + `actualizadaEn` (historial y estadísticas); `enCurso` + `creadaEn` (partidas en curso, administrador) |
+| `partidas` | `{ _id, modo, dificultad?, jugadores, enCurso, creadaEn, actualizadaEn, terminadaEn?, anulada?, anuladaEn?, anuladaPor?, juego }` | `jugadores` + `enCurso` + `creadaEn` (partida en curso de un jugador); `jugadores` + `enCurso` + `actualizadaEn` (historial y estadísticas); `enCurso` + `creadaEn` (partidas en curso, administrador) |
 
 - El `_id` de cada usuario es un UUID generado por el repositorio; fuera de la
   capa de datos solo existe como `id`, igual que con la implementación en memoria.

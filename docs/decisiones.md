@@ -245,3 +245,10 @@ Una sección por decisión, en orden cronológico. Una decisión sustituida no s
 - **Consecuencias:** la reconexión la hace el cliente (`client/js/tiempoReal.js`). Las pruebas de integración usan el cliente de `ws` con la cookie de sesión.
 - **Estado:** vigente. Evidencia: `test/api/tiempoReal.test.js`.
 
+### D-38 Dificultad de la máquina
+- **Qué:** la estrategia de [D-28](#d-28-estrategia-del-jugador-máquina) se divide en tres niveles que se eligen al crear la partida contra la máquina (MJ-03): fácil (solo caza al azar, el mínimo de RF-14), normal (caza y remate) y difícil (caza, remate y descarte, la estrategia de D-28). La dificultad se guarda con la partida y la aplica el jugador máquina en la capa lógica; por defecto, normal. Las partidas guardadas antes de MJ-03 no tienen dificultad y siguen jugando en difícil, que era la única estrategia entonces.
+- **Alternativas consideradas:** un único nivel (el actual); que la dificultad cambie la fuente de azar o haga fallar a propósito a la máquina (más difícil de explicar y de probar).
+- **Por qué:** TODO(alumno): ¿por qué estos tres niveles? (niveles aceptados el 2026-11-11; cada uno añade una parte de la estrategia, así que se prueban por separado).
+- **Consecuencias:** el historial muestra la dificultad de cada partida contra la máquina. Las estadísticas y la clasificación no la distinguen: una victoria cuenta igual en cualquier nivel.
+- **Estado:** vigente. Evidencia: `test/logic/jugadorMaquina.test.js`.
+
