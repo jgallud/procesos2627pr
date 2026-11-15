@@ -119,12 +119,68 @@ const formatearFecha = (iso) => (iso ? new Date(iso).toLocaleString('es-ES') : '
 
 // --- Acceso: inicio de sesión y registro ------------------------------------
 
+// Formularios de la pantalla de acceso: los dos de las pestañas y los de
+// recuperar la contraseña (MJ-12), que no tienen pestaña propia.
+const FORMULARIOS_ACCESO = ['entrar', 'registro', 'olvido', 'restablecer'];
+
 function elegirPestana(nombre) {
+  for (const formulario of FORMULARIOS_ACCESO) $(`#form-${formulario}`).hidden = formulario !== nombre;
   for (const pestana of document.querySelectorAll('[data-pestana]')) {
-    const activa = pestana.dataset.pestana === nombre;
-    pestana.setAttribute('aria-selected', String(activa));
-    $(`#form-${pestana.dataset.pestana}`).hidden = !activa;
+    pestana.setAttribute('aria-selected', String(pestana.dataset.pestana === nombre));
   }
+  // El acceso con Google solo junto al formulario de inicio de sesión.
+  $('#acceso-externo').classList.toggle('oculto-fuera-de-entrar', nombre !== 'entrar');
+}
+
+// --- Recuperar la contraseña (MJ-12) ------------------------------------------
+
+let tokenRestablecimiento = null;
+
+async function alPedirRestablecimiento(evento) {
+  evento.preventDefault();
+  const form = evento.currentTarget;
+  limpiarAviso();
+  try {
+    await conBotonOcupado(form.querySelector('button[type="submit"]'), () => api.pedirRestablecimiento(form.email.value));
+    const email = form.email.value;
+    form.reset();
+    elegirPestana('entrar');
+    $('#form-entrar').email.value = email;
+    avisar(`Si ${email} corresponde a una cuenta, te hemos enviado un enlace para cambiar la contraseña (revisa también la carpeta de spam).`, 'exito');
+  } catch (error) {
+    mostrarError(error);
+  }
+}
+
+async function alRestablecer(evento) {
+  evento.preventDefault();
+  const form = evento.currentTarget;
+  limpiarAviso();
+  if (form.contrasena.value !== form.repetir.value) {
+    avisar('Las contraseñas no coinciden.', 'error');
+    return;
+  }
+  try {
+    const usuario = await conBotonOcupado(form.querySelector('button[type="submit"]'), () =>
+      api.restablecerContrasena({ token: tokenRestablecimiento, contrasena: form.contrasena.value }));
+    tokenRestablecimiento = null;
+    form.reset();
+    elegirPestana('entrar');
+    $('#form-entrar').email.value = usuario.email;
+    avisar('Contraseña cambiada. Ya puedes iniciar sesión con la nueva.', 'exito');
+  } catch (error) {
+    mostrarError(error);
+  }
+}
+
+// Al abrir el enlace del correo (?restablecer=<token>): se muestra el
+// formulario de la contraseña nueva y se quita el token de la URL.
+function restablecerSiProcede() {
+  const token = new URLSearchParams(window.location.search).get('restablecer');
+  if (!token) return false;
+  window.history.replaceState(null, '', window.location.pathname);
+  tokenRestablecimiento = token;
+  return true;
 }
 
 async function alIniciarSesion(evento) {
@@ -382,6 +438,16 @@ function enlazarEventos() {
   }
   $('#form-entrar').addEventListener('submit', alIniciarSesion);
   $('#form-registro').addEventListener('submit', alRegistrarse);
+  $('#form-olvido').addEventListener('submit', alPedirRestablecimiento);
+  $('#form-restablecer').addEventListener('submit', alRestablecer);
+  $('#boton-olvido').addEventListener('click', () => {
+    limpiarAviso();
+    elegirPestana('olvido');
+    $('#form-olvido').email.value = $('#form-entrar').email.value;
+  });
+  for (const boton of document.querySelectorAll('[data-volver-a-entrar]')) {
+    boton.addEventListener('click', () => { limpiarAviso(); elegirPestana('entrar'); });
+  }
   $('#boton-salir').addEventListener('click', alCerrarSesion);
   $('#boton-eliminar-cuenta').addEventListener('click', alEliminarMiCuenta);
   $('#boton-recargar-usuarios').addEventListener('click', cargarUsuarios);
@@ -397,6 +463,13 @@ async function iniciar() {
   mostrarAccesoExterno();
   avisarErrorOAuthSiProcede();
   await confirmarSiProcede();
+  // Con el enlace para cambiar la contraseña se muestra ese formulario, aunque
+  // haya una sesión abierta en este navegador (MJ-12).
+  if (restablecerSiProcede()) {
+    mostrarVista('acceso');
+    elegirPestana('restablecer');
+    return;
+  }
   await recuperarSesion();
 }
 

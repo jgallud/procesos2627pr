@@ -237,3 +237,8 @@ tr.fila-propia td { background: var(--exito-fondo); font-weight: 600; }
 /* Dificultad de la máquina (MJ-03) */
 .dificultad { display: inline-flex; align-items: center; gap: 8px; color: var(--texto-suave); }
 .dificultad select { font: inherit; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; background: #fff; }
+
+/* Botón con aspecto de enlace (MJ-12) */
+button.enlace { background: none; border: 0; padding: 0; justify-self: start; color: var(--acento); font: inherit; font-size: 0.92rem; cursor: pointer; text-decoration: underline; }
+button.enlace:hover { color: var(--acento-oscuro); }
+.oculto-fuera-de-entrar { display: none !important; }

@@ -56,6 +56,31 @@
           <input name="contrasena" type="password" autocomplete="current-password" required>
         </label>
         <button type="submit" class="boton-principal">Entrar</button>
+        <!-- MJ-12: recuperar la contraseña -->
+        <button id="boton-olvido" type="button" class="enlace">¿Has olvidado tu contraseña?</button>
+      </form>
+
+      <!-- MJ-12: pedir el enlace para cambiar la contraseña -->
+      <form id="form-olvido" class="formulario" novalidate hidden>
+        <p class="secundario">Escribe el email de tu cuenta y te enviaremos un enlace para elegir una contraseña nueva. El enlace vale durante una hora.</p>
+        <label>Email
+          <input name="email" type="email" autocomplete="username" required>
+        </label>
+        <button type="submit" class="boton-principal">Enviar enlace</button>
+        <button type="button" class="enlace" data-volver-a-entrar>Volver a iniciar sesión</button>
+      </form>
+
+      <!-- MJ-12: elegir la contraseña nueva (al abrir el enlace del correo) -->
+      <form id="form-restablecer" class="formulario" novalidate hidden>
+        <p class="secundario">Elige tu contraseña nueva. Al cambiarla se cerrarán las sesiones que tengas abiertas.</p>
+        <label>Contraseña nueva <span class="opcional">(mínimo 8 caracteres)</span>
+          <input name="contrasena" type="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <label>Repite la contraseña
+          <input name="repetir" type="password" autocomplete="new-password" minlength="8" required>
+        </label>
+        <button type="submit" class="boton-principal">Cambiar la contraseña</button>
+        <button type="button" class="enlace" data-volver-a-entrar>Volver a iniciar sesión</button>
       </form>
 
       <div id="acceso-externo" class="acceso-externo" hidden>
