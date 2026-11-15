@@ -21,6 +21,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | Lógica | `server/logic/usuarioService.js`, `server/logic/sesionService.js`, `server/logic/contrasenas.js`, `server/logic/errores.js` | Reglas de usuarios, roles, sesiones y contraseñas |
 | Lógica · motor del juego | `server/logic/motor/` (`reglas.js`, `coordenadas.js`, `colocacion.js`, `partida.js`, `estado.js`, `index.js`) | Reglas de Hundir la Flota: colocación, disparos, turnos, fin, abandono y vista de cada jugador, como funciones puras ([D-22](decisiones.md#d-22-motor-del-juego-en-la-capa-lógica)) |
 | Lógica · servicio de partidas | `server/logic/partidaService.js` | Carga la partida, comprueba que el solicitante juega en ella, aplica la jugada con el motor, hace jugar a la máquina y guarda. Devuelve siempre la vista del jugador |
+| Lógica · historial y estadísticas | `server/logic/estadisticas.js` | Funciones puras que calculan el historial y las estadísticas de un jugador a partir de las partidas guardadas (RF-18, RF-19) |
 | Lógica · jugador máquina | `server/logic/jugadorMaquina.js` | Colocación y disparos de la máquina a partir de su tablero de disparos, con azar inyectable ([D-28](decisiones.md#d-28-estrategia-del-jugador-máquina)) |
 | Datos | `server/data/usuarioRepositorioMongo.js`, `server/data/sesionRepositorioMongo.js`, `server/data/conexionMongo.js`, y las versiones `*Memoria.js` | Guardar y buscar usuarios y sesiones |
 | Datos · partidas | `server/data/partidaRepositorioMongo.js` (producción) y `partidaRepositorioMemoria.js` (desarrollo y pruebas) | Partidas de Hundir la Flota, con el mismo contrato (`test/contratos/repositorioPartidas.js`) en las dos implementaciones ([D-31](decisiones.md#d-31-partidas-en-mongodb)) |
@@ -48,6 +49,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 |------|---------|-----------------|
 | Presentación | `client/js/interfaz.js` | DOM, formularios, vistas y mensajes |
 | Presentación | `client/js/juego.js` | Partida de Hundir la Flota: tableros, colocación, disparos y fin de partida ([D-30](decisiones.md#d-30-interfaz-del-juego-en-un-módulo-de-presentación-propio)) |
+| Presentación | `client/js/historial.js` | Historial y estadísticas del jugador; el administrador ve las de otro usuario desde la tabla de usuarios. Solo da formato: los números los calcula el servidor |
 | Comunicación | `client/js/api.js` | Único módulo que usa `fetch`; expone funciones y la clase `ErrorApi` |
 
 **Frontera.** `interfaz.js` y `juego.js` solo hacen `import * as api from './api.js'` (y `interfaz.js` importa de `juego.js` las funciones para mostrarlo u ocultarlo). `interfaz.js` y no contiene ningún `fetch` ni URL de la API. Incluso la dirección del botón «Entrar con Google» la da `api.urlInicioOAuth('google')`.
@@ -70,6 +72,8 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | GET | `/api/oauth/google/retorno` | vuelta desde Google | 302 a `/` con sesión, o a `/?error_oauth=<código>` |
 | POST | `/api/partidas` | con sesión | 201 partida nueva contra la máquina (200 si ya tenía una en curso) |
 | GET | `/api/partidas/actual` | con sesión | 200 partida en curso, o `null` |
+| GET | `/api/partidas/historial[?usuario=id]` | con sesión (otro usuario: administrador) | 200 partidas terminadas, la más reciente primero (RF-18) |
+| GET | `/api/partidas/estadisticas[?usuario=id]` | con sesión (otro usuario: administrador) | 200 `{jugadas, ganadas, perdidas, porcentajeVictorias, disparos, aciertos, porcentajeAcierto}` (RF-19) |
 | GET | `/api/partidas/:id` | quien juega la partida | 200 vista de la partida |
 | POST | `/api/partidas/:id/barcos` | quien juega la partida | 200 vista (`{barco, casilla, orientacion}`) |
 | DELETE | `/api/partidas/:id/barcos/:barco` | quien juega la partida | 200 vista |

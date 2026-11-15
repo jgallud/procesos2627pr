@@ -117,7 +117,7 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 |-----------|-----------|---------|
 | `usuarios` | `{ _id, email, nombre, rol, estado, origen, creadoEn, eliminadoEn?, hashContrasena?, hashTokenConfirmacion? }` | `email` único |
 | `sesiones` | `{ _id, idUsuario, creadaEn, expiraEn, caducidad }` | `idUsuario`; TTL sobre `caducidad` |
-| `partidas` | `{ _id, modo, jugadores, enCurso, creadaEn, actualizadaEn, juego }` | `jugadores` + `enCurso` + `creadaEn` (partida en curso de un jugador) |
+| `partidas` | `{ _id, modo, jugadores, enCurso, creadaEn, actualizadaEn, terminadaEn?, juego }` | `jugadores` + `enCurso` + `creadaEn` (partida en curso de un jugador); `jugadores` + `enCurso` + `actualizadaEn` (historial y estadísticas) |
 
 - El `_id` de cada usuario es un UUID generado por el repositorio; fuera de la
   capa de datos solo existe como `id`, igual que con la implementación en memoria.
@@ -182,6 +182,8 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 | `GET` | `/api/oauth/google/retorno` | vuelta desde Google | `302` a `/` con sesión, o a `/?error_oauth=<código>` |
 | `POST` | `/api/partidas` | con sesión | `201` partida contra la máquina (`200` si ya había una en curso) |
 | `GET` | `/api/partidas/actual` | con sesión | `200` partida en curso o `null` |
+| `GET` | `/api/partidas/historial[?usuario=id]` | con sesión (otro usuario: administrador) | `200` partidas terminadas (RF-18) |
+| `GET` | `/api/partidas/estadisticas[?usuario=id]` | con sesión (otro usuario: administrador) | `200` estadísticas (RF-19) |
 | `GET` | `/api/partidas/:id` | quien juega la partida | `200` vista de la partida |
 | `POST` | `/api/partidas/:id/barcos` | quien juega la partida | `200` vista (`{barco, casilla, orientacion}`) |
 | `DELETE` | `/api/partidas/:id/barcos/:barco` | quien juega la partida | `200` vista |
