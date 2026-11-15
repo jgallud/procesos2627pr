@@ -19,6 +19,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 |------|----------|-----------------|
 | API | `server/app.js`, `server/api/usuariosRouter.js`, `server/api/sesion.js`, `server/api/oauth.js`, `server/api/errores.js` | Leer la petición, llamar al servicio, devolver JSON; cookie de sesión; redirecciones y `state` de OAuth |
 | Lógica | `server/logic/usuarioService.js`, `server/logic/sesionService.js`, `server/logic/contrasenas.js`, `server/logic/errores.js` | Reglas de usuarios, roles, sesiones y contraseñas |
+| API · tiempo real | `server/api/tiempoReal.js` | WebSocket en `/api/tiempo-real` (librería `ws`): identifica la conexión con la cookie de sesión, pregunta al servicio de partidas quién puede seguir cada partida y entrega los avisos; no valida jugadas ni guarda estado ([D-23](decisiones.md#d-23-websocket-solo-para-avisos-y-avisador-inyectado), [D-37](decisiones.md#d-37-websocket-con-la-librería-ws)) |
 | Lógica · motor del juego | `server/logic/motor/` (`reglas.js`, `coordenadas.js`, `colocacion.js`, `partida.js`, `estado.js`, `index.js`) | Reglas de Hundir la Flota: colocación, disparos, turnos, fin, abandono y vista de cada jugador, como funciones puras ([D-22](decisiones.md#d-22-motor-del-juego-en-la-capa-lógica)) |
 | Lógica · servicio de partidas | `server/logic/partidaService.js` | Carga la partida, comprueba que el solicitante juega en ella, aplica la jugada con el motor, hace jugar a la máquina y guarda. Devuelve siempre la vista del jugador |
 | Lógica · historial y estadísticas | `server/logic/estadisticas.js` | Funciones puras que calculan el historial, las estadísticas y la clasificación a partir de las partidas guardadas (RF-18 a RF-20) |
@@ -43,6 +44,8 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 
 **Jugador máquina.** `server/logic/jugadorMaquina.js` usa el motor igual que un jugador humano: `jugarTurno(partida, jugador, azar)` pide `vistaPara` y decide con `rival.disparos`, sus propios disparos, así que no puede ver la flota del rival. Dispara con `disparar` hasta fallar o terminar la partida y devuelve los disparos hechos para que el servicio los guarde y el jugador los vea. La fuente de azar se inyecta: en producción será `Math.random`; en las pruebas, una fija.
 
+**Tiempo real.** El servicio de partidas recibe un avisador con `avisar(idPartida, evento)` y lo llama después de guardar cada jugada de una partida entre jugadores. `server/index.js` le pasa el módulo `server/api/tiempoReal.js`, que se engancha al evento `upgrade` del servidor HTTP. Los avisos solo dicen qué ha pasado (tipo, jugador y, en un disparo, casilla y resultado); el cliente pide después su vista por REST, así que por el WebSocket nunca viaja una flota (RNF-10).
+
 ## Frontend
 
 | Capa | Archivo | Responsabilidad |
@@ -51,6 +54,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | Presentación | `client/js/juego.js` | Partida de Hundir la Flota: tableros, colocación, disparos y fin de partida ([D-30](decisiones.md#d-30-interfaz-del-juego-en-un-módulo-de-presentación-propio)) |
 | Presentación | `client/js/historial.js` | Historial, estadísticas y clasificación; el administrador ve las de otro usuario desde la tabla de usuarios. Solo da formato: los números los calcula el servidor |
 | Presentación | `client/js/adminPartidas.js` | Partidas en curso de todos los jugadores y botón «Anular», solo para el administrador (RF-21) |
+| Comunicación | `client/js/tiempoReal.js` | Único módulo con WebSocket: conecta, se reconecta y entrega los avisos a la interfaz como eventos; no envía jugadas (RF-24, RF-25) |
 | Comunicación | `client/js/api.js` | Único módulo que usa `fetch`; expone funciones y la clase `ErrorApi` |
 
 **Frontera.** `interfaz.js` y `juego.js` solo hacen `import * as api from './api.js'` (y `interfaz.js` importa de `juego.js` las funciones para mostrarlo u ocultarlo). `interfaz.js` y no contiene ningún `fetch` ni URL de la API. Incluso la dirección del botón «Entrar con Google» la da `api.urlInicioOAuth('google')`.
@@ -73,6 +77,7 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | GET | `/api/oauth/google/retorno` | vuelta desde Google | 302 a `/` con sesión, o a `/?error_oauth=<código>` |
 | POST | `/api/partidas` | con sesión | 201 partida nueva contra la máquina (200 si ya tenía una en curso); con `{modo: 'jugadores'}`, partida abierta para otro jugador (RF-22) |
 | GET | `/api/partidas/actual` | con sesión | 200 partida en curso, o `null` |
+| GET (WebSocket) | `/api/tiempo-real?partida=id` | quien juega la partida | conexión de avisos; 401 sin sesión, 403 si no juega o desde otro origen, 404 si la partida no existe (RF-24) |
 | GET | `/api/partidas/abiertas` | con sesión | 200 partidas entre jugadores esperando rival, de otros usuarios (RF-22) |
 | POST | `/api/partidas/:id/union` | con sesión | 200 vista; 409 si es propia o ya tiene dos jugadores (RF-22) |
 | POST | `/api/partidas/:id/cancelacion` | quien creó la partida | 204; 409 si alguien ya se ha unido (RF-22) |
