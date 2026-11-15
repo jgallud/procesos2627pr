@@ -25,6 +25,22 @@ const { ErrorDominio, CODIGOS } = require('./errores');
 const { loggerSilencioso } = require('../logger');
 
 const MODOS = Object.freeze({ MAQUINA: 'maquina', JUGADORES: 'jugadores' });
+
+// Avisos de tiempo real (Hito 7, RF-24, D-23). El servicio no sabe cómo se
+// entregan: recibe un avisador con avisar(idPartida, evento), que implementa
+// el módulo de tiempo real de la capa API y conecta server/index.js. Por
+// defecto no hace nada (pruebas y partidas contra la máquina).
+const AVISOS = Object.freeze({
+  RIVAL_UNIDO: 'rival-unido',
+  FLOTA_COLOCADA: 'flota-colocada',
+  ACTUALIZADA: 'actualizada',
+  DISPARO: 'disparo',
+  FIN: 'fin',
+  ABANDONO: 'abandono',
+  CANCELADA: 'cancelada',
+  ANULADA: 'anulada',
+});
+const avisadorNulo = Object.freeze({ avisar() {} });
 const JUGADOR_MAQUINA = 1;
 
 function crearServicioPartidas({
@@ -33,6 +49,7 @@ function crearServicioPartidas({
   logger = loggerSilencioso,
   reloj = () => new Date(),
   azar = Math.random,
+  avisador = avisadorNulo,
 }) {
   if (!repositorio) throw new Error('crearServicioPartidas necesita un repositorio');
   if (!servicioUsuarios) throw new Error('crearServicioPartidas necesita el servicio de usuarios');
@@ -115,6 +132,31 @@ function crearServicioPartidas({
     return usuario;
   }
 
+  // Avisa a quien sigue la partida (RF-24). Solo en partidas entre jugadores:
+  // contra la máquina no hay nadie más esperando. Un fallo al avisar no
+  // deshace la jugada, que ya está guardada: el cliente la verá al
+  // reconectarse (RF-25). El evento nunca lleva la flota de nadie (RNF-10).
+  function avisar(partida, evento) {
+    if (partida.modo !== MODOS.JUGADORES) return;
+    try {
+      avisador.avisar(partida.id, { partida: partida.id, ...evento });
+    } catch (err) {
+      logger.error('No se pudo enviar el aviso', { partida: partida.id, tipo: evento.tipo, error: err.message });
+    }
+  }
+
+  // Qué aviso corresponde a un cambio de juego hecho por `jugador`.
+  function eventoDe(antes, despues, jugador, disparo) {
+    if (despues.estado === motor.ESTADOS.TERMINADA && antes.estado !== motor.ESTADOS.TERMINADA) {
+      const tipo = despues.motivoFin === motor.MOTIVOS_FIN.ABANDONO ? AVISOS.ABANDONO : AVISOS.FIN;
+      return { tipo, jugador, ...(disparo ? { disparo } : {}) };
+    }
+    if (disparo) return { tipo: AVISOS.DISPARO, jugador, disparo };
+    const completa = (juego) => motor.barcosPendientesDe(juego, jugador).length === 0;
+    if (!completa(antes) && completa(despues)) return { tipo: AVISOS.FLOTA_COLOCADA, jugador };
+    return { tipo: AVISOS.ACTUALIZADA, jugador };
+  }
+
   // Guarda el nuevo estado del juego. Si la partida termina, deja de estar
   // en curso y se registra el resultado.
   async function guardar(partida, juego) {
@@ -142,7 +184,9 @@ function crearServicioPartidas({
   async function jugada(idSolicitante, idPartida, aplicar) {
     const { partida, jugador } = await cargarParaJugar(idSolicitante, idPartida);
     const juego = aplicar(partida.juego, jugador);
-    return vista(await guardar(partida, juego), jugador);
+    const guardada = await guardar(partida, juego);
+    avisar(partida, eventoDe(partida.juego, juego, jugador));
+    return vista(guardada, jugador);
   }
 
   return {
@@ -229,6 +273,7 @@ function crearServicioPartidas({
         throw new ErrorDominio(CODIGOS.ESTADO_INVALIDO, 'La partida ya no está abierta: tiene dos jugadores o se ha cancelado');
       }
       logger.info('Jugador unido a la partida', { partida: partida.id, jugador: usuario.id });
+      avisar(ocupada, { tipo: AVISOS.RIVAL_UNIDO, jugador: 1 });
       return vista(ocupada, 1);
     },
 
@@ -245,6 +290,7 @@ function crearServicioPartidas({
       const ahora = reloj().toISOString();
       await repositorio.actualizar(partida.id, { enCurso: false, cancelada: true, actualizadaEn: ahora });
       logger.info('Partida cancelada', { partida: partida.id, por: partida.jugadores[0] });
+      avisar(partida, { tipo: AVISOS.CANCELADA, jugador: 0 });
     },
 
     // Partida en curso del usuario, para retomarla al cargar la página.
@@ -252,6 +298,14 @@ function crearServicioPartidas({
       const usuario = await solicitante(idSolicitante);
       const partida = await repositorio.buscarEnCursoDe(usuario.id);
       return partida ? vista(partida, partida.jugadores.indexOf(usuario.id)) : null;
+    },
+
+    // RF-24: ¿puede el solicitante seguir esta partida en tiempo real? Solo
+    // quien juega en ella. Lo pregunta el módulo de tiempo real al abrir la
+    // conexión: él no decide quién puede seguir una partida.
+    async puedeSeguir(idSolicitante, idPartida) {
+      await cargar(idSolicitante, idPartida);
+      return true;
     },
 
     // RF-16: la vista de la partida para quien la consulta.
@@ -295,6 +349,7 @@ function crearServicioPartidas({
       }
 
       const guardada = await guardar(partida, juego);
+      avisar(partida, eventoDe(partida.juego, juego, jugador, resultado.disparo));
       return { disparo: resultado.disparo, disparosRival, partida: await vista(guardada, jugador) };
     },
 
@@ -360,6 +415,7 @@ function crearServicioPartidas({
         enCurso: false, anulada: true, anuladaEn: ahora, anuladaPor: admin.id, actualizadaEn: ahora,
       });
       logger.info('Partida anulada', { partida: partida.id, por: admin.id });
+      avisar(partida, { tipo: AVISOS.ANULADA });
     },
 
     // RF-20: clasificación de los jugadores activos con alguna partida
@@ -373,4 +429,4 @@ function crearServicioPartidas({
   };
 }
 
-module.exports = { crearServicioPartidas, MODOS };
+module.exports = { crearServicioPartidas, MODOS, AVISOS };

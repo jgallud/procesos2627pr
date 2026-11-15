@@ -16,6 +16,8 @@ module.exports = {
   colocarBarco: colocacion.colocarBarco,
   retirarBarco: colocacion.retirarBarco,
   colocarFlotaAleatoria: colocacion.colocarFlotaAleatoria,
+  // Barcos que le faltan por colocar a un jugador.
+  barcosPendientesDe: (partida, jugador) => colocacion.barcosPendientes(partida.jugadores[jugador].flota),
   generarFlotaAleatoria: colocacion.generarFlotaAleatoria,
   crearPartida: partida.crearPartida,
   disparar: partida.disparar,
