@@ -1,6 +1,8 @@
 // Configuración centralizada: toda la configuración y los secretos se leen
 // de variables de entorno, nunca se escriben en el código.
 
+const { version } = require('../package.json');
+
 function leerConfig(env = process.env) {
   const puerto = Number(env.PORT) || 3000;
   const entorno = env.NODE_ENV || 'development';
@@ -36,6 +38,10 @@ function leerConfig(env = process.env) {
     duracionSesionMs: (horasSesion > 0 ? horasSesion : 24 * 7) * 60 * 60 * 1000,
     // En producción la cookie de sesión solo viaja por HTTPS.
     cookieSegura: entorno === 'production',
+    // MJ-17: versión de la aplicación (package.json, D-41) y revisión de
+    // Cloud Run que la sirve (K_REVISION la pone Cloud Run; en local no existe).
+    version,
+    revision: env.K_REVISION || 'local',
   };
 }
 

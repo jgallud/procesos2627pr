@@ -15,7 +15,7 @@ const { crearRouterPartidas } = require('./api/partidasRouter');
 const { crearManejadorErroresApi } = require('./api/errores');
 
 function crearApp({
-  servicioUsuarios, servicioSesiones, servicioPartidas, proveedoresOAuth = {}, logger = loggerSilencioso, cookieSegura = false,
+  servicioUsuarios, servicioSesiones, servicioPartidas, proveedoresOAuth = {}, logger = loggerSilencioso, cookieSegura = false, infoVersion = { version: 'desconocida', revision: 'local' },
 } = {}) {
   if (!servicioUsuarios) throw new Error('crearApp necesita servicioUsuarios');
   if (!servicioSesiones) throw new Error('crearApp necesita servicioSesiones');
@@ -45,8 +45,10 @@ function crearApp({
   api.use(express.json());
   api.use(crearIdentificadorSesion({ servicioSesiones, cookie }));
 
+  // MJ-17: además del estado, la versión y la revisión desplegadas, para
+  // saber qué está sirviendo producción.
   api.get('/salud', (req, res) => {
-    res.json({ estado: 'ok' });
+    res.json({ estado: 'ok', version: infoVersion.version, revision: infoVersion.revision });
   });
 
   api.use('/sesion', crearRouterSesion({ servicioUsuarios, servicioSesiones, cookie }));
