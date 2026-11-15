@@ -71,8 +71,11 @@ El servidor Express sirve el frontend (`client/`) y la API (`/api`) en el mismo 
 | GET | `/api/oauth/proveedores` | cualquiera | 200 `{proveedores}` |
 | GET | `/api/oauth/google` | cualquiera | 302 a Google, con el `state` en una cookie |
 | GET | `/api/oauth/google/retorno` | vuelta desde Google | 302 a `/` con sesión, o a `/?error_oauth=<código>` |
-| POST | `/api/partidas` | con sesión | 201 partida nueva contra la máquina (200 si ya tenía una en curso) |
+| POST | `/api/partidas` | con sesión | 201 partida nueva contra la máquina (200 si ya tenía una en curso); con `{modo: 'jugadores'}`, partida abierta para otro jugador (RF-22) |
 | GET | `/api/partidas/actual` | con sesión | 200 partida en curso, o `null` |
+| GET | `/api/partidas/abiertas` | con sesión | 200 partidas entre jugadores esperando rival, de otros usuarios (RF-22) |
+| POST | `/api/partidas/:id/union` | con sesión | 200 vista; 409 si es propia o ya tiene dos jugadores (RF-22) |
+| POST | `/api/partidas/:id/cancelacion` | quien creó la partida | 204; 409 si alguien ya se ha unido (RF-22) |
 | GET | `/api/partidas/historial[?usuario=id]` | con sesión (otro usuario: administrador) | 200 partidas terminadas, la más reciente primero (RF-18) |
 | GET | `/api/partidas/admin/en-curso` | administrador | 200 partidas en curso de todos los jugadores, sin flotas (RF-21) |
 | POST | `/api/partidas/:id/anulacion` | administrador | 204 partida anulada; 409 si no está en curso (RF-21) |

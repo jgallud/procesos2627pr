@@ -37,7 +37,7 @@ Tres hitos, un PBI de Donetonic por hito. Cada hito se reparte en varios pull re
 |------|-----------------|------------|--------|
 | 5 | Partida contra la máquina | RF-11 a RF-16, RNF-09, RNF-10, RNF-11 | **cerrado**: motor (#17), jugador máquina (#19), servicio y API (#20) e interfaz (#21); comprobado en la URL pública el 2026-11-11; etiqueta `hito-5` (`40016f2`) |
 | 6 | Persistencia, historial y estadísticas | RF-17 a RF-21 | en curso: partidas en MongoDB (#23, RF-17 comprobado en producción), MJ-04 (barco hundido entero) historial y estadísticas (RF-18 y RF-19, #27), clasificación (RF-20, #28) y gestión de partidas del administrador (RF-21). Falta comprobarlo en producción y etiquetar `hito-6` |
-| 7 | Partida entre jugadores en tiempo real | RF-22 a RF-26, RNF-12 | pendiente |
+| 7 | Partida entre jugadores en tiempo real | RF-22 a RF-26, RNF-12 | en curso: crear, unirse y turnos entre jugadores (RF-22 y RF-23). Después: avisos por WebSocket con la librería `ws` y reconexión (RF-24, RF-25, RNF-12) y abandono (RF-26) |
 | — | Mejoras del Sprint 2 | MJ-01 a MJ-04 (y RF-19, ya en el Hito 6) | en curso: MJ-02 y MJ-04 hechas; niveles de MJ-03 aceptados |
 
 Cada hito se cierra como en el Sprint 1: CI en verde, aplicación desplegada funcionando, requisitos actualizados con su evidencia y etiqueta (`hito-5`, `hito-6`, `hito-7`).

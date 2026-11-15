@@ -180,8 +180,11 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 | `GET` | `/api/oauth/proveedores` | cualquiera | `200 {proveedores}` |
 | `GET` | `/api/oauth/google` | cualquiera | `302` a Google |
 | `GET` | `/api/oauth/google/retorno` | vuelta desde Google | `302` a `/` con sesión, o a `/?error_oauth=<código>` |
-| `POST` | `/api/partidas` | con sesión | `201` partida contra la máquina (`200` si ya había una en curso) |
+| `POST` | `/api/partidas` | con sesión | `201` partida contra la máquina (`200` si ya había una en curso); `{modo: 'jugadores'}`: partida abierta para otro jugador |
 | `GET` | `/api/partidas/actual` | con sesión | `200` partida en curso o `null` |
+| `GET` | `/api/partidas/abiertas` | con sesión | `200` partidas abiertas de otros jugadores (RF-22) |
+| `POST` | `/api/partidas/:id/union` | con sesión | `200` vista de la partida (RF-22) |
+| `POST` | `/api/partidas/:id/cancelacion` | quien creó la partida | `204` (RF-22) |
 | `GET` | `/api/partidas/historial[?usuario=id]` | con sesión (otro usuario: administrador) | `200` partidas terminadas (RF-18) |
 | `GET` | `/api/partidas/estadisticas[?usuario=id]` | con sesión (otro usuario: administrador) | `200` estadísticas (RF-19) |
 | `GET` | `/api/partidas/clasificacion` | con sesión | `200` clasificación de jugadores (RF-20) |
