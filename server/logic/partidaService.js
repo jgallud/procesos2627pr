@@ -11,8 +11,11 @@
 // tablero completo y, del rival, solo el resultado de sus disparos. La flota
 // del rival no sale de aquí hasta que la partida termina (RNF-10).
 //
-// En el Hito 5 solo hay partidas contra la máquina: el usuario es el
-// jugador 0 (empieza él, D-25) y la máquina el jugador 1.
+// Dos modos (D-36). Contra la máquina (Hito 5): el usuario es el jugador 0
+// (empieza él, D-25) y la máquina el jugador 1. Entre jugadores (Hito 7): el
+// creador es el jugador 0 y empieza; quien se une es el jugador 1. El motor
+// es el mismo: solo cambia quién hace el otro turno.
+// Un usuario tiene como mucho una partida en curso, de cualquier modo.
 
 const motor = require('./motor');
 const jugadorMaquina = require('./jugadorMaquina');
@@ -21,7 +24,7 @@ const { ROLES } = require('./usuarioService');
 const { ErrorDominio, CODIGOS } = require('./errores');
 const { loggerSilencioso } = require('../logger');
 
-const MODOS = Object.freeze({ MAQUINA: 'maquina' });
+const MODOS = Object.freeze({ MAQUINA: 'maquina', JUGADORES: 'jugadores' });
 const JUGADOR_MAQUINA = 1;
 
 function crearServicioPartidas({
@@ -51,15 +54,31 @@ function crearServicioPartidas({
     return idUsuario;
   }
 
-  function vista(partida, jugador) {
+  // La vista de un jugador. En una partida entre jugadores incluye el nombre
+  // del rival (nunca su email) y si aún se espera a que alguien se una.
+  async function vista(partida, jugador) {
+    const contraMaquina = partida.modo === MODOS.MAQUINA;
+    const idRival = partida.jugadores[1 - jugador];
     return {
       id: partida.id,
       modo: partida.modo,
-      oponente: partida.modo === MODOS.MAQUINA ? 'maquina' : null,
+      oponente: contraMaquina ? 'maquina' : 'usuario',
+      nombreRival: contraMaquina ? null : await servicioUsuarios.nombrePublico(idRival),
+      esperandoRival: !contraMaquina && partida.jugadores[1] === null,
+      soyCreador: jugador === 0,
       creadaEn: partida.creadaEn,
       anulada: Boolean(partida.anulada),
+      cancelada: Boolean(partida.cancelada),
       ...motor.vistaPara(partida.juego, jugador),
     };
+  }
+
+  // RF-22: un usuario no puede tener dos partidas en curso a la vez.
+  function exigirSinPartidaEnCurso(existente) {
+    if (existente) {
+      const contra = existente.modo === MODOS.MAQUINA ? 'contra la máquina' : 'contra otro jugador';
+      throw new ErrorDominio(CODIGOS.ESTADO_INVALIDO, `Ya tienes una partida en curso ${contra}: termínala o abandónala antes`);
+    }
   }
 
   // Carga una partida y comprueba que el solicitante juega en ella.
@@ -134,8 +153,9 @@ function crearServicioPartidas({
       const usuario = await solicitante(idSolicitante);
       const existente = await repositorio.buscarEnCursoDe(usuario.id);
       if (existente && existente.modo === MODOS.MAQUINA) {
-        return { partida: vista(existente, existente.jugadores.indexOf(usuario.id)), nueva: false };
+        return { partida: await vista(existente, existente.jugadores.indexOf(usuario.id)), nueva: false };
       }
+      exigirSinPartidaEnCurso(existente);
 
       const juego = motor.colocarFlotaAleatoria(motor.crearPartida(), JUGADOR_MAQUINA, azar);
       const ahora = reloj().toISOString();
@@ -148,7 +168,83 @@ function crearServicioPartidas({
         juego,
       });
       logger.info('Partida creada', { partida: partida.id, modo: partida.modo, jugador: usuario.id });
-      return { partida: vista(partida, 0), nueva: true };
+      return { partida: await vista(partida, 0), nueva: true };
+    },
+
+    // RF-22: crea una partida abierta para jugar contra otro usuario. El
+    // creador es el jugador 0 y puede ir colocando su flota mientras espera.
+    // Si ya tiene una partida abierta esperando rival, devuelve esa.
+    async crearAbierta(idSolicitante) {
+      const usuario = await solicitante(idSolicitante);
+      const existente = await repositorio.buscarEnCursoDe(usuario.id);
+      if (existente && existente.modo === MODOS.JUGADORES && existente.jugadores[1] === null) {
+        return { partida: await vista(existente, 0), nueva: false };
+      }
+      exigirSinPartidaEnCurso(existente);
+      const ahora = reloj().toISOString();
+      const partida = await repositorio.crear({
+        modo: MODOS.JUGADORES,
+        jugadores: [usuario.id, null],
+        enCurso: true,
+        creadaEn: ahora,
+        actualizadaEn: ahora,
+        juego: motor.crearPartida(),
+      });
+      logger.info('Partida creada', { partida: partida.id, modo: partida.modo, jugador: usuario.id });
+      return { partida: await vista(partida, 0), nueva: true };
+    },
+
+    // RF-22: partidas abiertas a las que el solicitante se puede unir: entre
+    // jugadores, en curso, con la plaza libre y creadas por otro usuario.
+    async listarAbiertas(idSolicitante) {
+      const usuario = await solicitante(idSolicitante);
+      const abiertas = (await repositorio.listarEnCurso())
+        .filter((p) => p.modo === MODOS.JUGADORES && p.jugadores[1] === null && p.jugadores[0] !== usuario.id);
+      return Promise.all(abiertas.map(async (p) => ({
+        id: p.id,
+        creador: await servicioUsuarios.nombrePublico(p.jugadores[0]),
+        creadaEn: p.creadaEn,
+      })));
+    },
+
+    // RF-22: unirse a una partida abierta. No a la propia, ni a una que ya
+    // tiene dos jugadores, ni teniendo otra partida en curso. La plaza se
+    // ocupa con una sola operación del repositorio, para que de dos uniones
+    // simultáneas solo una lo consiga.
+    async unirse(idSolicitante, idPartida) {
+      const usuario = await solicitante(idSolicitante);
+      const partida = idPartida ? await repositorio.buscarPorId(idPartida) : null;
+      if (!partida || partida.modo !== MODOS.JUGADORES) {
+        throw new ErrorDominio(CODIGOS.PARTIDA_NO_ENCONTRADA, 'La partida no existe');
+      }
+      if (partida.jugadores[0] === usuario.id) {
+        throw new ErrorDominio(CODIGOS.ESTADO_INVALIDO, 'No puedes unirte a tu propia partida');
+      }
+      if (!partida.enCurso || partida.jugadores[1] !== null) {
+        throw new ErrorDominio(CODIGOS.ESTADO_INVALIDO, 'La partida ya no está abierta: tiene dos jugadores o se ha cancelado');
+      }
+      exigirSinPartidaEnCurso(await repositorio.buscarEnCursoDe(usuario.id));
+      const ocupada = await repositorio.ocuparPlaza(partida.id, usuario.id, { actualizadaEn: reloj().toISOString() });
+      if (!ocupada) {
+        throw new ErrorDominio(CODIGOS.ESTADO_INVALIDO, 'La partida ya no está abierta: tiene dos jugadores o se ha cancelado');
+      }
+      logger.info('Jugador unido a la partida', { partida: partida.id, jugador: usuario.id });
+      return vista(ocupada, 1);
+    },
+
+    // RF-22: el creador cancela su partida mientras nadie se haya unido. No
+    // cuenta en el historial ni en las estadísticas (no está terminada).
+    async cancelar(idSolicitante, idPartida) {
+      const { partida, jugador } = await cargar(idSolicitante, idPartida);
+      if (partida.modo !== MODOS.JUGADORES || jugador !== 0) {
+        throw new ErrorDominio(CODIGOS.PROHIBIDO, 'Solo quien crea una partida entre jugadores puede cancelarla');
+      }
+      if (!partida.enCurso || partida.jugadores[1] !== null) {
+        throw new ErrorDominio(CODIGOS.ESTADO_INVALIDO, 'Solo se puede cancelar mientras nadie se haya unido');
+      }
+      const ahora = reloj().toISOString();
+      await repositorio.actualizar(partida.id, { enCurso: false, cancelada: true, actualizadaEn: ahora });
+      logger.info('Partida cancelada', { partida: partida.id, por: partida.jugadores[0] });
     },
 
     // Partida en curso del usuario, para retomarla al cargar la página.
@@ -199,11 +295,17 @@ function crearServicioPartidas({
       }
 
       const guardada = await guardar(partida, juego);
-      return { disparo: resultado.disparo, disparosRival, partida: vista(guardada, jugador) };
+      return { disparo: resultado.disparo, disparosRival, partida: await vista(guardada, jugador) };
     },
 
-    // RF-15: abandonar cuenta como derrota.
-    abandonar(idSolicitante, idPartida) {
+    // RF-15: abandonar cuenta como derrota. En una partida entre jugadores
+    // a la que aún no se ha unido nadie no hay a quién dar la victoria: se
+    // cancela (RF-22).
+    async abandonar(idSolicitante, idPartida) {
+      const { partida } = await cargarParaJugar(idSolicitante, idPartida);
+      if (partida.modo === MODOS.JUGADORES && partida.jugadores[1] === null) {
+        throw new ErrorDominio(CODIGOS.ESTADO_INVALIDO, 'Nadie se ha unido todavía: cancela la partida en lugar de abandonarla');
+      }
       return jugada(idSolicitante, idPartida, (juego, jugador) => motor.abandonar(juego, jugador));
     },
 
@@ -232,7 +334,10 @@ function crearServicioPartidas({
       return partidas.map((p) => ({
         id: p.id,
         modo: p.modo,
-        jugadores: p.jugadores.map((id) => (id === null ? 'maquina' : emails.get(id) ?? id)),
+        jugadores: p.jugadores.map((id) => {
+          if (id !== null) return emails.get(id) ?? id;
+          return p.modo === MODOS.MAQUINA ? 'maquina' : 'esperando rival';
+        }),
         estado: p.juego.estado,
         disparos: p.juego.jugadores.reduce((total, j) => total + (j.disparosRecibidos?.length ?? 0), 0),
         creadaEn: p.creadaEn,

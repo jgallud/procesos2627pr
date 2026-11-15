@@ -100,6 +100,12 @@ function vistaPublica(usuario) {
   return { id, email, nombre, rol, estado, origen, creadoEn };
 }
 
+// Nombre que se puede enseñar a otros jugadores: el nombre o, si no tiene,
+// la parte del email antes de la arroba (D-34). Nunca el email completo.
+function nombreParaMostrar(usuario) {
+  return usuario.nombre || usuario.email.split('@')[0];
+}
+
 function crearServicioUsuarios({
   repositorio,
   logger = loggerSilencioso,
@@ -293,7 +299,14 @@ function crearServicioUsuarios({
       const usuarios = await repositorio.listar();
       return usuarios
         .filter((u) => u.estado === ESTADOS.ACTIVO)
-        .map((u) => ({ id: u.id, nombre: u.nombre || u.email.split('@')[0] }));
+        .map((u) => ({ id: u.id, nombre: nombreParaMostrar(u) }));
+    },
+
+    // Nombre para mostrar del rival en una partida entre jugadores (RF-22).
+    // Lo usa la capa lógica de partidas, que ya ha comprobado la sesión.
+    async nombrePublico(idUsuario) {
+      const usuario = idUsuario ? await repositorio.buscarPorId(idUsuario) : null;
+      return usuario ? nombreParaMostrar(usuario) : null;
     },
 
     // ¿Está activo el usuario? (cuenta confirmada y no eliminada). Solo administrador.

@@ -36,7 +36,7 @@ function resumenDe(partida, idUsuario) {
     id: partida.id,
     fecha: partida.terminadaEn ?? partida.actualizadaEn,
     modo: partida.modo,
-    oponente: partida.jugadores[rival] === null ? 'maquina' : 'usuario',
+    oponente: partida.modo === 'jugadores' ? 'usuario' : 'maquina',
     idOponente: partida.jugadores[rival],
     resultado: partida.juego.ganador === jugador ? 'victoria' : 'derrota',
     motivoFin: partida.juego.motivoFin,
