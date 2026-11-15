@@ -13,6 +13,8 @@
 //                                   ese usuario si se indica, de la más
 //                                   reciente a la más antigua (por
 //                                   actualizadaEn) (RF-18 a RF-20)
+//   listarEnCurso()              -> todas las partidas en curso, de la más
+//                                   reciente a la más antigua (por creadaEn) (RF-21)
 //
 // Una partida guardada es un objeto plano:
 //   { id, modo, jugadores: [idUsuario, idUsuario | null], enCurso,
@@ -61,6 +63,13 @@ function crearRepositorioPartidasMemoria() {
         if (!elegida || partida.creadaEn > elegida.creadaEn) elegida = partida;
       }
       return copiar(elegida);
+    },
+
+    async listarEnCurso() {
+      return [...partidas.values()]
+        .filter((p) => p.enCurso)
+        .sort((a, b) => String(b.creadaEn).localeCompare(String(a.creadaEn)))
+        .map(copiar);
     },
 
     async listarTerminadas({ idUsuario } = {}) {
