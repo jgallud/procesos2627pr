@@ -51,6 +51,7 @@ describe('Historial y estadísticas', () => {
       fecha: '2026-11-10T10:00:00.000Z',
       modo: 'maquina',
       oponente: 'maquina',
+      dificultad: 'dificil', // partida sin dificultad guardada: anterior a MJ-03
       idOponente: null,
       resultado: 'victoria',
       motivoFin: 'flota_hundida',

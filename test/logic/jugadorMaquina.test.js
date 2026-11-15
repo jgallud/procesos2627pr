@@ -4,7 +4,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const motor = require('../../server/logic/motor');
-const { elegirDisparo, elegirColocacion, jugarTurno } = require('../../server/logic/jugadorMaquina');
+const { elegirDisparo, elegirColocacion, jugarTurno, NIVELES } = require('../../server/logic/jugadorMaquina');
 const { CODIGOS } = require('../../server/logic/errores');
 const { partidaEnJuego, colocarFlotaFija, disparos, azarFijo, esError } = require('./motor/ayuda');
 
@@ -102,3 +102,57 @@ describe('Jugador máquina: colocación y turno', () => {
     assert.ok(todos.length < 100);
   });
 });
+
+describe('Jugador máquina: niveles de dificultad (MJ-03)', () => {
+  const vecinasE5 = ['D5', 'F5', 'E4', 'E6'];
+  // Tablero en el que solo quedan sin disparar las casillas alrededor de un
+  // destructor hundido en A1-A2 y J10: por la regla de no tocarse, solo J10
+  // puede tener barco.
+  const alrededor = ['A3', 'B1', 'B2', 'B3'];
+  const tableroCasiLleno = [
+    tocado('A1'), { casilla: 'A2', resultado: 'hundido', barco: 'destructor' },
+    ...motor.todasLasCasillas().filter((c) => !['A1', 'A2', 'J10', ...alrededor].includes(c)).map(agua),
+  ];
+  const elecciones = (hechos, nivel) => new Set(Array.from({ length: 30 }, (_, s) => elegirDisparo(hechos, azarFijo(s), nivel)));
+
+  it('fácil: tras un tocado no remata, dispara al azar', () => {
+    const casillas = elecciones([tocado('E5')], NIVELES.FACIL);
+    assert.ok([...casillas].some((c) => !vecinasE5.includes(c)));
+  });
+
+  it('normal y difícil: tras un tocado rematan por las casillas vecinas', () => {
+    for (const nivel of [NIVELES.NORMAL, NIVELES.DIFICIL]) {
+      for (const casilla of elecciones([tocado('E5')], nivel)) assert.ok(vecinasE5.includes(casilla), `${nivel}: ${casilla}`);
+    }
+  });
+
+  it('normal no descarta las casillas alrededor de un barco hundido; difícil sí', () => {
+    assert.ok([...elecciones(tableroCasiLleno, NIVELES.NORMAL)].some((c) => alrededor.includes(c)));
+    assert.deepEqual([...elecciones(tableroCasiLleno, NIVELES.DIFICIL)], ['J10']);
+  });
+
+  it('con más dificultad, menos disparos para hundir la flota (30 partidas con azar fijo)', () => {
+    const disparosHastaGanar = (nivel) => {
+      let total = 0;
+      for (let semilla = 0; semilla < 30; semilla += 1) {
+        const azar = azarFijo(semilla);
+        let partida = motor.colocarFlotaAleatoria(motor.crearPartida(), 0, azar);
+        partida = motor.colocarFlotaAleatoria(partida, 1, azar);
+        partida = { ...partida, turno: 1 };
+        while (partida.estado === motor.ESTADOS.EN_JUEGO) {
+          const turno = jugarTurno(partida, 1, azar, nivel);
+          total += turno.disparos.length;
+          partida = turno.partida.estado === motor.ESTADOS.EN_JUEGO ? { ...turno.partida, turno: 1 } : turno.partida;
+        }
+      }
+      return total / 30;
+    };
+    const [facil, normal, dificil] = [NIVELES.FACIL, NIVELES.NORMAL, NIVELES.DIFICIL].map(disparosHastaGanar);
+    assert.ok(facil > normal && normal > dificil, `fácil ${facil}, normal ${normal}, difícil ${dificil}`);
+  });
+
+  it('rechaza un nivel desconocido', () => {
+    assert.throws(() => elegirDisparo([], azarFijo(1), 'imposible'), /desconocido/);
+  });
+});
+

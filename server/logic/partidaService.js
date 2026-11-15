@@ -42,6 +42,10 @@ const AVISOS = Object.freeze({
 });
 const avisadorNulo = Object.freeze({ avisar() {} });
 const JUGADOR_MAQUINA = 1;
+// MJ-03: dificultad de la máquina. Las partidas creadas antes de MJ-03 no la
+// guardan y siguen jugando con la estrategia de entonces (difícil).
+const DIFICULTAD_POR_DEFECTO = jugadorMaquina.NIVELES.NORMAL;
+const dificultadDe = (partida) => partida.dificultad ?? jugadorMaquina.NIVELES.DIFICIL;
 
 function crearServicioPartidas({
   repositorio,
@@ -80,6 +84,7 @@ function crearServicioPartidas({
       id: partida.id,
       modo: partida.modo,
       oponente: contraMaquina ? 'maquina' : 'usuario',
+      dificultad: contraMaquina ? dificultadDe(partida) : null,
       nombreRival: contraMaquina ? null : await servicioUsuarios.nombrePublico(idRival),
       esperandoRival: !contraMaquina && partida.jugadores[1] === null,
       soyCreador: jugador === 0,
@@ -193,8 +198,11 @@ function crearServicioPartidas({
     // RF-11: crea una partida contra la máquina, que coloca su flota al azar
     // cumpliendo las reglas. Si el usuario ya tiene una en curso contra la
     // máquina, devuelve esa. Devuelve { partida, nueva }.
-    async crearContraMaquina(idSolicitante) {
+    async crearContraMaquina(idSolicitante, { dificultad = DIFICULTAD_POR_DEFECTO } = {}) {
       const usuario = await solicitante(idSolicitante);
+      if (!Object.values(jugadorMaquina.NIVELES).includes(dificultad)) {
+        throw new ErrorDominio(CODIGOS.DATOS_INVALIDOS, 'La dificultad debe ser fácil, normal o difícil');
+      }
       const existente = await repositorio.buscarEnCursoDe(usuario.id);
       if (existente && existente.modo === MODOS.MAQUINA) {
         return { partida: await vista(existente, existente.jugadores.indexOf(usuario.id)), nueva: false };
@@ -205,6 +213,7 @@ function crearServicioPartidas({
       const ahora = reloj().toISOString();
       const partida = await repositorio.crear({
         modo: MODOS.MAQUINA,
+        dificultad,
         jugadores: [usuario.id, null],
         enCurso: true,
         creadaEn: ahora,
@@ -343,7 +352,7 @@ function crearServicioPartidas({
         && juego.estado === motor.ESTADOS.EN_JUEGO
         && juego.turno === JUGADOR_MAQUINA;
       if (turnoDeLaMaquina) {
-        const turno = jugadorMaquina.jugarTurno(juego, JUGADOR_MAQUINA, azar);
+        const turno = jugadorMaquina.jugarTurno(juego, JUGADOR_MAQUINA, azar, dificultadDe(partida));
         juego = turno.partida;
         disparosRival = turno.disparos;
       }

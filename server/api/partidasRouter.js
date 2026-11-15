@@ -7,6 +7,7 @@
 // del rival mientras dura la partida (RNF-10).
 //
 //   POST   /api/partidas                       crear contra la máquina  -> 201 (200 si ya había una en curso)
+//                                              {dificultad: 'facil'|'normal'|'dificil'} (MJ-03; por defecto normal)
 //                                              {modo:'jugadores'}: crear abierta (RF-22) -> 201 (200 si ya tenía una abierta)
 //   GET    /api/partidas/abiertas              partidas a las que unirse -> 200 [{id, creador, creadaEn}] (RF-22)
 //   POST   /api/partidas/:id/union             unirse a una abierta     -> 200 vista (RF-22)
@@ -35,7 +36,7 @@ function crearRouterPartidas({ servicioPartidas }) {
     const entreJugadores = req.body?.modo === 'jugadores';
     const { partida, nueva } = entreJugadores
       ? await servicioPartidas.crearAbierta(req.idSolicitante)
-      : await servicioPartidas.crearContraMaquina(req.idSolicitante);
+      : await servicioPartidas.crearContraMaquina(req.idSolicitante, { dificultad: req.body?.dificultad });
     res.status(nueva ? 201 : 200).json(partida);
   });
 

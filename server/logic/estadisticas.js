@@ -37,6 +37,8 @@ function resumenDe(partida, idUsuario) {
     fecha: partida.terminadaEn ?? partida.actualizadaEn,
     modo: partida.modo,
     oponente: partida.modo === 'jugadores' ? 'usuario' : 'maquina',
+    // MJ-03: las partidas contra la máquina anteriores a la dificultad se jugaron en difícil.
+    dificultad: partida.modo === 'jugadores' ? null : partida.dificultad ?? 'dificil',
     idOponente: partida.jugadores[rival],
     resultado: partida.juego.ganador === jugador ? 'victoria' : 'derrota',
     motivoFin: partida.juego.motivoFin,
