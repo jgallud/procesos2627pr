@@ -3,11 +3,17 @@
 Procesos de Ingeniería del Software — curso 2026-2027.
 Escuela Superior de Ingeniería Informática de Albacete
 Universidad de Castilla-La Mancha
-Aplicación SaaS con arquitectura en capas y gestión de usuarios.
+Aplicación SaaS con arquitectura en capas y gestión de usuarios (Sprint 1) sobre
+la que se juega a **Hundir la Flota** (Sprint 2): contra la máquina y entre dos
+jugadores en tiempo real, con historial, estadísticas y clasificación.
 
 - **URL pública:** <https://procesos2627pr-56307806056.europe-west1.run.app>
 - **Integración continua:** pestaña *Actions* → workflow **CI**
 - **Despliegue continuo:** Cloud Run conectado al repositorio (activador de Cloud Build sobre `main`)
+- **Estado de cada requisito, con su evidencia:** [docs/requisitos.md](docs/requisitos.md)
+  (Sprint 1, Sprint 2 y mejoras MJ-01 a MJ-17)
+- **Documentación del proyecto:** [docs/index.md](docs/index.md): arquitectura,
+  decisiones de diseño, proceso, resumen de cada sprint y cronología
 
 ## Tecnologías
 
@@ -30,36 +36,61 @@ Aplicación SaaS con arquitectura en capas y gestión de usuarios.
 
 ```
  Cliente (navegador)            client/
-   Capa de presentación         client/js/interfaz.js   (DOM, formularios, mensajes)
-        │  llamadas a funciones
-   Capa de comunicación         client/js/api.js        (único módulo con fetch)
-        │  HTTP/JSON, mismo origen, cookie de sesión
+   Capa de presentación         client/js/interfaz.js, juego.js, historial.js, adminPartidas.js, dialogo.js
+        │  llamadas a funciones y eventos
+   Capa de comunicación         client/js/api.js        (único módulo con fetch: envía las jugadas)
+                                client/js/tiempoReal.js (único módulo con WebSocket: solo recibe avisos)
+        │  HTTP/JSON y WebSocket, mismo origen, cookie de sesión
         ▼
- Capa API                       server/app.js, server/api/
+ Capa API                       server/app.js, server/api/   (rutas REST y tiempo real)
         │  llamadas a funciones (sin HTTP)
         ▼
- Capa de lógica de negocio      server/logic/
+ Capa de lógica de negocio      server/logic/            (servicios, motor del juego, jugador máquina)
         │  contrato del repositorio (async)
         ▼
  Capa de acceso a datos         server/data/       MongoDB (producción) o memoria (desarrollo/pruebas)
 ```
 
-- **Frontera interfaz ↔ comunicación (cliente):** `client/js/interfaz.js` solo
-  importa funciones de `client/js/api.js`; no contiene `fetch` ni URLs de la API.
-
-- **Frontera API ↔ lógica:** `server/api/usuariosRouter.js` y `server/api/sesion.js`
-  llaman a `servicioUsuarios` y `servicioSesiones`.
-  La API no contiene reglas de negocio y la lógica no conoce HTTP: lanza
-  `ErrorDominio` con un código y `server/api/errores.js` lo traduce a un estado HTTP.
+- **Frontera interfaz ↔ comunicación (cliente):** los módulos de presentación
+  solo importan funciones de `client/js/api.js` y escuchan los eventos de
+  `client/js/tiempoReal.js`; no contienen `fetch`, `WebSocket` ni URLs de la API.
+  La interfaz no decide si un barco cabe ni si un disparo acierta: envía la
+  jugada y pinta la vista que devuelve el servidor.
+- **Frontera API ↔ lógica:** los routers (`usuariosRouter.js`, `sesion.js`,
+  `partidasRouter.js`) solo leen la petición, llaman al servicio y responden.
+  La API no contiene reglas de negocio ni importa el motor, y la lógica no conoce
+  HTTP: lanza `ErrorDominio` con un código y `server/api/errores.js` lo traduce a
+  un estado HTTP.
+- **Motor del juego (RNF-09):** todas las reglas de Hundir la Flota están en
+  `server/logic/motor/`, como funciones puras sobre el estado de la partida. Solo
+  importa sus propios módulos y `server/logic/errores.js`, y lo comprueba una
+  prueba (`test/logic/motor/capas.test.js`). El servicio de partidas no contiene
+  reglas: carga la partida, comprueba quién juega, aplica la jugada con el motor,
+  guarda y avisa. El jugador máquina usa el motor como un jugador humano, con una
+  fuente de azar inyectada ([D-22](docs/decisiones.md#d-22-motor-del-juego-en-la-capa-lógica),
+  [D-28](docs/decisiones.md#d-28-estrategia-del-jugador-máquina)).
+- **Servidor autoritativo (RNF-10):** toda jugada se valida en el servidor y al
+  cliente solo llega `vistaPara(partida, jugador)`: su tablero completo y, del
+  rival, el resultado de sus propios disparos. La flota rival no sale del
+  servidor hasta que la partida termina.
+- **Tiempo real:** el servicio de partidas recibe un avisador inyectado
+  (`avisar(idPartida, evento)`) que implementa `server/api/tiempoReal.js`. El
+  WebSocket solo lleva avisos del servidor al cliente; las jugadas van siempre
+  por la API REST, y tras cada aviso el cliente pide su vista por REST, así que
+  por el WebSocket nunca viaja una flota ([D-23](docs/decisiones.md#d-23-websocket-solo-para-avisos-y-avisador-inyectado)).
 - **Frontera lógica ↔ datos:** los servicios de `server/logic/` reciben
-  repositorios que cumplen los contratos descritos en `server/data/usuarioRepositorioMemoria.js`
-  y `server/data/sesionRepositorioMemoria.js`. Hay dos implementaciones de cada
-  contrato (memoria y MongoDB) y las dos superan la misma batería de pruebas
-  (`test/contratos/`).
-- **Composición:** `server/index.js` crea repositorios → servicios → app. Si
-  existe `MONGODB_URI` usa los repositorios de MongoDB; si no, los de memoria
-  (en producción, sin `MONGODB_URI` el servidor no arranca). El paso a MongoDB
-  en el Hito 3 no modificó ningún archivo de `server/logic/` ni de `server/api/`.
+  repositorios que cumplen los contratos descritos en los repositorios en
+  memoria (`server/data/*RepositorioMemoria.js`). Hay dos implementaciones de
+  cada contrato (memoria y MongoDB), usuarios, sesiones y partidas, y las dos
+  superan la misma batería de pruebas (`test/contratos/`).
+- **Composición:** `server/index.js` crea repositorios → servicios → app y
+  conecta el tiempo real con el servicio de partidas. Si existe `MONGODB_URI` usa
+  los repositorios de MongoDB; si no, los de memoria (en producción, sin
+  `MONGODB_URI` el servidor no arranca). El paso a MongoDB no modificó la lógica
+  ni la API, ni en el Hito 3 (usuarios y sesiones) ni en el Hito 6 (partidas,
+  [D-31](docs/decisiones.md#d-31-partidas-en-mongodb)).
+
+Fronteras exactas, archivo por archivo: [docs/arquitectura.md](docs/arquitectura.md).
 
 ```
 server/
@@ -71,33 +102,46 @@ server/
     usuariosRouter.js           Endpoints REST de usuarios
     sesion.js                   Cookie de sesión y endpoints /api/sesion
     oauth.js                    Inicio de sesión con Google: /api/oauth
+    partidasRouter.js           Endpoints REST de partidas: /api/partidas
+    tiempoReal.js               WebSocket /api/tiempo-real: avisos de las partidas
     errores.js                  ErrorDominio → código HTTP
   logic/                        CAPA LÓGICA
     usuarioService.js           Reglas de gestión de usuarios (registro, login, roles…)
     sesionService.js            Ciclo de vida de las sesiones
     contrasenas.js              Hash de contraseñas (scrypt)
+    motor/                      Motor del juego: reglas, coordenadas, colocación, partida y estado
+    jugadorMaquina.js           Colocación y disparos de la máquina (azar inyectable)
+    partidaService.js           Servicio de partidas: carga, aplica la jugada con el motor, guarda y avisa
+    estadisticas.js             Historial, estadísticas y clasificación (funciones puras)
     errores.js                  Errores de dominio
   data/                         CAPA DE DATOS
     conexionMongo.js            Conexión, índices y cierre ordenado
     usuarioRepositorioMongo.js  Usuarios en MongoDB (producción)
     sesionRepositorioMongo.js   Sesiones en MongoDB (producción)
+    partidaRepositorioMongo.js  Partidas en MongoDB (producción)
     usuarioRepositorioMemoria.js  Usuarios en memoria (desarrollo y pruebas)
     sesionRepositorioMemoria.js   Sesiones en memoria (desarrollo y pruebas)
+    partidaRepositorioMemoria.js  Partidas en memoria (desarrollo y pruebas)
   oauth/
     proveedorGoogle.js          Comunicación con Google (OAuth / OpenID Connect)
   notificacion/
     notificadorBrevo.js         Correo de confirmación con Brevo (si hay BREVO_API_KEY)
     notificadorLog.js           Enlace de confirmación al log (sin BREVO_API_KEY)
 client/                         Frontend
-  index.html, css/
-  js/interfaz.js                Capa de presentación (usuarios y sesión)
-  js/juego.js                   Capa de presentación (partida de Hundir la Flota)
-  js/api.js                     Capa de comunicación con el servidor
+  index.html, css/, img/
+  js/interfaz.js                Presentación: usuarios, sesión y menú
+  js/juego.js                   Presentación: partida de Hundir la Flota
+  js/historial.js               Presentación: historial, estadísticas y clasificación
+  js/adminPartidas.js           Presentación: partidas en curso y anulación (administrador)
+  js/dialogo.js                 Presentación: ventanas de confirmación
+  js/api.js                     Comunicación: REST (único módulo con fetch)
+  js/tiempoReal.js              Comunicación: WebSocket, reconexión y avisos como eventos
 test/                           Pruebas automatizadas (node:test)
-  logic/  data/  api/  notificacion/  ayuda/
+  logic/  logic/motor/  data/  api/  notificacion/  oauth/  ayuda/
   contratos/                    Pruebas comunes a todas las implementaciones de repositorio
-docs/                           Documentación de despliegue
+docs/                           Documentación del proyecto (requisitos, arquitectura, decisiones, sprints, despliegue)
 .github/workflows/              Integración continua (CI)
+Dockerfile                      Imagen que despliega Cloud Build en Cloud Run
 ```
 
 ## Modelo de usuario y reglas
@@ -109,6 +153,39 @@ docs/                           Documentación de despliegue
 - Listar usuarios y consultar si un usuario está activo: solo administrador.
 - Eliminar: el administrador a cualquiera; un usuario normal solo a sí mismo.
 - Todas estas comprobaciones se hacen en la capa lógica del servidor.
+
+## Hundir la Flota
+
+**Reglas** (todas en el motor del juego, `server/logic/motor/`):
+
+- Tablero de 10 × 10 por jugador (propio y de disparos), coordenadas de A1 a J10.
+- Flota: portaaviones (5), acorazado (4), crucero (3), submarino (3) y destructor (2).
+- Los barcos se colocan en horizontal o vertical, dentro del tablero, sin
+  solaparse y **sin tocarse, tampoco en diagonal**. Se pueden colocar uno a uno o
+  pedir una colocación aleatoria.
+- Cada disparo da agua, tocado o hundido (con el nombre del barco); no se puede
+  disparar dos veces a la misma casilla ni fuera del tablero.
+- **Quien acierta repite turno**; tras un agua, juega el rival. **Empieza quien
+  crea la partida** (contra la máquina, el jugador).
+- Gana quien hunde primero toda la flota del rival. Abandonar cuenta como derrota.
+
+Las tres reglas en negrita eran las decisiones abiertas de la especificación:
+ver [D-25](docs/decisiones.md#d-25-reglas-del-juego-fijadas-por-la-especificación).
+
+**Modos de juego:**
+
+- **Contra la máquina:** la máquina coloca su flota al azar y, tras un tocado,
+  remata el barco siguiendo la línea y descarta las casillas donde no puede haber
+  barco ([D-28](docs/decisiones.md#d-28-estrategia-del-jugador-máquina)). Un
+  usuario tiene como mucho una partida en curso: al entrar, se retoma.
+- **Entre dos jugadores:** un usuario crea una partida abierta y otro se une
+  desde la lista de partidas abiertas, que se actualiza en directo. Cada jugada
+  llega al rival al instante por WebSocket; si se corta la conexión, el cliente
+  se reconecta solo y recupera el estado desde el servidor.
+
+**Historial y estadísticas:** cada jugador ve sus partidas terminadas, sus
+estadísticas y la clasificación general; el administrador puede ver las de
+cualquier usuario y anular partidas en curso (una partida anulada no cuenta).
 
 ## Persistencia (MongoDB)
 
@@ -125,8 +202,17 @@ Base de datos `MONGODB_DB` (por defecto `procesos2627pr`) con tres colecciones:
 - El índice único de `email` garantiza en la propia base de datos que no hay
   dos cuentas con el mismo correo, incluso ante dos altas simultáneas.
 - Las sesiones también se guardan en la base de datos: un nuevo despliegue o un
-  reinicio no cierra la sesión de nadie y Cloud Run puede usar varias instancias.
-  El índice TTL hace que MongoDB borre solo las sesiones caducadas.
+  reinicio no cierra la sesión de nadie. El índice TTL hace que MongoDB borre
+  solo las sesiones caducadas.
+- Las partidas se guardan tras cada jugada, con el estado del motor tal cual: al
+  recargar la página, o tras un reinicio o un nuevo despliegue, el jugador vuelve
+  a su partida en el mismo estado (RF-17).
+- **Una sola instancia de Cloud Run (RNF-12).** Aunque todo el estado está en
+  MongoDB, las conexiones WebSocket viven en la memoria de la instancia: con
+  varias instancias, el aviso de una jugada podría producirse en una instancia
+  distinta de la que tiene la conexión del rival. Por eso el servicio está
+  limitado a una instancia ([D-24](docs/decisiones.md#d-24-una-sola-instancia-de-cloud-run-con-websocket)).
+  La reconexión tras un despliegue se comprobó en la URL pública el 2026-11-15.
 - Los índices se crean al arrancar (`createIndex` es idempotente).
 - Al recibir `SIGTERM` (Cloud Run apaga la instancia) el servidor deja de
   aceptar peticiones, termina las que hay en curso y cierra la conexión.
@@ -245,10 +331,25 @@ de verdad, define `BREVO_API_KEY` y `CORREO_REMITENTE` en tu `.env`.
 npm test
 ```
 
-Ejecuta con `node:test` todas las pruebas de `test/`: unitarias de la capa
-lógica (`test/logic`: usuarios, sesiones y hash de contraseñas), de los contratos
-de los repositorios (`test/data`, con la batería común de `test/contratos`) y de
-integración de la API con peticiones HTTP reales y cookie de sesión (`test/api`).
+Ejecuta con `node:test` todas las pruebas de `test/`:
+
+- **Unitarias de la capa lógica** (`test/logic`): usuarios, sesiones, hash de
+  contraseñas y restablecimiento de contraseña; servicio de partidas, contra la
+  máquina y entre jugadores (`partidaService.test.js`, `partidaJugadores.test.js`);
+  historial, estadísticas y clasificación (`estadisticas.test.js`); y jugador
+  máquina con una fuente de azar fija (`jugadorMaquina.test.js`).
+- **Motor del juego** (`test/logic/motor`): colocación y partida, con los casos
+  de error (colocación inválida, disparo repetido, fuera de turno, partida
+  terminada) y la vista sin la flota rival (RNF-10); y `capas.test.js`, que
+  comprueba que el motor solo importa sus propios módulos y que las rutas de
+  partidas no importan el motor (RNF-09).
+- **Contratos de los repositorios** (`test/data`, con la batería común de
+  `test/contratos`): usuarios, sesiones y partidas, en memoria y en MongoDB.
+- **Integración de la API** (`test/api`) con peticiones HTTP reales y cookie de
+  sesión, incluidas las partidas y el WebSocket de tiempo real
+  (`tiempoReal.test.js`: rechazo sin sesión o desde otro origen, avisos solo a
+  quien juega la partida y cierre ordenado al parar el servidor, para que el
+  cliente se reconecte).
 
 Las pruebas de la capa lógica usan siempre los repositorios en memoria: son
 rápidas y no necesitan base de datos. Las pruebas de los repositorios de MongoDB
@@ -286,13 +387,16 @@ Ver `.env.example` (solo nombres, sin valores reales):
 
 ## Flujo de trabajo (GitHub Flow)
 
-1. Crear una rama por cambio: `git switch -c feature/<descripcion>`.
+1. Crear una rama por cambio desde `main` actualizado: `git switch -c feature/<descripcion>` (solo documentación: `docs/<descripcion>`).
 2. Programar y ejecutar `npm test` en local.
-3. `git push -u origin feature/<descripcion>` y abrir un pull request contra `main`.
-4. Esperar el CI en verde e integrar el PR (*Create a merge commit*).
-5. El cambio en `main` dispara el activador de Cloud Build, que construye la imagen con el `Dockerfile` y la despliega en Cloud Run.
+3. Si el cambio afecta a lo que describe `docs/`, actualizarlo en el mismo PR (estado en `requisitos.md`, decisión nueva en `decisiones.md`, entrada en `log.md`).
+4. Si el cambio llega a producción, subir la versión en el mismo PR: `npm version minor --no-git-tag-version` (funcionalidad) o `npm version patch --no-git-tag-version` (corrección) ([D-41](docs/decisiones.md#d-41-versión-de-la-aplicación)).
+5. `git push -u origin <rama>` y abrir un pull request contra `main`.
+6. Esperar el CI en verde e integrar el PR (*Create a merge commit*). Tras integrar un cambio de versión, `git tag vX.Y.Z` sobre `main`.
+7. El cambio en `main` dispara el activador de Cloud Build, que construye la imagen con el `Dockerfile` y la despliega en Cloud Run. El pie de la página muestra la versión y la revisión desplegadas.
 
-Al cerrar cada hito se etiqueta el último commit de `main` (`hito-1`, `hito-2`…).
+Al cerrar cada hito se etiqueta el último commit de `main` (`hito-1` … `hito-7`).
+Detalle del CI y del despliegue en [docs/procesos.md](docs/procesos.md).
 
 ## Despliegue
 

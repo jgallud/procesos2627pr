@@ -4,6 +4,9 @@ Del más reciente al más antiguo. Fuentes: historial de git, pull requests y ej
 
 | Fecha | Evento | Referencia |
 |-------|--------|------------|
+| 2026-11-16 | README actualizado con el Sprint 2: Hundir la Flota, motor del juego y tiempo real en la arquitectura, reglas del juego, una sola instancia de Cloud Run (RNF-12), pruebas y flujo con la versión. Cierre del Sprint 2 en `sprint-2.md` | rama `docs/readme-sprint2` |
+| 2026-11-15 | PR #42 integrado: MJ-17; etiqueta `v2.0.0` | [D-41](decisiones.md#d-41-versión-de-la-aplicación) |
+| 2026-11-15 | PR #41 integrado: MJ-15 y MJ-16 | [Mejoras](requisitos.md#mejoras-del-sprint-2) |
 | 2026-11-15 | MJ-17: versión de la aplicación (2.0.0) en `package.json`, en `/api/salud` y en el pie de la página, con la revisión de Cloud Run | rama `feature/mj17-version`, [D-41](decisiones.md#d-41-versión-de-la-aplicación) |
 | 2026-11-15 | MJ-16: confirmaciones en una ventana propia en lugar de `window.confirm`. Rama nueva con MJ-15, cuyos commits llegaron a la rama de MJ-14 después de integrar el PR #40 y no estaban en producción | rama `feature/mj15-mj16-abandono-y-dialogos`, [Mejoras](requisitos.md#mejoras-del-sprint-2) |
 | 2026-11-15 | PR #40 integrado: MJ-14 (lista de partidas abiertas en directo) | [D-40](decisiones.md#d-40-vestíbulo-en-tiempo-real) |
