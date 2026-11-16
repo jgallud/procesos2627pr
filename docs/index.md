@@ -2,7 +2,7 @@
 
 Conocimiento del proyecto en formato OKF (Open Knowledge Format): archivos Markdown con frontmatter, que se versionan junto al código y se actualizan en el mismo pull request que el cambio que describen.
 
-Recoge el estado del Sprint 1 a fecha 2026-10-25 y la preparación del Sprint 2. Las tareas y su seguimiento están en Donetonic; aquí no se copian.
+Recoge el estado del Sprint 1 y del Sprint 2 (Hundir la Flota) a fecha 2026-11-16. Las tareas y su seguimiento están en Donetonic; aquí no se copian.
 
 | Archivo | Tipo | Contenido |
 |---------|------|-----------|
